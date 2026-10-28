@@ -27,6 +27,7 @@ import {
 import { DetailsPanel } from "../panel/DetailsPanel";
 import { closeDetails, fetchDetails } from "../state/detailsSlice";
 import { fetchParameterDictionary } from "../state/parameterDictionarySlice";
+import { useMoveMapToElement } from "./hooks/useMoveMapToElement";
 
 interface DetailsPageProps {
   kind: DetailsKind;
@@ -46,6 +47,8 @@ export const DetailsPage = ({ kind }: DetailsPageProps) => {
   const name = firstRoot?.label
     ? DETAILS_KINDS[kind].displayName(firstRoot.label)
     : canonicalId;
+
+  useMoveMapToElement(kind, firstRoot?.position ?? null);
 
   useEffect(() => {
     dispatch(fetchParameterDictionary(endpoint));

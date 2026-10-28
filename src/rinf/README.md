@@ -18,7 +18,13 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   available" are shown as such. A filter narrows the list by name, RINF index
   or value. For an OP this includes its type, its primary location code
   (shown as code · name, e.g. "DE18314 · Perl Grenze") and its railway
-  locations (km on each line).
+  locations (km on each line). Opening a panel moves the map to the element
+  when it is out of sight or the map is zoomed out too far to draw it.
+- **Search**: a switch in the header chooses between RINF and Abzu's own stop
+  place search (unchanged). RINF mode searches OPs by name (contains), UOPID
+  or primary location code (starts with); press Enter to search, as a search
+  takes about 2 s. Picking a result opens its panel. The choice of mode is
+  remembered; RINF is the default.
 
 ## Data source
 
@@ -51,6 +57,10 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   2026-10-28).
 - A primary location's label is its code for only 27% of them; the code
   (`era:primaryLocationCode`) is therefore fetched separately.
+- The endpoint has no full-text index (no Lucene or Elasticsearch connector,
+  no `onto:fts`), so search scans names: the query first finds matching OPs,
+  then looks up only those, which takes ~2 s instead of 5–7 s. Very short,
+  common text ("de") still takes ~6 s, hence the 2-character minimum.
 
 ## Structure
 
@@ -62,7 +72,8 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
 | `state/`  | Redux state (`state.rinf`): one slice per concern, and the toggles |
 | `map/`    | MapLibre layers, click handling, loading bar                       |
 | `panel/`  | The details panel, shared by OPs and SoLs                          |
-| `pages/`  | Route element for `/<kind>/:canonicalId`                           |
+| `pages/`  | Route element for `/<kind>/:canonicalId`, and moving the map there |
+| `search/` | The header search switch and the RINF search box                   |
 
 `detailsKinds.ts` describes each kind (route, id prefix, labels, hidden
 statements); adding a kind there adds its route and panel.
@@ -74,6 +85,8 @@ Kept to one or two lines each, so upstream releases merge easily:
 - `src/components/modern/Map/ModernEditStopMap.tsx` — renders `<RinfMapLayers />`
 - `src/components/modern/Map/controls/MapSettingsPanel.tsx` — spreads `useRinfLayerSettingItems()` into its toggles
 - `src/containers/modern/App.tsx` — `{rinfRoutes(path)}` inside its `<Routes>`
+- `src/components/modern/Header/ModernHeader.tsx` — wraps `<HeaderSearch />` in
+  `<RinfHeaderSearch stopPlaceSearch={…} />`
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
 - `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` config field
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds

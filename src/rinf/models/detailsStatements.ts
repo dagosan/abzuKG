@@ -51,6 +51,8 @@ export interface DetailsNode {
   label: string;
   /** For a root: code of the IM whose dataset declared it, e.g. "0088". */
   source: string | null;
+  /** For a root: where it is, as [lat, lng], so the map can move to it. */
+  position: [number, number] | null;
   classUri: string | null;
   classLabel: string | null;
   parameters: RawParameter[];
@@ -62,6 +64,7 @@ export const newNode = (uri: string): DetailsNode => ({
   uri,
   label: "",
   source: null,
+  position: null,
   classUri: null,
   classLabel: null,
   parameters: [],

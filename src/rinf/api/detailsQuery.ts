@@ -62,6 +62,8 @@ export const buildDetailsQuery = (
   return `${SPARQL_PREFIXES}
 SELECT ?level ?subject ?parent ?p ?o (SAMPLE(?label) AS ?oLabel)
        (SAMPLE(?code) AS ?oCode) (SAMPLE(?sourceGraph) AS ?source)
+       (SAMPLE(?pointLat) AS ?oLat) (SAMPLE(?pointLng) AS ?oLng)
+       (SAMPLE(?shape) AS ?oWkt)
 WHERE {
   GRAPH ?sourceGraph { ?root era:canonicalURI <${canonicalPrefix}${canonicalId}> }
   FILTER(STRSTARTS(STR(?root), "${canonicalPrefix}"))
@@ -86,6 +88,16 @@ WHERE {
   # A primary location's label is often its name, not its code (73% on
   # 2026-10-28), so the code is fetched on its own.
   OPTIONAL { ?o era:primaryLocationCode ?code }
+  # Where the element is, so the map can move to it: an OP's net references
+  # carry coordinates, a SoL's carries its drawn shape.
+  OPTIONAL {
+    ?o wgs:lat ?pointLat ; wgs:long ?pointLng .
+    FILTER(?p = era:netReference && ?level = 0)
+  }
+  OPTIONAL {
+    ?o geo:hasGeometry/geo:asWKT ?shape .
+    FILTER(?p = era:netReference && ?level = 0)
+  }
 }
 GROUP BY ?level ?subject ?parent ?p ?o`;
 };

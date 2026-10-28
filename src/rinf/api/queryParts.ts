@@ -68,7 +68,31 @@ export const validOnPattern = (subject: string, validOn: string): string => {
 };
 
 /** WKT polygon for a bounding box, for GeoSPARQL filters. */
-export const boundingBoxWkt = ({ south, west, north, east }: BoundingBox) => {
-  const [s, w, n, e] = [south, west, north, east].map(formatCoordinate);
-  return `POLYGON((${w} ${s}, ${e} ${s}, ${e} ${n}, ${w} ${n}, ${w} ${s}))`;
+export const boundingBoxWkt = (box: BoundingBox): string => {
+  const [south, west, north, east] = [
+    box.south,
+    box.west,
+    box.north,
+    box.east,
+  ].map(formatCoordinate);
+  const corners = [
+    `${west} ${south}`,
+    `${east} ${south}`,
+    `${east} ${north}`,
+    `${west} ${north}`,
+    `${west} ${south}`,
+  ];
+  return `POLYGON((${corners.join(", ")}))`;
 };
+
+const SPARQL_STRING_ESCAPES: Record<string, string> = {
+  "\\": "\\\\",
+  '"': '\\"',
+  "\n": "\\n",
+  "\r": "\\r",
+  "\t": "\\t",
+};
+
+/** Text as a SPARQL string literal, quotes included, safe to put in a query. */
+export const sparqlStringLiteral = (text: string): string =>
+  `"${text.replace(/[\\"\n\r\t]/g, (character) => SPARQL_STRING_ESCAPES[character])}"`;

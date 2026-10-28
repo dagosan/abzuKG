@@ -12,6 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
+/* Modified for the ERA RINF frontend, 2026-10-29: header search can switch to RINF. */
+
 import { AppBar, Box, Toolbar, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import React from "react";
@@ -46,6 +48,7 @@ import {
 import { useHeaderSlotContent } from "./HeaderSlotContext";
 import { useLastMapLocation } from "./hooks/useLastMapLocation";
 import { useLastReportsLocation } from "./hooks/useLastReportsLocation";
+import { RinfHeaderSearch } from "../../../rinf/search/RinfHeaderSearch";
 
 interface ModernHeaderProps {
   config: {
@@ -152,7 +155,10 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({ config }) => {
 
           {/* Header center: page-injected slot content, or the default stop-place search */}
           <Box sx={headerSearchContainer}>
-            {headerSlotContent ?? (!isDisplayingReports && <HeaderSearch />)}
+            {headerSlotContent ??
+              (!isDisplayingReports && (
+                <RinfHeaderSearch stopPlaceSearch={<HeaderSearch />} />
+              ))}
           </Box>
 
           <UserSection

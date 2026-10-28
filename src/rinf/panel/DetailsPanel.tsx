@@ -33,11 +33,12 @@ import { DetailsKind, DETAILS_KINDS } from "../detailsKinds";
 import { DetailsContent } from "./DetailsContent";
 import { DetailsHeader } from "./DetailsHeader";
 import { ParameterFilter } from "./ParameterFilter";
+import {
+  DRAWER_WIDTH_DESKTOP,
+  DRAWER_WIDTH_MOBILE,
+  DRAWER_WIDTH_TABLET,
+} from "./panelWidth";
 
-/** Same widths as Abzu's stop place panel, so both sit alike beside the map. */
-const DRAWER_WIDTH_DESKTOP = 450;
-const DRAWER_WIDTH_TABLET = 380;
-const DRAWER_WIDTH_MOBILE = "100%";
 const FAILED_MESSAGE_ID = "rinf_details_failed";
 
 interface DetailsPanelProps {

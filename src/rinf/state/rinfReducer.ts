@@ -18,6 +18,7 @@ import { combineReducers } from "@reduxjs/toolkit";
 import { detailsReducer } from "./detailsSlice";
 import { operationalPointsReducer } from "./operationalPointsSlice";
 import { parameterDictionaryReducer } from "./parameterDictionarySlice";
+import { searchReducer } from "./searchSlice";
 import { sectionsOfLineReducer } from "./sectionsOfLineSlice";
 
 /** All RINF state, registered once in the root reducer as `rinf`. */
@@ -26,4 +27,5 @@ export const rinfReducer = combineReducers({
   sectionsOfLine: sectionsOfLineReducer,
   details: detailsReducer,
   parameterDictionary: parameterDictionaryReducer,
+  search: searchReducer,
 });

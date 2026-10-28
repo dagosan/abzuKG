@@ -33,3 +33,26 @@ export const writeShowPreference = (key: string, show: boolean): void => {
     // Storage unavailable: the toggle still works for this session.
   }
 };
+
+export type SearchMode = "rinf" | "stopPlaces";
+const SEARCH_MODE_KEY = "rinf.searchMode";
+/** RINF first: this is a RINF frontend, stop place search stays one click away. */
+const DEFAULT_SEARCH_MODE: SearchMode = "rinf";
+
+export const readSearchMode = (): SearchMode => {
+  try {
+    return localStorage.getItem(SEARCH_MODE_KEY) === "stopPlaces"
+      ? "stopPlaces"
+      : DEFAULT_SEARCH_MODE;
+  } catch {
+    return DEFAULT_SEARCH_MODE;
+  }
+};
+
+export const writeSearchMode = (mode: SearchMode): void => {
+  try {
+    localStorage.setItem(SEARCH_MODE_KEY, mode);
+  } catch {
+    // Storage unavailable: the switch still works for this session.
+  }
+};

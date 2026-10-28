@@ -17,6 +17,7 @@ Added for the ERA RINF frontend, 2026-10-28. */
 import type { SparqlBinding } from "../api/sparqlClient";
 import { applyStatement, DetailsNode, newNode } from "./detailsStatements";
 import { localName } from "./labels";
+import { positionFromBinding } from "./rootPosition";
 
 export type {
   DetailsNode,
@@ -49,16 +50,17 @@ export const toDetailsTrees = (
   const parentsOf = new Map<string, Set<string>>();
   const rootUris = new Set<string>();
 
-  bindings.forEach(({ subject, parent, level, source }) => {
+  bindings.forEach((binding) => {
+    const { subject, parent, level, source } = binding;
     if (!subject?.value) return;
     if (!nodes.has(subject.value)) {
       nodes.set(subject.value, newNode(subject.value));
     }
     if (level?.value === ROOT_LEVEL) {
+      const root = nodes.get(subject.value)!;
       rootUris.add(subject.value);
-      nodes.get(subject.value)!.source ??= source?.value
-        ? localName(source.value)
-        : null;
+      root.source ??= source?.value ? localName(source.value) : null;
+      root.position ??= positionFromBinding(binding);
       return;
     }
     if (parent?.value) {
