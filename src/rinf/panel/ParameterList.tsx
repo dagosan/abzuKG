@@ -14,21 +14,21 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-const SHOW_OPERATIONAL_POINTS_KEY = "rinf.showOperationalPoints";
+import { Box } from "@mui/material";
+import { ParameterRow } from "./ParameterRow";
+import type { DisplayParameter } from "./visibleParameters";
 
-/** Remembered map toggle; on by default. Storage can be blocked, so failures fall back. */
-export const readShowOperationalPoints = (): boolean => {
-  try {
-    return localStorage.getItem(SHOW_OPERATIONAL_POINTS_KEY) !== "false";
-  } catch {
-    return true;
-  }
-};
+interface ParameterListProps {
+  parameters: DisplayParameter[];
+}
 
-export const writeShowOperationalPoints = (show: boolean): void => {
-  try {
-    localStorage.setItem(SHOW_OPERATIONAL_POINTS_KEY, String(show));
-  } catch {
-    // Storage unavailable: the toggle still works for this session.
-  }
+export const ParameterList = ({ parameters }: ParameterListProps) => {
+  if (parameters.length === 0) return null;
+  return (
+    <Box component="ul" sx={{ m: 0, p: 0 }}>
+      {parameters.map((parameter) => (
+        <ParameterRow key={parameter.propertyUri} parameter={parameter} />
+      ))}
+    </Box>
+  );
 };

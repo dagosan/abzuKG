@@ -12,6 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
+/* Modified for the ERA RINF frontend, 2026-10-28: added the section of line route. */
+
 import { ComponentToggle } from "@entur/react-component-toggle";
 import { Box } from "@mui/material";
 import { StyledEngineProvider } from "@mui/material/styles";
@@ -41,6 +43,11 @@ import { MapNoticeProvider } from "../../components/modern/Map/notices/MapNotice
 import { UnsavedChangesGuard } from "../../components/modern/Shared/UnsavedChangesGuard";
 import GroupOfStopPlaces from "./GroupOfStopPlaces";
 import ReportPage from "./ReportPage";
+import { SectionOfLinePage } from "../../rinf/pages/SectionOfLinePage";
+import {
+  SECTION_OF_LINE_PARAM,
+  SECTION_OF_LINE_ROUTE,
+} from "../../rinf/routes";
 import { StopPlace } from "./StopPlace";
 import { StopPlaces } from "./StopPlaces";
 
@@ -165,6 +172,10 @@ const App: React.FC<ModernAppProps> = () => {
                 element={<GroupOfStopPlaces />}
               />
               <Route path={path + AppRoutes.REPORTS} element={<ReportPage />} />
+              <Route
+                path={`${path}${SECTION_OF_LINE_ROUTE}/:${SECTION_OF_LINE_PARAM}`}
+                element={<SectionOfLinePage />}
+              />
             </Routes>
           </MapNoticeProvider>
         </Router>

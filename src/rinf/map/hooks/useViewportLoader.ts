@@ -18,54 +18,63 @@ import debounce from "lodash.debounce";
 import type { Map as MaplibreMap } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 import { useMap } from "react-map-gl/maplibre";
-import { useAppDispatch } from "../../../store/hooks";
-import { useRinfSparqlEndpoint } from "../../config/rinfEndpoint";
-import {
-  clearOperationalPoints,
-  fetchOperationalPointsInBox,
-} from "../../state/rinfSlice";
+import type { BoundingBox } from "../../api/queryParts";
 
-/** Below this zoom a view covers too much of Europe to load OPs one by one. */
-export const OPERATIONAL_POINTS_MIN_ZOOM = 8;
+/** Below this zoom a view covers too much of Europe to load features one by one. */
+export const RINF_MIN_ZOOM = 8;
 const MOVE_DEBOUNCE_MS = 500;
 
-type PendingRequest = { abort: () => void };
+export interface AbortableRequest {
+  abort: () => void;
+}
+
+interface ViewportLoaderOptions {
+  enabled: boolean;
+  /** Starts loading the features in `box`; a newer move aborts it. */
+  load: (box: BoundingBox) => AbortableRequest;
+  /** Empties the layer, when zoomed out too far or switched off. */
+  clear: () => void;
+}
+
+const visibleBox = (map: MaplibreMap): BoundingBox => {
+  const bounds = map.getBounds();
+  return {
+    south: bounds.getSouth(),
+    west: bounds.getWest(),
+    north: bounds.getNorth(),
+    east: bounds.getEast(),
+  };
+};
 
 /**
- * Loads the OPs in view after each map move, like neighbour stops do.
- * Lives inside <Map>, so the upstream map component needs no extra wiring.
+ * Reloads a layer's features for the visible area after each map move, like
+ * Abzu's neighbour stops. Lives inside <Map>, so the upstream map component
+ * needs no extra wiring. `load` and `clear` are read through refs, so callers
+ * need not memoise them.
  */
-export const useOperationalPointsLoader = (enabled: boolean): void => {
-  const dispatch = useAppDispatch();
+export const useViewportLoader = ({
+  enabled,
+  load,
+  clear,
+}: ViewportLoaderOptions): void => {
   const { current: mapRef } = useMap();
-  const endpoint = useRinfSparqlEndpoint();
-  const endpointRef = useRef(endpoint);
-  endpointRef.current = endpoint;
-  const pendingRef = useRef<PendingRequest | null>(null);
+  const loadRef = useRef(load);
+  const clearRef = useRef(clear);
+  loadRef.current = load;
+  clearRef.current = clear;
+  const pendingRef = useRef<AbortableRequest | null>(null);
 
   const loadVisible = useMemo(
     () =>
       debounce((map: MaplibreMap) => {
         pendingRef.current?.abort();
-        if (map.getZoom() < OPERATIONAL_POINTS_MIN_ZOOM) {
-          dispatch(clearOperationalPoints());
+        if (map.getZoom() < RINF_MIN_ZOOM) {
+          clearRef.current();
           return;
         }
-        const bounds = map.getBounds();
-        pendingRef.current = dispatch(
-          fetchOperationalPointsInBox({
-            endpoint: endpointRef.current,
-            box: {
-              south: bounds.getSouth(),
-              west: bounds.getWest(),
-              north: bounds.getNorth(),
-              east: bounds.getEast(),
-            },
-          }),
-        );
+        pendingRef.current = loadRef.current(visibleBox(map));
       }, MOVE_DEBOUNCE_MS),
-    // endpointRef and pendingRef are stable refs — intentionally excluded
-    [dispatch],
+    [],
   );
 
   useEffect(() => {
@@ -74,7 +83,7 @@ export const useOperationalPointsLoader = (enabled: boolean): void => {
     if (!enabled) {
       loadVisible.cancel();
       pendingRef.current?.abort();
-      dispatch(clearOperationalPoints());
+      clearRef.current();
       return;
     }
 
@@ -85,5 +94,5 @@ export const useOperationalPointsLoader = (enabled: boolean): void => {
       map.off("moveend", handleMoveEnd);
       loadVisible.cancel();
     };
-  }, [enabled, mapRef, loadVisible, dispatch]);
+  }, [enabled, mapRef, loadVisible]);
 };

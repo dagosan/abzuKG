@@ -1,0 +1,74 @@
+/*
+ *  Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+the European Commission - subsequent versions of the EUPL (the "Licence");
+You may not use this work except in compliance with the Licence.
+You may obtain a copy of the Licence at:
+
+  https://joinup.ec.europa.eu/software/page/eupl
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the Licence is distributed on an "AS IS" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the Licence for the specific language governing permissions and
+limitations under the Licence.
+
+Added for the ERA RINF frontend, 2026-10-28. */
+
+/** Namespace of the ERA vocabulary; current-model resources live under it. */
+export const ERA_NAMESPACE = "http://data.europa.eu/949/";
+
+export const SPARQL_PREFIXES = `PREFIX era: <${ERA_NAMESPACE}>
+PREFIX wgs: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX time: <http://www.w3.org/2006/time#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>`;
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const COORDINATE_DECIMALS = 6;
+
+export interface BoundingBox {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** Today's date as YYYY-MM-DD in the user's own time zone. */
+export const todayIsoDate = (): string => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
+
+export const formatCoordinate = (value: number): string =>
+  value.toFixed(COORDINATE_DECIMALS);
+
+/**
+ * Graph patterns keeping only the version of `subject` valid on `validOn`
+ * (YYYY-MM-DD). RINF resources are versioned by era:validity; one without a
+ * validity period counts as always valid. The date is checked because it is
+ * written into the query text.
+ */
+export const validOnPattern = (subject: string, validOn: string): string => {
+  if (!ISO_DATE_PATTERN.test(validOn)) {
+    throw new Error(`validOn must be YYYY-MM-DD, got "${validOn}"`);
+  }
+  const from = `${subject}ValidFrom`;
+  const to = `${subject}ValidTo`;
+  return `OPTIONAL { ${subject} era:validity/time:hasBeginning/time:inXSDDate ${from} }
+  OPTIONAL { ${subject} era:validity/time:hasEnd/time:inXSDDate ${to} }
+  FILTER((!BOUND(${from}) || ${from} <= "${validOn}"^^xsd:date)
+      && (!BOUND(${to}) || ${to} >= "${validOn}"^^xsd:date))`;
+};
+
+/** WKT polygon for a bounding box, for GeoSPARQL filters. */
+export const boundingBoxWkt = ({ south, west, north, east }: BoundingBox) => {
+  const [s, w, n, e] = [south, west, north, east].map(formatCoordinate);
+  return `POLYGON((${w} ${s}, ${e} ${s}, ${e} ${n}, ${w} ${n}, ${w} ${s}))`;
+};

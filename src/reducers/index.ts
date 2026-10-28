@@ -25,7 +25,7 @@ import snackbarReducer from "./snackbarReducer";
 import stopPlaceReducer from "./stopPlaceReducer";
 import userReducer from "./userReducer";
 import zonesSlice from "./zonesSlice";
-import rinfSlice from "../rinf/state/rinfSlice";
+import { rinfReducer } from "../rinf/state/rinfReducer";
 
 export const createRootReducer = (routerReducer: Reducer) =>
   combineReducers({
@@ -38,5 +38,5 @@ export const createRootReducer = (routerReducer: Reducer) =>
     stopPlacesGroup: groupOfStopPlaceReducer,
     loading: loadingReducer,
     zones: zonesSlice,
-    rinf: rinfSlice,
+    rinf: rinfReducer,
   });

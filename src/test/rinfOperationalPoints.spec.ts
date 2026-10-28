@@ -22,12 +22,12 @@ import {
   toOperationalPoint,
   toOperationalPoints,
 } from "../rinf/models/OperationalPoint";
-import reducer, {
+import {
   fetchOperationalPointsInBox,
-  OPERATIONAL_POINTS_LIMIT,
+  operationalPointsReducer as reducer,
   selectOperationalPoint,
   setShowOperationalPoints,
-} from "../rinf/state/rinfSlice";
+} from "../rinf/state/operationalPointsSlice";
 
 const BUIZINGEN_ROW: SparqlBinding = {
   op: {
@@ -56,8 +56,8 @@ describe("buildOperationalPointsQuery", () => {
   );
 
   it("keeps only OP versions valid on the given date", () => {
-    expect(query).toContain('?validFrom <= "2026-10-28"^^xsd:date');
-    expect(query).toContain('?validTo >= "2026-10-28"^^xsd:date');
+    expect(query).toContain('?opValidFrom <= "2026-10-28"^^xsd:date');
+    expect(query).toContain('?opValidTo >= "2026-10-28"^^xsd:date');
   });
 
   it("refuses a malformed date rather than sending it to the endpoint", () => {
@@ -120,7 +120,7 @@ describe("buildOperationalPointsGeoJson", () => {
   });
 });
 
-describe("rinfSlice", () => {
+describe("operationalPointsSlice", () => {
   const loaded = reducer(
     undefined,
     fetchOperationalPointsInBox.fulfilled(
@@ -133,18 +133,18 @@ describe("rinfSlice", () => {
     ),
   );
 
-  it("stores loaded OPs and flags a full page as truncated", () => {
-    expect(loaded.operationalPoints).toHaveLength(1);
-    expect(loaded.operationalPointsTruncated).toBe(false);
-    expect(OPERATIONAL_POINTS_LIMIT).toBeGreaterThan(1);
+  it("stores loaded OPs; a partial page is not truncated", () => {
+    expect(loaded.items).toHaveLength(1);
+    expect(loaded.truncated).toBe(false);
+    expect(loaded.status).toBe("loaded");
   });
 
   it("clears the selection when the layer is switched off", () => {
     const selected = reducer(
       loaded,
-      selectOperationalPoint(loaded.operationalPoints[0].uri),
+      selectOperationalPoint(loaded.items[0].uri),
     );
     const hidden = reducer(selected, setShowOperationalPoints(false));
-    expect(hidden.selectedOperationalPointUri).toBeNull();
+    expect(hidden.selectedUri).toBeNull();
   });
 });

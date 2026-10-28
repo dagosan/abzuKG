@@ -19,66 +19,47 @@ import type { ExpressionSpecification } from "maplibre-gl";
 import { useCallback, useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { selectOperationalPoint } from "../state/rinfSlice";
+import { useRinfSparqlEndpoint } from "../config/rinfEndpoint";
+import type { BoundingBox } from "../api/queryParts";
+import {
+  clearOperationalPoints,
+  fetchOperationalPointsInBox,
+  selectOperationalPoint,
+} from "../state/operationalPointsSlice";
 import { buildOperationalPointsGeoJson } from "./buildOperationalPointsGeoJson";
 import { useOperationalPointClick } from "./hooks/useOperationalPointClick";
-import { useOperationalPointsLoader } from "./hooks/useOperationalPointsLoader";
+import { useViewportLoader } from "./hooks/useViewportLoader";
+import { operationalPointRadius } from "./operationalPointRadius";
 import { OperationalPointPopup } from "./OperationalPointPopup";
 
 const SOURCE_ID = "rinf-operational-points";
-const CIRCLE_LAYER_ID = "rinf-operational-points-circle";
-const FOCUS_SCALE = 1.2;
+/** Exported so other layers can tell when a click landed on an OP. */
+export const OPERATIONAL_POINTS_LAYER_ID = "rinf-operational-points-circle";
+const CIRCLE_LAYER_ID = OPERATIONAL_POINTS_LAYER_ID;
 const STROKE_WIDTH = 1.5;
 const FOCUS_STROKE_WIDTH = 3;
-
-const OVERVIEW_ZOOM = 8;
-const OVERVIEW_RADIUS = 3;
-const REGION_ZOOM = 12;
-const REGION_RADIUS = 5;
-const STREET_ZOOM = 16;
-const STREET_RADIUS = 8;
-
-/**
- * Circle radius growing with zoom, the selected OP scaled up. MapLibre only
- * accepts the zoom interpolation at the top, so the selection sits inside it.
- */
-const buildRadius = (
-  isSelected: ExpressionSpecification,
-): ExpressionSpecification => {
-  const radius = (base: number): ExpressionSpecification => [
-    "case",
-    isSelected,
-    base * FOCUS_SCALE,
-    base,
-  ];
-  return [
-    "interpolate",
-    ["linear"],
-    ["zoom"],
-    OVERVIEW_ZOOM,
-    radius(OVERVIEW_RADIUS),
-    REGION_ZOOM,
-    radius(REGION_RADIUS),
-    STREET_ZOOM,
-    radius(STREET_RADIUS),
-  ];
-};
 
 /** RINF operational points as one circle per OP; click one for details. */
 export const RinfOperationalPointsLayer = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
+  const endpoint = useRinfSparqlEndpoint();
   const showOperationalPoints = useAppSelector(
-    (state) => state.rinf.showOperationalPoints,
+    (state) => state.rinf.operationalPoints.show,
   );
   const operationalPoints = useAppSelector(
-    (state) => state.rinf.operationalPoints,
+    (state) => state.rinf.operationalPoints.items,
   );
   const selectedUri = useAppSelector(
-    (state) => state.rinf.selectedOperationalPointUri,
+    (state) => state.rinf.operationalPoints.selectedUri,
   );
 
-  useOperationalPointsLoader(showOperationalPoints);
+  useViewportLoader({
+    enabled: showOperationalPoints,
+    load: (box: BoundingBox) =>
+      dispatch(fetchOperationalPointsInBox({ endpoint, box })),
+    clear: () => dispatch(clearOperationalPoints()),
+  });
   useOperationalPointClick(CIRCLE_LAYER_ID);
 
   const geoJson = useMemo(
@@ -110,7 +91,7 @@ export const RinfOperationalPointsLayer = () => {
           type="circle"
           paint={{
             "circle-color": theme.palette.secondary.main,
-            "circle-radius": buildRadius(isSelected),
+            "circle-radius": operationalPointRadius(isSelected),
             "circle-stroke-color": [
               "case",
               isSelected,

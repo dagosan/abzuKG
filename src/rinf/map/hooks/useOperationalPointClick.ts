@@ -18,7 +18,7 @@ import type { MapLayerMouseEvent } from "maplibre-gl";
 import { useEffect } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import { useAppDispatch } from "../../../store/hooks";
-import { selectOperationalPoint } from "../../state/rinfSlice";
+import { selectOperationalPoint } from "../../state/operationalPointsSlice";
 
 const POINTER_CURSOR = "pointer";
 

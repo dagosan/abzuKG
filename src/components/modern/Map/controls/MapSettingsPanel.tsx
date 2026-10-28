@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF operational points toggle. */
+/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF layer toggles. */
 
 import { MyLocationOutlined } from "@mui/icons-material";
 import {
@@ -31,7 +31,7 @@ import { useAppDispatch } from "../../../../store/hooks";
 import { DefaultMapSettingsDialog } from "../../Dialogs/DefaultMapSettingsDialog";
 import { CrosshairPicker } from "../crosshair";
 import { SettingIndicator } from "../../Shared";
-import { setShowOperationalPoints } from "../../../../rinf/state/rinfSlice";
+import { useRinfLayerSettingItems } from "../../../../rinf/map/hooks/useRinfLayerSettingItems";
 
 export const MapSettingsPanel: React.FC = () => {
   const { formatMessage } = useIntl();
@@ -53,9 +53,7 @@ export const MapSettingsPanel: React.FC = () => {
     (state: any) => state.stopPlace.showMultimodalEdges,
   );
   const showPublicCode = useSelector((state: any) => state.user.showPublicCode);
-  const showRinfOperationalPoints = useSelector(
-    (state: any) => state.rinf.showOperationalPoints,
-  );
+  const rinfSettingItems = useRinfLayerSettingItems();
 
   // Translations
   const showPathLinks = formatMessage({ id: "show_path_links" });
@@ -88,10 +86,6 @@ export const MapSettingsPanel: React.FC = () => {
     dispatch(UserActions.toggleShowPublicCode(value));
   };
 
-  const handleToggleRinfOperationalPoints = (value: boolean) => {
-    dispatch(setShowOperationalPoints(value));
-  };
-
   const settingItemStyle = {
     py: 1,
     px: 1.5,
@@ -107,12 +101,7 @@ export const MapSettingsPanel: React.FC = () => {
   };
 
   const settingItems = [
-    {
-      key: "rinfOperationalPoints",
-      label: formatMessage({ id: "rinf_show_operational_points" }),
-      checked: showRinfOperationalPoints,
-      onChange: handleToggleRinfOperationalPoints,
-    },
+    ...rinfSettingItems,
     {
       key: "pathLinks",
       label: showPathLinks,

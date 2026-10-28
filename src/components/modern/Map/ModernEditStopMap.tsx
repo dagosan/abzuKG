@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF operational points layer. */
+/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF map layers. */
 
 import debounce from "lodash.debounce";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -42,7 +42,7 @@ import { ParkingMarkers } from "./markers/ParkingMarkers";
 import { QuayMarkers } from "./markers/QuayMarkers";
 import { StopPlaceMarker } from "./markers/StopPlaceMarker";
 import { buildMaplibreStyle } from "./tile-sources/buildMaplibreStyle";
-import { RinfOperationalPointsLayer } from "../../../rinf/map/RinfOperationalPointsLayer";
+import { RinfMapLayers } from "../../../rinf/map/RinfMapLayers";
 
 const NEIGHBOUR_STOPS_MIN_ZOOM = 13;
 const STOP_PLACE_FLY_TO_ZOOM = 17;
@@ -265,7 +265,7 @@ export const ModernEditStopMap = () => {
         <MultimodalEdgesLayer />
         <GroupEdgesLayer />
         <PathLinkLayer />
-        <RinfOperationalPointsLayer />
+        <RinfMapLayers />
         <NeighbourMarkers />
         <NeighbourQuayMarkers />
         <StopPlaceMarker />
