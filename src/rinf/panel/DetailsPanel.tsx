@@ -14,13 +14,10 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   CircularProgress,
   Drawer,
-  InputAdornment,
-  TextField,
   Typography,
   useMediaQuery,
   useTheme,
@@ -32,45 +29,49 @@ import {
   belowAppChromeHeight,
 } from "../../components/modern/Header/headerMetrics";
 import { useAppSelector } from "../../store/hooks";
-import { SectionOfLineContent } from "./SectionOfLineContent";
-import { SectionOfLineHeader } from "./SectionOfLineHeader";
+import { DetailsKind, DETAILS_KINDS } from "../detailsKinds";
+import { DetailsContent } from "./DetailsContent";
+import { DetailsHeader } from "./DetailsHeader";
+import { ParameterFilter } from "./ParameterFilter";
 
 /** Same widths as Abzu's stop place panel, so both sit alike beside the map. */
 const DRAWER_WIDTH_DESKTOP = 450;
 const DRAWER_WIDTH_TABLET = 380;
 const DRAWER_WIDTH_MOBILE = "100%";
+const FAILED_MESSAGE_ID = "rinf_details_failed";
 
-const STATUS_MESSAGES: Record<string, string> = {
-  failed: "rinf_section_of_line_failed",
-  notFound: "rinf_section_of_line_not_found",
-};
-
-interface SectionOfLinePanelProps {
+interface DetailsPanelProps {
+  kind: DetailsKind;
   canonicalId: string;
   name: string;
   onClose: () => void;
 }
 
-/** Left-hand panel listing every parameter of the open SoL and its tracks. */
-export const SectionOfLinePanel = ({
+/** Left-hand panel listing every parameter of the open SoL or OP and its parts. */
+export const DetailsPanel = ({
+  kind,
   canonicalId,
   name,
   onClose,
-}: SectionOfLinePanelProps) => {
+}: DetailsPanelProps) => {
   const { formatMessage } = useIntl();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [filter, setFilter] = useState("");
-  const { status, details } = useAppSelector(
-    (state) => state.rinf.sectionOfLineDetails,
-  );
+  const { status, roots } = useAppSelector((state) => state.rinf.details);
+  const { titleId, notFoundId } = DETAILS_KINDS[kind];
   const drawerWidth = isMobile
     ? DRAWER_WIDTH_MOBILE
     : isTablet
       ? DRAWER_WIDTH_TABLET
       : DRAWER_WIDTH_DESKTOP;
-  const statusMessage = STATUS_MESSAGES[status];
+  const errorMessageId =
+    status === "failed"
+      ? FAILED_MESSAGE_ID
+      : status === "notFound"
+        ? notFoundId
+        : null;
 
   return (
     <Drawer
@@ -88,49 +89,31 @@ export const SectionOfLinePanel = ({
         },
       }}
     >
-      <SectionOfLineHeader
+      <DetailsHeader
+        titleId={titleId}
         name={name}
         canonicalId={canonicalId}
         onClose={onClose}
       />
-      <Box sx={{ px: 2, pb: 1.5 }}>
-        <TextField
-          fullWidth
-          size="small"
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-          placeholder={formatMessage({ id: "rinf_filter_parameters" })}
-          slotProps={{
-            htmlInput: {
-              "aria-label": formatMessage({ id: "rinf_filter_parameters" }),
-            },
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-      </Box>
+      <ParameterFilter value={filter} onChange={setFilter} />
       <Box sx={{ flex: 1, overflowY: "auto" }}>
         {status === "loading" && (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress
-              aria-label={formatMessage({ id: "rinf_loading_section_of_line" })}
+              aria-label={formatMessage({ id: "rinf_loading_details" })}
             />
           </Box>
         )}
-        {statusMessage && (
+        {errorMessageId && (
           <Typography variant="body2" sx={{ p: 2, color: "error.main" }}>
-            {formatMessage({ id: statusMessage })}
+            {formatMessage({ id: errorMessageId })}
           </Typography>
         )}
-        {status === "loaded" && details && (
-          <SectionOfLineContent
-            key={details.uri}
-            details={details}
+        {status === "loaded" && (
+          <DetailsContent
+            key={`${kind}/${canonicalId}`}
+            kind={kind}
+            roots={roots}
             filter={filter}
           />
         )}

@@ -14,9 +14,7 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-import { ERA_NAMESPACE, SPARQL_PREFIXES, validOnPattern } from "./queryParts";
-
-export const SECTION_OF_LINE_CANONICAL_PREFIX = `${ERA_NAMESPACE}sectionOfLine/`;
+import { SPARQL_PREFIXES, validOnPattern } from "./queryParts";
 
 /** Characters that may not appear inside a SPARQL IRI, plus whitespace. */
 const UNSAFE_IRI_CHARACTERS = /[\s<>"{}|\\^`]/;
@@ -24,7 +22,7 @@ const UNSAFE_IRI_CHARACTERS = /[\s<>"{}|\\^`]/;
 /** Linked objects shown by name only, never opened as a sub-section. */
 const NAME_ONLY_CLASSES = ["era:Document", "era:OrganisationRole"];
 
-/** Links that tie a track to its context rather than describing it. */
+/** Links that tie a part to its context rather than describing it. */
 const STRUCTURAL_LINKS = [
   "era:isPartOf",
   "era:infrastructureManager",
@@ -40,33 +38,40 @@ export const isSafeCanonicalId = (canonicalId: string): boolean =>
   canonicalId.length > 0 && !UNSAFE_IRI_CHARACTERS.test(canonicalId);
 
 /**
- * Every statement about one SoL (level 0), its tracks (level 1) and the
- * objects its tracks link to: contact line system, ETCS, tunnels, … (level 2),
- * with a readable label for each linked value. Only the SoL version valid
- * on `validOn` is used.
+ * Every statement about one element (level 0: a SoL or an OP), its parts
+ * (level 1: tracks, sidings) and the objects those parts link to (level 2:
+ * contact line system, ETCS, platform edges, tunnels, …), with a readable
+ * label for each linked value. Only versions valid on `validOn` are used.
+ *
+ * Several elements can share one canonical id: a border point is declared
+ * by each neighbouring IM. Each comes back as its own root, with `?source`
+ * naming the IM's dataset (named graph) it was declared in.
  */
-export const buildSectionOfLineDetailsQuery = (
+export const buildDetailsQuery = (
+  canonicalPrefix: string,
   canonicalId: string,
   validOn: string,
 ): string => {
   if (!isSafeCanonicalId(canonicalId)) {
-    throw new Error(`Not a usable section of line id: "${canonicalId}"`);
+    throw new Error(`Not a usable RINF id: "${canonicalId}"`);
   }
   const notNameOnly = NAME_ONLY_CLASSES.map(
     (cls) => `FILTER NOT EXISTS { ?subject a ${cls} }`,
-  ).join("\n      ");
+  ).join("\n    ");
 
   return `${SPARQL_PREFIXES}
 SELECT ?level ?subject ?parent ?p ?o (SAMPLE(?label) AS ?oLabel)
+       (SAMPLE(?code) AS ?oCode) (SAMPLE(?sourceGraph) AS ?source)
 WHERE {
-  ?sol era:canonicalURI <${SECTION_OF_LINE_CANONICAL_PREFIX}${canonicalId}> .
-  ${validOnPattern("?sol", validOn)}
+  GRAPH ?sourceGraph { ?root era:canonicalURI <${canonicalPrefix}${canonicalId}> }
+  FILTER(STRSTARTS(STR(?root), "${canonicalPrefix}"))
+  ${validOnPattern("?root", validOn)}
   {
-    BIND(?sol AS ?subject) BIND(0 AS ?level)
+    BIND(?root AS ?subject) BIND(0 AS ?level)
   } UNION {
-    ?sol era:hasPart ?subject . BIND(?sol AS ?parent) BIND(1 AS ?level)
+    ?root era:hasPart ?subject . BIND(?root AS ?parent) BIND(1 AS ?level)
   } UNION {
-    ?sol era:hasPart ?parent . ?parent ?link ?subject .
+    ?root era:hasPart ?parent . ?parent ?link ?subject .
     FILTER(isIRI(?subject))
     FILTER(?link NOT IN (${STRUCTURAL_LINKS.join(", ")}))
     FILTER NOT EXISTS { ?subject a skos:Concept }
@@ -78,6 +83,9 @@ WHERE {
     { ?o skos:prefLabel ?label FILTER(LANG(?label) = "en" || LANG(?label) = "") }
     UNION { ?o rdfs:label ?label }
   }
+  # A primary location's label is often its name, not its code (73% on
+  # 2026-10-28), so the code is fetched on its own.
+  OPTIONAL { ?o era:primaryLocationCode ?code }
 }
 GROUP BY ?level ?subject ?parent ?p ?o`;
 };

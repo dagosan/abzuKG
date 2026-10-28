@@ -16,6 +16,7 @@ Added for the ERA RINF frontend, 2026-10-28. */
 
 import type { SparqlBinding } from "../api/sparqlClient";
 import { applyStatement, DetailsNode, newNode } from "./detailsStatements";
+import { localName } from "./labels";
 
 export type {
   DetailsNode,
@@ -24,37 +25,57 @@ export type {
   RawParameter,
 } from "./detailsStatements";
 
+const ROOT_LEVEL = "0";
+
+const byClassThenLabel = (first: DetailsNode, second: DetailsNode): number =>
+  `${first.classLabel} ${first.label}`.localeCompare(
+    `${second.classLabel} ${second.label}`,
+    "en",
+    { numeric: true },
+  );
+
 /**
- * Builds the SoL → tracks → linked objects tree from the details query rows.
- * Returns null when no SoL matched (unknown id, or no version valid on the date).
+ * Builds element → parts → linked objects trees from the details query rows.
+ * Usually one root; a border point declared by two IMs gives two. An empty
+ * list means nothing matched (unknown id, or no version valid on the date).
  */
-export const toSectionOfLineDetails = (
+export const toDetailsTrees = (
   bindings: SparqlBinding[],
-): DetailsNode | null => {
+  hiddenProperties: string[] = [],
+): DetailsNode[] => {
   const nodes = new Map<string, DetailsNode>();
   // Linked objects can be shared: one pantograph rule or detection system
   // may serve several tracks, so a child can have several parents.
   const parentsOf = new Map<string, Set<string>>();
-  let rootUri: string | null = null;
+  const rootUris = new Set<string>();
 
-  bindings.forEach(({ subject, parent, level }) => {
+  bindings.forEach(({ subject, parent, level, source }) => {
     if (!subject?.value) return;
     if (!nodes.has(subject.value)) {
       nodes.set(subject.value, newNode(subject.value));
     }
-    if (level?.value === "0") rootUri = subject.value;
-    if (parent?.value && level?.value !== "0") {
+    if (level?.value === ROOT_LEVEL) {
+      rootUris.add(subject.value);
+      nodes.get(subject.value)!.source ??= source?.value
+        ? localName(source.value)
+        : null;
+      return;
+    }
+    if (parent?.value) {
       const parents = parentsOf.get(subject.value) ?? new Set<string>();
       parents.add(parent.value);
       parentsOf.set(subject.value, parents);
     }
   });
-  if (!rootUri) return null;
+  if (rootUris.size === 0) return [];
 
   const childUris = new Set(parentsOf.keys());
+  const hidden = new Set(hiddenProperties);
   bindings.forEach((binding) => {
     const node = binding.subject?.value && nodes.get(binding.subject.value);
-    if (node && binding.p?.value) applyStatement(node, binding, childUris);
+    if (node && binding.p?.value) {
+      applyStatement(node, binding, childUris, hidden);
+    }
   });
   parentsOf.forEach((parentUris, childUri) => {
     const childNode = nodes.get(childUri);
@@ -63,14 +84,11 @@ export const toSectionOfLineDetails = (
       if (parentNode && childNode) parentNode.children.push(childNode);
     });
   });
-  nodes.forEach((node) =>
-    node.children.sort((first, second) =>
-      `${first.classLabel} ${first.label}`.localeCompare(
-        `${second.classLabel} ${second.label}`,
-        "en",
-        { numeric: true },
-      ),
-    ),
-  );
-  return nodes.get(rootUri) ?? null;
+  nodes.forEach((node) => node.children.sort(byClassThenLabel));
+
+  return Array.from(rootUris)
+    .map((uri) => nodes.get(uri)!)
+    .sort((first, second) =>
+      (first.source ?? "").localeCompare(second.source ?? ""),
+    );
 };

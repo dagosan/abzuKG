@@ -19,18 +19,21 @@ import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
 import { CopyIdButton } from "../../components/modern/Shared";
 
-interface SectionOfLineHeaderProps {
+interface DetailsHeaderProps {
+  /** Text key of the overline, e.g. "Operational point". */
+  titleId: string;
   name: string;
   canonicalId: string;
   onClose: () => void;
 }
 
-/** SoL name, its id with a copy button, and the close button. */
-export const SectionOfLineHeader = ({
+/** Kind, name, id with a copy button, and the close button. */
+export const DetailsHeader = ({
+  titleId,
   name,
   canonicalId,
   onClose,
-}: SectionOfLineHeaderProps) => {
+}: DetailsHeaderProps) => {
   const { formatMessage } = useIntl();
   return (
     <Box
@@ -47,7 +50,7 @@ export const SectionOfLineHeader = ({
           variant="overline"
           sx={{ color: "text.secondary", lineHeight: 1.5 }}
         >
-          {formatMessage({ id: "rinf_section_of_line" })}
+          {formatMessage({ id: titleId })}
         </Typography>
         <Typography
           variant="h6"

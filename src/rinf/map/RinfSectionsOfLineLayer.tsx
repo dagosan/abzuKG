@@ -18,17 +18,16 @@ import { useTheme } from "@mui/material";
 import type { ExpressionSpecification } from "maplibre-gl";
 import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
-import { useMatch } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import type { BoundingBox } from "../api/queryParts";
 import { useRinfSparqlEndpoint } from "../config/rinfEndpoint";
-import { SECTION_OF_LINE_PARAM, SECTION_OF_LINE_ROUTE } from "../routes";
 import {
   clearSectionsOfLine,
   fetchSectionsOfLineInBox,
 } from "../state/sectionsOfLineSlice";
 import { buildSectionsOfLineGeoJson } from "./buildSectionsOfLineGeoJson";
-import { useSectionOfLineClick } from "./hooks/useSectionOfLineClick";
+import { useOpenCanonicalId } from "./hooks/useOpenCanonicalId";
+import { useOpenDetailsOnClick } from "./hooks/useOpenDetailsOnClick";
 import { useViewportLoader } from "./hooks/useViewportLoader";
 import { OPERATIONAL_POINTS_LAYER_ID } from "./RinfOperationalPointsLayer";
 
@@ -86,10 +85,7 @@ export const RinfSectionsOfLineLayer = () => {
   const endpoint = useRinfSparqlEndpoint();
   const show = useAppSelector((state) => state.rinf.sectionsOfLine.show);
   const sections = useAppSelector((state) => state.rinf.sectionsOfLine.items);
-  const openMatch = useMatch(
-    `/${SECTION_OF_LINE_ROUTE}/:${SECTION_OF_LINE_PARAM}`,
-  );
-  const openCanonicalId = openMatch?.params[SECTION_OF_LINE_PARAM] ?? "";
+  const openCanonicalId = useOpenCanonicalId("sectionOfLine");
 
   useViewportLoader({
     enabled: show,
@@ -97,7 +93,11 @@ export const RinfSectionsOfLineLayer = () => {
       dispatch(fetchSectionsOfLineInBox({ endpoint, box })),
     clear: () => dispatch(clearSectionsOfLine()),
   });
-  useSectionOfLineClick(HIT_LAYER_ID, OPERATIONAL_POINTS_LAYER_ID);
+  useOpenDetailsOnClick({
+    kind: "sectionOfLine",
+    layerId: HIT_LAYER_ID,
+    layersOnTop: [OPERATIONAL_POINTS_LAYER_ID],
+  });
 
   const geoJson = useMemo(
     () => buildSectionsOfLineGeoJson(sections),

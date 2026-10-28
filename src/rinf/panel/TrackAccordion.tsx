@@ -37,7 +37,7 @@ const countParameters = ({ parameters, children }: DisplayNode): number =>
   parameters.length +
   children.reduce((total, child) => total + countParameters(child), 0);
 
-/** One track of the SoL: its own parameters, then each object it links to. */
+/** One part (track, siding, …): its own parameters, then each object it links to. */
 export const TrackAccordion = ({
   displayNode,
   expanded,

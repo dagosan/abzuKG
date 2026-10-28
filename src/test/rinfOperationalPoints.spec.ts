@@ -25,7 +25,6 @@ import {
 import {
   fetchOperationalPointsInBox,
   operationalPointsReducer as reducer,
-  selectOperationalPoint,
   setShowOperationalPoints,
 } from "../rinf/state/operationalPointsSlice";
 
@@ -35,15 +34,11 @@ const BUIZINGEN_ROW: SparqlBinding = {
     value: "http://data.europa.eu/949/operationalPoint/40198f8e28",
   },
   id: { type: "literal", value: "BEFGU" },
+  canonicalUri: {
+    type: "uri",
+    value: "http://data.europa.eu/949/operationalPoint/BEFGU",
+  },
   label: { type: "literal", value: "Buizingen" },
-  opType: {
-    type: "uri",
-    value: "http://data.europa.eu/949/concepts/op-types/20",
-  },
-  inCountry: {
-    type: "uri",
-    value: "http://publications.europa.eu/resource/authority/country/BEL",
-  },
   latitude: { type: "literal", value: "5.0751581E1" },
   longitude: { type: "literal", value: "4.258561E0" },
 };
@@ -80,6 +75,7 @@ describe("buildOperationalPointsQuery", () => {
       'STRSTARTS(STR(?op), "http://data.europa.eu/949/operationalPoint/")',
     );
     expect(query).toContain("GROUP BY ?op");
+    expect(query).toContain("era:canonicalURI ?canonical");
     expect(query).toContain("LIMIT 5000");
   });
 });
@@ -88,10 +84,9 @@ describe("toOperationalPoint", () => {
   it("maps a full row, parsing scientific-notation coordinates", () => {
     expect(toOperationalPoint(BUIZINGEN_ROW)).toEqual({
       uri: "http://data.europa.eu/949/operationalPoint/40198f8e28",
+      canonicalId: "BEFGU",
       uopid: "BEFGU",
       name: "Buizingen",
-      typeCode: "20",
-      countryCode: "BEL",
       lat: 50.751581,
       lng: 4.258561,
     });
@@ -100,6 +95,11 @@ describe("toOperationalPoint", () => {
   it("falls back to the UOPID when the OP has no name", () => {
     const { label, ...withoutName } = BUIZINGEN_ROW;
     expect(toOperationalPoint(withoutName)?.name).toBe("BEFGU");
+  });
+
+  it("drops rows without a canonical id, which the panel link needs", () => {
+    const { canonicalUri, ...withoutId } = BUIZINGEN_ROW;
+    expect(toOperationalPoint(withoutId)).toBeNull();
   });
 
   it("drops rows without a usable position", () => {
@@ -116,7 +116,7 @@ describe("buildOperationalPointsGeoJson", () => {
     const points = toOperationalPoints([BUIZINGEN_ROW]);
     const [feature] = buildOperationalPointsGeoJson(points).features;
     expect(feature.geometry.coordinates).toEqual([4.258561, 50.751581]);
-    expect(feature.properties.uopid).toBe("BEFGU");
+    expect(feature.properties.canonicalId).toBe("BEFGU");
   });
 });
 
@@ -139,12 +139,7 @@ describe("operationalPointsSlice", () => {
     expect(loaded.status).toBe("loaded");
   });
 
-  it("clears the selection when the layer is switched off", () => {
-    const selected = reducer(
-      loaded,
-      selectOperationalPoint(loaded.items[0].uri),
-    );
-    const hidden = reducer(selected, setShowOperationalPoints(false));
-    expect(hidden.selectedUri).toBeNull();
+  it("remembers the layer being switched off", () => {
+    expect(reducer(loaded, setShowOperationalPoints(false)).show).toBe(false);
   });
 });

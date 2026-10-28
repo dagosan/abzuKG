@@ -15,15 +15,15 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-28. */
 
 import { combineReducers } from "@reduxjs/toolkit";
+import { detailsReducer } from "./detailsSlice";
 import { operationalPointsReducer } from "./operationalPointsSlice";
 import { parameterDictionaryReducer } from "./parameterDictionarySlice";
-import { sectionOfLineDetailsReducer } from "./sectionOfLineDetailsSlice";
 import { sectionsOfLineReducer } from "./sectionsOfLineSlice";
 
 /** All RINF state, registered once in the root reducer as `rinf`. */
 export const rinfReducer = combineReducers({
   operationalPoints: operationalPointsReducer,
   sectionsOfLine: sectionsOfLineReducer,
-  sectionOfLineDetails: sectionOfLineDetailsReducer,
+  details: detailsReducer,
   parameterDictionary: parameterDictionaryReducer,
 });

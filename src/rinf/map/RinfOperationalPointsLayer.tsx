@@ -16,103 +16,84 @@ Added for the ERA RINF frontend, 2026-10-28. */
 
 import { useTheme } from "@mui/material";
 import type { ExpressionSpecification } from "maplibre-gl";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { useRinfSparqlEndpoint } from "../config/rinfEndpoint";
 import type { BoundingBox } from "../api/queryParts";
+import { useRinfSparqlEndpoint } from "../config/rinfEndpoint";
 import {
   clearOperationalPoints,
   fetchOperationalPointsInBox,
-  selectOperationalPoint,
 } from "../state/operationalPointsSlice";
 import { buildOperationalPointsGeoJson } from "./buildOperationalPointsGeoJson";
-import { useOperationalPointClick } from "./hooks/useOperationalPointClick";
+import { useOpenCanonicalId } from "./hooks/useOpenCanonicalId";
+import { useOpenDetailsOnClick } from "./hooks/useOpenDetailsOnClick";
 import { useViewportLoader } from "./hooks/useViewportLoader";
 import { operationalPointRadius } from "./operationalPointRadius";
-import { OperationalPointPopup } from "./OperationalPointPopup";
 
 const SOURCE_ID = "rinf-operational-points";
 /** Exported so other layers can tell when a click landed on an OP. */
 export const OPERATIONAL_POINTS_LAYER_ID = "rinf-operational-points-circle";
-const CIRCLE_LAYER_ID = OPERATIONAL_POINTS_LAYER_ID;
 const STROKE_WIDTH = 1.5;
 const FOCUS_STROKE_WIDTH = 3;
 
-/** RINF operational points as one circle per OP; click one for details. */
+/** RINF operational points as one circle per OP; click one to open its panel. */
 export const RinfOperationalPointsLayer = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const endpoint = useRinfSparqlEndpoint();
-  const showOperationalPoints = useAppSelector(
-    (state) => state.rinf.operationalPoints.show,
-  );
+  const show = useAppSelector((state) => state.rinf.operationalPoints.show);
   const operationalPoints = useAppSelector(
     (state) => state.rinf.operationalPoints.items,
   );
-  const selectedUri = useAppSelector(
-    (state) => state.rinf.operationalPoints.selectedUri,
-  );
+  const openCanonicalId = useOpenCanonicalId("operationalPoint");
 
   useViewportLoader({
-    enabled: showOperationalPoints,
+    enabled: show,
     load: (box: BoundingBox) =>
       dispatch(fetchOperationalPointsInBox({ endpoint, box })),
     clear: () => dispatch(clearOperationalPoints()),
   });
-  useOperationalPointClick(CIRCLE_LAYER_ID);
+  useOpenDetailsOnClick({
+    kind: "operationalPoint",
+    layerId: OPERATIONAL_POINTS_LAYER_ID,
+  });
 
   const geoJson = useMemo(
     () => buildOperationalPointsGeoJson(operationalPoints),
     [operationalPoints],
   );
-  const selectedPoint = useMemo(
-    () => operationalPoints.find((point) => point.uri === selectedUri) ?? null,
-    [operationalPoints, selectedUri],
-  );
-  const handleClosePopup = useCallback(
-    () => dispatch(selectOperationalPoint(null)),
-    [dispatch],
-  );
 
-  if (!showOperationalPoints) return null;
+  if (!show) return null;
 
-  const isSelected: ExpressionSpecification = [
+  const isOpen: ExpressionSpecification = [
     "==",
-    ["get", "uri"],
-    selectedUri ?? "",
+    ["get", "canonicalId"],
+    openCanonicalId,
   ];
 
   return (
-    <>
-      <Source id={SOURCE_ID} type="geojson" data={geoJson}>
-        <Layer
-          id={CIRCLE_LAYER_ID}
-          type="circle"
-          paint={{
-            "circle-color": theme.palette.secondary.main,
-            "circle-radius": operationalPointRadius(isSelected),
-            "circle-stroke-color": [
-              "case",
-              isSelected,
-              theme.palette.warning.main,
-              theme.palette.background.paper,
-            ],
-            "circle-stroke-width": [
-              "case",
-              isSelected,
-              FOCUS_STROKE_WIDTH,
-              STROKE_WIDTH,
-            ],
-          }}
-        />
-      </Source>
-      {selectedPoint && (
-        <OperationalPointPopup
-          point={selectedPoint}
-          onClose={handleClosePopup}
-        />
-      )}
-    </>
+    <Source id={SOURCE_ID} type="geojson" data={geoJson}>
+      <Layer
+        id={OPERATIONAL_POINTS_LAYER_ID}
+        type="circle"
+        paint={{
+          "circle-color": theme.palette.secondary.main,
+          "circle-radius": operationalPointRadius(isOpen),
+          "circle-stroke-color": [
+            "case",
+            isOpen,
+            theme.palette.warning.main,
+            theme.palette.background.paper,
+          ],
+          "circle-stroke-width": [
+            "case",
+            isOpen,
+            FOCUS_STROKE_WIDTH,
+            STROKE_WIDTH,
+          ],
+        }}
+      />
+    </Source>
   );
 };

@@ -25,7 +25,7 @@ const NOT_YET_AVAILABLE = `${ERA_NAMESPACE}notYetAvailable`;
 const GENERIC_CLASS = `${ERA_NAMESPACE}InfrastructureElement`;
 /** Statements that tie resources together rather than describe them. */
 const STRUCTURAL = new Set(
-  ["hasPart", "isPartOf", "canonicalURI", "netReference"].map(
+  ["hasPart", "isPartOf", "canonicalURI"].map(
     (name) => `${ERA_NAMESPACE}${name}`,
   ),
 );
@@ -45,10 +45,12 @@ export interface RawParameter {
   values: ParameterValue[];
 }
 
-/** A SoL, a track, or an object a track links to (tunnel, ETCS, …). */
+/** A SoL or OP, one of its parts, or an object a part links to (tunnel, ETCS, …). */
 export interface DetailsNode {
   uri: string;
   label: string;
+  /** For a root: code of the IM whose dataset declared it, e.g. "0088". */
+  source: string | null;
   classUri: string | null;
   classLabel: string | null;
   parameters: RawParameter[];
@@ -59,6 +61,7 @@ export interface DetailsNode {
 export const newNode = (uri: string): DetailsNode => ({
   uri,
   label: "",
+  source: null,
   classUri: null,
   classLabel: null,
   parameters: [],
@@ -85,12 +88,19 @@ const addValue = (
   if (value && !duplicate) parameter.values.push(value);
 };
 
+/** "DE18314 · Perl Grenze": the code first, then the name when it adds something. */
+const codeWithName = (code: string, name: string): string =>
+  name && name !== code ? `${code} · ${name}` : code;
+
 const toValue = (binding: SparqlBinding): ParameterValue => {
-  const { o, oLabel } = binding;
+  const { o, oLabel, oCode } = binding;
   const isIri = o?.type === "uri";
   const label = oLabel?.value ? stripValidity(oLabel.value) : "";
+  const linkedText = oCode?.value
+    ? codeWithName(oCode.value, label)
+    : label || localName(o?.value ?? "");
   return {
-    text: isIri ? label || localName(o!.value) : (o?.value ?? ""),
+    text: isIri ? linkedText : (o?.value ?? ""),
     uri: isIri ? o!.value : null,
     datatype: o?.datatype ?? null,
   };
@@ -100,6 +110,7 @@ export const applyStatement = (
   node: DetailsNode,
   binding: SparqlBinding,
   childUris: Set<string>,
+  hiddenProperties: Set<string>,
 ) => {
   const property = binding.p!.value;
   const object = binding.o?.value ?? "";
@@ -113,7 +124,11 @@ export const applyStatement = (
     addValue(node, object, "notApplicable", null);
   } else if (property === NOT_YET_AVAILABLE) {
     addValue(node, object, "notYetAvailable", null);
-  } else if (!STRUCTURAL.has(property) && !childUris.has(object)) {
+  } else if (
+    !STRUCTURAL.has(property) &&
+    !hiddenProperties.has(property) &&
+    !childUris.has(object)
+  ) {
     addValue(node, property, "value", toValue(binding));
   }
 };

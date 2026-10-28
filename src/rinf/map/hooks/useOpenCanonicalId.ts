@@ -14,10 +14,17 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-/** Route segment for the SoL panel: /section-of-line/:canonicalId. */
-export const SECTION_OF_LINE_ROUTE = "section-of-line";
-export const SECTION_OF_LINE_PARAM = "canonicalId";
+import { useMatch } from "react-router-dom";
+import {
+  CANONICAL_ID_PARAM,
+  DetailsKind,
+  DETAILS_KINDS,
+} from "../../detailsKinds";
 
-/** Path that opens the panel for one SoL, e.g. /section-of-line/1440_BELGB_BECAD. */
-export const sectionOfLinePath = (canonicalId: string): string =>
-  `/${SECTION_OF_LINE_ROUTE}/${encodeURIComponent(canonicalId)}`;
+/** Canonical id of the element of `kind` whose panel is open, or "" if none. */
+export const useOpenCanonicalId = (kind: DetailsKind): string => {
+  const match = useMatch(
+    `/${DETAILS_KINDS[kind].route}/:${CANONICAL_ID_PARAM}`,
+  );
+  return match?.params[CANONICAL_ID_PARAM] ?? "";
+};

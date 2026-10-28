@@ -19,29 +19,33 @@ import { Helmet } from "react-helmet";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useRinfSparqlEndpoint } from "../config/rinfEndpoint";
-import { sectionOfLineName } from "../models/labels";
-import { SectionOfLinePanel } from "../panel/SectionOfLinePanel";
-import { SECTION_OF_LINE_PARAM } from "../routes";
-import { fetchParameterDictionary } from "../state/parameterDictionarySlice";
 import {
-  closeSectionOfLineDetails,
-  fetchSectionOfLineDetails,
-} from "../state/sectionOfLineDetailsSlice";
+  CANONICAL_ID_PARAM,
+  DetailsKind,
+  DETAILS_KINDS,
+} from "../detailsKinds";
+import { DetailsPanel } from "../panel/DetailsPanel";
+import { closeDetails, fetchDetails } from "../state/detailsSlice";
+import { fetchParameterDictionary } from "../state/parameterDictionarySlice";
+
+interface DetailsPageProps {
+  kind: DetailsKind;
+}
 
 /**
- * Route /section-of-line/:canonicalId — loads the SoL valid today and shows
- * its parameters beside the map, as the stop place route does for stops.
+ * Route /<kind>/:canonicalId — loads the element valid today and shows its
+ * parameters beside the map, as the stop place route does for stops.
  */
-export const SectionOfLinePage = () => {
+export const DetailsPage = ({ kind }: DetailsPageProps) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const endpoint = useRinfSparqlEndpoint();
   const params = useParams<Record<string, string>>();
-  const canonicalId = params[SECTION_OF_LINE_PARAM] ?? "";
-  const details = useAppSelector(
-    (state) => state.rinf.sectionOfLineDetails.details,
-  );
-  const name = details ? sectionOfLineName(details.label) : canonicalId;
+  const canonicalId = params[CANONICAL_ID_PARAM] ?? "";
+  const firstRoot = useAppSelector((state) => state.rinf.details.roots[0]);
+  const name = firstRoot?.label
+    ? DETAILS_KINDS[kind].displayName(firstRoot.label)
+    : canonicalId;
 
   useEffect(() => {
     dispatch(fetchParameterDictionary(endpoint));
@@ -49,15 +53,13 @@ export const SectionOfLinePage = () => {
 
   useEffect(() => {
     if (!canonicalId) return;
-    const request = dispatch(
-      fetchSectionOfLineDetails({ endpoint, canonicalId }),
-    );
+    const request = dispatch(fetchDetails({ endpoint, kind, canonicalId }));
     return () => request.abort();
-  }, [dispatch, endpoint, canonicalId]);
+  }, [dispatch, endpoint, kind, canonicalId]);
 
   useEffect(
     () => () => {
-      dispatch(closeSectionOfLineDetails());
+      dispatch(closeDetails());
     },
     [dispatch],
   );
@@ -67,7 +69,8 @@ export const SectionOfLinePage = () => {
   return (
     <>
       <Helmet title={name} />
-      <SectionOfLinePanel
+      <DetailsPanel
+        kind={kind}
         canonicalId={canonicalId}
         name={name}
         onClose={handleClose}

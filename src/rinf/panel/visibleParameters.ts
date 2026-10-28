@@ -25,7 +25,7 @@ import type {
   DetailsNode,
   ParameterStatus,
   ParameterValue,
-} from "../models/SectionOfLineDetails";
+} from "../models/detailsTree";
 
 /** A parameter ready to display: named, indexed and with its unit. */
 export interface DisplayParameter extends TermDefinition {

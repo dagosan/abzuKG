@@ -18,7 +18,7 @@ import type { FeatureCollection, Point } from "geojson";
 import type { OperationalPoint } from "../models/OperationalPoint";
 
 export interface OperationalPointFeatureProperties {
-  uri: string;
+  canonicalId: string;
   uopid: string;
   name: string;
 }
@@ -27,9 +27,9 @@ export const buildOperationalPointsGeoJson = (
   points: OperationalPoint[],
 ): FeatureCollection<Point, OperationalPointFeatureProperties> => ({
   type: "FeatureCollection",
-  features: points.map(({ uri, uopid, name, lat, lng }) => ({
+  features: points.map(({ canonicalId, uopid, name, lat, lng }) => ({
     type: "Feature" as const,
-    properties: { uri, uopid, name },
+    properties: { canonicalId, uopid, name },
     // GeoJSON order is [lng, lat]
     geometry: { type: "Point" as const, coordinates: [lng, lat] },
   })),

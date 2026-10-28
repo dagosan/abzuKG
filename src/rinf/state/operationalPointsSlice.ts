@@ -35,7 +35,6 @@ export interface OperationalPointsState {
   /** True when the last load hit MAP_FEATURES_LIMIT, so some OPs are missing. */
   truncated: boolean;
   status: RinfLoadStatus;
-  selectedUri: string | null;
 }
 
 const initialState: OperationalPointsState = {
@@ -43,7 +42,6 @@ const initialState: OperationalPointsState = {
   items: [],
   truncated: false,
   status: "idle",
-  selectedUri: null,
 };
 
 export interface FetchInBoxArgs {
@@ -71,16 +69,11 @@ const operationalPointsSlice = createSlice({
     setShowOperationalPoints(state, action: PayloadAction<boolean>) {
       state.show = action.payload;
       writeShowPreference(SHOW_OPERATIONAL_POINTS_KEY, action.payload);
-      if (!action.payload) state.selectedUri = null;
     },
     clearOperationalPoints(state) {
       state.items = [];
       state.truncated = false;
       state.status = "idle";
-      state.selectedUri = null;
-    },
-    selectOperationalPoint(state, action: PayloadAction<string | null>) {
-      state.selectedUri = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -101,10 +94,7 @@ const operationalPointsSlice = createSlice({
   },
 });
 
-export const {
-  setShowOperationalPoints,
-  clearOperationalPoints,
-  selectOperationalPoint,
-} = operationalPointsSlice.actions;
+export const { setShowOperationalPoints, clearOperationalPoints } =
+  operationalPointsSlice.actions;
 
 export const operationalPointsReducer = operationalPointsSlice.reducer;

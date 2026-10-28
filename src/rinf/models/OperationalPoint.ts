@@ -15,25 +15,22 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-28. */
 
 import type { SparqlBinding } from "../api/sparqlClient";
+import { canonicalIdFromUri } from "../detailsKinds";
 
+/** What the map needs to draw and open one OP; the panel loads the rest. */
 export interface OperationalPoint {
-  /** The OP's URI in the knowledge graph. */
+  /** URI of the version valid on the chosen date. */
   uri: string;
+  /**
+   * Stable id across versions, used in the page URL. Usually the UOPID,
+   * but not always (771 OPs on 2026-10-28), so it is read, not assumed.
+   */
+  canonicalId: string;
   uopid: string;
   name: string;
-  /** Code from the op-types list, e.g. "10" for station; null if absent. */
-  typeCode: string | null;
-  /** ISO 3166 alpha-3 code from the EU country authority list, e.g. "BEL". */
-  countryCode: string | null;
   lat: number;
   lng: number;
 }
-
-const lastPathSegment = (uri: string | undefined): string | null => {
-  if (!uri) return null;
-  const segment = uri.split("/").pop();
-  return segment || null;
-};
 
 /** Maps one SPARQL row to an OP; null when the row lacks an id or a usable position. */
 export const toOperationalPoint = (
@@ -41,17 +38,20 @@ export const toOperationalPoint = (
 ): OperationalPoint | null => {
   const uri = binding.op?.value;
   const uopid = binding.id?.value;
+  const canonicalId = canonicalIdFromUri(
+    "operationalPoint",
+    binding.canonicalUri?.value ?? "",
+  );
   const lat = Number.parseFloat(binding.latitude?.value ?? "");
   const lng = Number.parseFloat(binding.longitude?.value ?? "");
-  if (!uri || !uopid) return null;
+  if (!uri || !uopid || !canonicalId) return null;
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
 
   return {
     uri,
+    canonicalId,
     uopid,
     name: binding.label?.value || uopid,
-    typeCode: lastPathSegment(binding.opType?.value),
-    countryCode: lastPathSegment(binding.inCountry?.value),
     lat,
     lng,
   };

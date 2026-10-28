@@ -14,7 +14,7 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-import type { ParameterValue } from "../models/SectionOfLineDetails";
+import type { ParameterValue } from "../models/detailsTree";
 import type { DisplayParameter } from "./visibleParameters";
 
 const XSD = "http://www.w3.org/2001/XMLSchema#";

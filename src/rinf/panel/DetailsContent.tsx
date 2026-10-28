@@ -14,38 +14,45 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-import { Box, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useIntl } from "react-intl";
 import { useAppSelector } from "../../store/hooks";
-import type { DetailsNode } from "../models/SectionOfLineDetails";
-import { ParameterList } from "./ParameterList";
-import { TrackAccordion } from "./TrackAccordion";
-import { toDisplayNode } from "./visibleParameters";
+import { DetailsKind, DETAILS_KINDS } from "../detailsKinds";
+import type { DetailsNode } from "../models/detailsTree";
+import { RootBlock } from "./RootBlock";
+import { DisplayNode, toDisplayNode } from "./visibleParameters";
 
-interface SectionOfLineContentProps {
-  details: DetailsNode;
+interface DetailsContentProps {
+  kind: DetailsKind;
+  roots: DetailsNode[];
   filter: string;
 }
 
-/** The SoL's own parameters, then one collapsible block per track. */
-export const SectionOfLineContent = ({
-  details,
+/**
+ * One block per declaration of the element: usually one, two for a border
+ * point declared by both neighbouring IMs.
+ */
+export const DetailsContent = ({
+  kind,
+  roots,
   filter,
-}: SectionOfLineContentProps) => {
+}: DetailsContentProps) => {
   const { formatMessage } = useIntl();
   const dictionary = useAppSelector(
     (state) => state.rinf.parameterDictionary.entries,
   );
   const displayed = useMemo(
-    () => toDisplayNode(details, dictionary, filter),
-    [details, dictionary, filter],
+    () =>
+      roots
+        .map((root) => toDisplayNode(root, dictionary, filter))
+        .filter((node): node is DisplayNode => node !== null),
+    [roots, dictionary, filter],
   );
-  const firstTrackUri = details.children[0]?.uri;
+  const firstPartUri = roots[0]?.children[0]?.uri;
   const [expandedUris, setExpandedUris] = useState<Set<string>>(
-    () => new Set(firstTrackUri ? [firstTrackUri] : []),
+    () => new Set(firstPartUri ? [firstPartUri] : []),
   );
-  const filtering = filter.trim().length > 0;
 
   const toggle = (uri: string) =>
     setExpandedUris((current) => {
@@ -55,7 +62,7 @@ export const SectionOfLineContent = ({
       return next;
     });
 
-  if (!displayed) {
+  if (displayed.length === 0) {
     return (
       <Typography variant="body2" sx={{ p: 2, color: "text.secondary" }}>
         {formatMessage({ id: "rinf_no_matching_parameters" })}
@@ -63,22 +70,29 @@ export const SectionOfLineContent = ({
     );
   }
 
+  const title = formatMessage({ id: DETAILS_KINDS[kind].titleId });
+  const showSource = roots.length > 1;
+
   return (
-    <Box>
-      <Box component="section" sx={{ px: 2, pb: 2 }}>
-        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
-          {formatMessage({ id: "rinf_section_of_line" })}
-        </Typography>
-        <ParameterList parameters={displayed.parameters} />
-      </Box>
-      {displayed.children.map((track) => (
-        <TrackAccordion
-          key={track.node.uri}
-          displayNode={track}
-          expanded={filtering || expandedUris.has(track.node.uri)}
-          onToggle={() => toggle(track.node.uri)}
+    <>
+      {displayed.map((root) => (
+        <RootBlock
+          key={root.node.uri}
+          title={
+            showSource && root.node.source
+              ? formatMessage(
+                  { id: "rinf_declared_by_im" },
+                  { title, code: root.node.source },
+                )
+              : title
+          }
+          displayNode={root}
+          isExpanded={(uri) =>
+            filter.trim().length > 0 || expandedUris.has(uri)
+          }
+          onToggle={toggle}
         />
       ))}
-    </Box>
+    </>
   );
 };

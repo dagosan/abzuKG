@@ -14,8 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
-import { SECTION_OF_LINE_CANONICAL_PREFIX } from "../api/sectionOfLineDetailsQuery";
 import type { SparqlBinding } from "../api/sparqlClient";
+import { canonicalIdFromUri } from "../detailsKinds";
 import { sectionOfLineName } from "./labels";
 import { LinePositions, parseWktLines } from "./wkt";
 
@@ -29,17 +29,14 @@ export interface SectionOfLineSummary {
   lines: LinePositions[];
 }
 
-/** "http://data.europa.eu/949/sectionOfLine/1440_BELGB_BECAD" → "1440_BELGB_BECAD". */
-export const canonicalIdFromUri = (uri: string): string | null =>
-  uri.startsWith(SECTION_OF_LINE_CANONICAL_PREFIX)
-    ? uri.slice(SECTION_OF_LINE_CANONICAL_PREFIX.length) || null
-    : null;
-
 export const toSectionOfLineSummary = (
   binding: SparqlBinding,
 ): SectionOfLineSummary | null => {
   const uri = binding.sol?.value;
-  const canonicalId = canonicalIdFromUri(binding.canonicalUri?.value ?? "");
+  const canonicalId = canonicalIdFromUri(
+    "sectionOfLine",
+    binding.canonicalUri?.value ?? "",
+  );
   const lines = parseWktLines(binding.wkt?.value ?? "");
   if (!uri || !canonicalId || lines.length === 0) return null;
   return {

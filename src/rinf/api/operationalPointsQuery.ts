@@ -35,17 +35,16 @@ export const buildOperationalPointsQuery = (
   limit: number,
   validOn: string,
 ): string => `${SPARQL_PREFIXES}
-SELECT ?op (SAMPLE(?uopid) AS ?id) (SAMPLE(?name) AS ?label)
-       (SAMPLE(?type) AS ?opType) (SAMPLE(?country) AS ?inCountry)
+SELECT ?op (SAMPLE(?uopid) AS ?id) (SAMPLE(?canonical) AS ?canonicalUri)
+       (SAMPLE(?name) AS ?label)
        (SAMPLE(?lat) AS ?latitude) (SAMPLE(?lng) AS ?longitude)
 WHERE {
   ?op a era:OperationalPoint ;
       era:uopid ?uopid ;
+      era:canonicalURI ?canonical ;
       era:netReference ?reference .
   ?reference wgs:lat ?lat ; wgs:long ?lng .
   OPTIONAL { ?op era:opName ?name }
-  OPTIONAL { ?op era:opType ?type }
-  OPTIONAL { ?op era:inCountry ?country }
   FILTER(STRSTARTS(STR(?op), "${CURRENT_MODEL_OP_PREFIX}"))
   FILTER(?lat >= ${formatCoordinate(box.south)} && ?lat <= ${formatCoordinate(box.north)}
       && ?lng >= ${formatCoordinate(box.west)} && ?lng <= ${formatCoordinate(box.east)})

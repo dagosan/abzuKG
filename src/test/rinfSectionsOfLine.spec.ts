@@ -15,16 +15,17 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-28. */
 
 import { describe, expect, it } from "vitest";
-import { buildSectionOfLineDetailsQuery } from "../rinf/api/sectionOfLineDetailsQuery";
+import { buildDetailsQuery } from "../rinf/api/detailsQuery";
 import { buildSectionsOfLineQuery } from "../rinf/api/sectionsOfLineQuery";
 import type { SparqlBinding, SparqlTerm } from "../rinf/api/sparqlClient";
+import { DETAILS_KINDS } from "../rinf/detailsKinds";
 import { sectionOfLineName } from "../rinf/models/labels";
 import {
   compareByRinfIndex,
   ParameterDictionary,
 } from "../rinf/models/ParameterDictionary";
 import { toSectionOfLineSummary } from "../rinf/models/SectionOfLine";
-import { toSectionOfLineDetails } from "../rinf/models/SectionOfLineDetails";
+import { toDetailsTrees } from "../rinf/models/detailsTree";
 import { unitSymbol } from "../rinf/models/units";
 import { parseWktLines } from "../rinf/models/wkt";
 import { formatParameterValue } from "../rinf/panel/formatParameterValue";
@@ -41,6 +42,9 @@ const literal = (value: string, datatype?: string): SparqlTerm => ({
   datatype,
 });
 const formatMessage = ({ id }: { id: string }) => id;
+const SOL_PREFIX = DETAILS_KINDS.sectionOfLine.canonicalPrefix;
+const solDetails = (rows: SparqlBinding[]) =>
+  toDetailsTrees(rows, DETAILS_KINDS.sectionOfLine.hiddenProperties)[0];
 
 describe("parseWktLines", () => {
   it("reads a LINESTRING as one [lng, lat] line", () => {
@@ -100,10 +104,10 @@ describe("section of line queries", () => {
 
   it("refuses ids that could break out of the query", () => {
     expect(() =>
-      buildSectionOfLineDetailsQuery("x> } DROP ALL { <y", "2026-10-28"),
+      buildDetailsQuery(SOL_PREFIX, "x> } DROP ALL { <y", "2026-10-28"),
     ).toThrow();
     expect(
-      buildSectionOfLineDetailsQuery("1440_BELGB_BECAD", "2026-10-28"),
+      buildDetailsQuery(SOL_PREFIX, "1440_BELGB_BECAD", "2026-10-28"),
     ).toContain(`<${ERA}sectionOfLine/1440_BELGB_BECAD>`);
   });
 });
@@ -189,8 +193,8 @@ const DETAIL_ROWS: SparqlBinding[] = [
   ),
 ];
 
-describe("toSectionOfLineDetails", () => {
-  const details = toSectionOfLineDetails(DETAIL_ROWS)!;
+describe("toDetailsTrees for a section of line", () => {
+  const details = solDetails(DETAIL_ROWS);
   const [trackA, trackB] = details.children;
 
   it("builds SoL → tracks → linked objects, with clean labels", () => {
@@ -224,8 +228,8 @@ describe("toSectionOfLineDetails", () => {
     expect(gauging?.status).toBe("notApplicable");
   });
 
-  it("returns null when no SoL matched", () => {
-    expect(toSectionOfLineDetails([])).toBeNull();
+  it("returns no trees when nothing matched", () => {
+    expect(toDetailsTrees([])).toEqual([]);
   });
 });
 
@@ -242,7 +246,7 @@ describe("panel display", () => {
       unit: "km",
     },
   };
-  const details = toSectionOfLineDetails(DETAIL_ROWS)!;
+  const details = solDetails(DETAIL_ROWS);
 
   it("orders RINF indices part by part", () => {
     const at = (rinfIndex: string) => ({ label: "x", rinfIndex, unit: null });
@@ -290,7 +294,7 @@ describe("panel display", () => {
 
 describe("details clean-up", () => {
   it("keeps one copy of a shared object's values", () => {
-    const details = toSectionOfLineDetails([
+    const details = solDetails([
       ...DETAIL_ROWS,
       row(
         "2",
@@ -300,13 +304,13 @@ describe("details clean-up", () => {
         uri(`${ERA}concepts/train-detection/10`),
         "track circuit",
       ),
-    ])!;
+    ]);
     const detection = details.children[0].children[0];
     expect(detection.parameters[0].values).toHaveLength(1);
   });
 
   it("titles an unlabelled object by its class", () => {
-    const details = toSectionOfLineDetails(DETAIL_ROWS)!;
+    const details = solDetails(DETAIL_ROWS);
     const shown = toDisplayNode(details, {}, "")!;
     expect(shown.children[0].children[0].title).toBe("Train Detection System");
   });

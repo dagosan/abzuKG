@@ -9,14 +9,16 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
 - **Map layers** (zoom 8 and closer, loaded for the visible area): operational
   points as circles, sections of line as lines. Each can be switched off in
   Map preferences; the choice is remembered.
-- **OP popup**: click an OP for name, UOPID, type and country.
-- **Section of line panel**: click a SoL, or open `/section-of-line/<canonical id>`
-  (e.g. `/section-of-line/1440_BELGB_BECAD`), for every parameter of the SoL,
-  its tracks, and the objects each track links to (contact line system, ETCS,
-  train detection, tunnels, load capability, …). Parameters are named and
-  ordered by RINF index from the ERA vocabulary, with units; "not applicable"
-  and "not yet available" are shown as such. A filter narrows the list by
-  name, RINF index or value.
+- **Details panel**: click an OP or a SoL, or open its link
+  (`/operational-point/BELGB`, `/section-of-line/1440_BELGB_BECAD`), for every
+  parameter of the element, its parts (tracks, sidings) and the objects each
+  part links to (platform edges, contact line system, ETCS, train detection,
+  tunnels, load capability, …). Parameters are named and ordered by RINF index
+  from the ERA vocabulary, with units; "not applicable" and "not yet
+  available" are shown as such. A filter narrows the list by name, RINF index
+  or value. For an OP this includes its type, its primary location code
+  (shown as code · name, e.g. "DE18314 · Perl Grenze") and its railway
+  locations (km on each line).
 
 ## Data source
 
@@ -42,7 +44,13 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
 - The IM appears as the vocabulary gives it ("IM role of the body with an
   organisation code 0088"); the organisation's name is not in this repository.
 - Border points are declared by each neighbouring IM, so they can show as two
-  overlapping points.
+  overlapping points, and their panel shows one block per declaration,
+  headed with the IM code of the dataset (named graph) it comes from.
+- The id in a panel link is the element's canonical id (`era:canonicalURI`).
+  For OPs it is usually, but not always, the UOPID (771 exceptions on
+  2026-10-28).
+- A primary location's label is its code for only 27% of them; the code
+  (`era:primaryLocationCode`) is therefore fetched separately.
 
 ## Structure
 
@@ -52,9 +60,12 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
 | `api/`    | SPARQL client and query builders                                   |
 | `models/` | Mapping from SPARQL rows to typed objects                          |
 | `state/`  | Redux state (`state.rinf`): one slice per concern, and the toggles |
-| `map/`    | MapLibre layers, popup, click handling, loading bar                |
-| `panel/`  | The section of line panel                                          |
-| `pages/`  | Route element for `/section-of-line/:canonicalId`                  |
+| `map/`    | MapLibre layers, click handling, loading bar                       |
+| `panel/`  | The details panel, shared by OPs and SoLs                          |
+| `pages/`  | Route element for `/<kind>/:canonicalId`                           |
+
+`detailsKinds.ts` describes each kind (route, id prefix, labels, hidden
+statements); adding a kind there adds its route and panel.
 
 ## Hooks into upstream files
 
@@ -62,7 +73,7 @@ Kept to one or two lines each, so upstream releases merge easily:
 
 - `src/components/modern/Map/ModernEditStopMap.tsx` — renders `<RinfMapLayers />`
 - `src/components/modern/Map/controls/MapSettingsPanel.tsx` — spreads `useRinfLayerSettingItems()` into its toggles
-- `src/containers/modern/App.tsx` — the `/section-of-line/:canonicalId` route
+- `src/containers/modern/App.tsx` — `{rinfRoutes(path)}` inside its `<Routes>`
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
 - `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` config field
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds

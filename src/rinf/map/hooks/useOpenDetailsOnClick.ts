@@ -19,37 +19,48 @@ import { useEffect, useRef } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import { useNavigate } from "react-router-dom";
 import { useConfirmLeave } from "../../../components/modern/Shared/UnsavedChangesGuard";
-import { sectionOfLinePath } from "../../routes";
+import { DetailsKind, detailsPath } from "../../detailsKinds";
 
 const POINTER_CURSOR = "pointer";
 
+interface OpenDetailsOnClickOptions {
+  kind: DetailsKind;
+  /** Layer whose features carry a `canonicalId` property. */
+  layerId: string;
+  /** Layers drawn on top: a click on one of them is left to that layer. */
+  layersOnTop?: string[];
+}
+
 /**
- * Clicking a SoL opens its panel, through Abzu's unsaved-changes guard like
- * any other navigation. A click on an OP drawn over the line is left to the OP.
+ * Clicking a feature opens its details panel, through Abzu's
+ * unsaved-changes guard like any other navigation.
  */
-export const useSectionOfLineClick = (
-  hitLayerId: string,
-  operationalPointsLayerId: string,
-): void => {
+export const useOpenDetailsOnClick = ({
+  kind,
+  layerId,
+  layersOnTop = [],
+}: OpenDetailsOnClickOptions): void => {
   const { current: mapRef } = useMap();
   const navigate = useNavigate();
   const confirmLeave = useConfirmLeave();
   // Ref so the map listeners, attached once, always use the latest guard.
   const openRef = useRef<(canonicalId: string) => void>(() => undefined);
   openRef.current = (canonicalId: string) =>
-    confirmLeave(() => navigate(sectionOfLinePath(canonicalId)));
+    confirmLeave(() => navigate(detailsPath(kind, canonicalId)));
+  const layersOnTopKey = layersOnTop.join(",");
 
   useEffect(() => {
     const map = mapRef?.getMap();
     if (!map) return;
+    const onTop = layersOnTopKey ? layersOnTopKey.split(",") : [];
 
     const handleClick = (event: MapLayerMouseEvent) => {
-      const onOperationalPoint =
-        !!map.getLayer(operationalPointsLayerId) &&
-        map.queryRenderedFeatures(event.point, {
-          layers: [operationalPointsLayerId],
-        }).length > 0;
-      if (onOperationalPoint) return;
+      const presentOnTop = onTop.filter((id) => map.getLayer(id));
+      const hitOnTop =
+        presentOnTop.length > 0 &&
+        map.queryRenderedFeatures(event.point, { layers: presentOnTop })
+          .length > 0;
+      if (hitOnTop) return;
       const canonicalId = event.features?.[0]?.properties?.canonicalId as
         string | undefined;
       if (canonicalId) openRef.current(canonicalId);
@@ -61,14 +72,14 @@ export const useSectionOfLineClick = (
       map.getCanvas().style.cursor = "";
     };
 
-    map.on("click", hitLayerId, handleClick);
-    map.on("mouseenter", hitLayerId, showPointer);
-    map.on("mouseleave", hitLayerId, resetCursor);
+    map.on("click", layerId, handleClick);
+    map.on("mouseenter", layerId, showPointer);
+    map.on("mouseleave", layerId, resetCursor);
     return () => {
-      map.off("click", hitLayerId, handleClick);
-      map.off("mouseenter", hitLayerId, showPointer);
-      map.off("mouseleave", hitLayerId, resetCursor);
+      map.off("click", layerId, handleClick);
+      map.off("mouseenter", layerId, showPointer);
+      map.off("mouseleave", layerId, resetCursor);
       resetCursor();
     };
-  }, [mapRef, hitLayerId, operationalPointsLayerId]);
+  }, [mapRef, layerId, layersOnTopKey]);
 };
