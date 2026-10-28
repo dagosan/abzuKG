@@ -1,9 +1,15 @@
+/* Modified for the ERA RINF frontend, 2026-10-28: added rinfSparqlEndpoint. */
 import { OidcClientSettings } from "oidc-client-ts";
 import React, { useContext } from "react";
 import { FeatureFlags } from "./FeatureFlags";
 
 export interface Config {
   tiamatBaseUrl?: string;
+  /**
+   * SPARQL endpoint for RINF data (ERA RINF frontend).
+   * Defaults to ERA's public rinf-plus repository when unset.
+   */
+  rinfSparqlEndpoint?: string;
   baatTokenProxyEndpoint?: string;
   sentryDSN?: string;
   tiamatEnv?: string;

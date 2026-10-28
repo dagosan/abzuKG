@@ -12,6 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
+/* Modified for the ERA RINF frontend, 2026-10-28: added the rinf reducer. */
+
 import { combineReducers } from "@reduxjs/toolkit";
 
 import type { Reducer } from "redux";
@@ -23,6 +25,7 @@ import snackbarReducer from "./snackbarReducer";
 import stopPlaceReducer from "./stopPlaceReducer";
 import userReducer from "./userReducer";
 import zonesSlice from "./zonesSlice";
+import rinfSlice from "../rinf/state/rinfSlice";
 
 export const createRootReducer = (routerReducer: Reducer) =>
   combineReducers({
@@ -35,4 +38,5 @@ export const createRootReducer = (routerReducer: Reducer) =>
     stopPlacesGroup: groupOfStopPlaceReducer,
     loading: loadingReducer,
     zones: zonesSlice,
+    rinf: rinfSlice,
   });
