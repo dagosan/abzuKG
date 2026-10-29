@@ -56,6 +56,8 @@ npm start
 
 Without that file the page stays blank.
 
+To run it on a server or NAS in Docker, see `deploy/README.md`.
+
 ## Data source
 
 - Endpoint: `https://graph.data.era.europa.eu/repositories/rinf-plus`

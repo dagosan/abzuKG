@@ -1,0 +1,14 @@
+# Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
+# On the NAS:  docker compose up -d --build   (see deploy/README.md)
+services:
+  abzukg:
+    build: .
+    image: abzukg:latest
+    container_name: abzukg
+    ports:
+      - "8090:80"
+    restart: unless-stopped
+    # To change settings without rebuilding, copy deploy/bootstrap.json next to
+    # the app folder (see deploy/README.md), then uncomment these two lines:
+    # volumes:
+    #   - ../abzukg-bootstrap.json:/usr/share/nginx/html/bootstrap.json:ro

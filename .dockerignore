@@ -1,0 +1,7 @@
+node_modules
+build
+coverage
+.git
+.husky
+.claude
+public/bootstrap.json

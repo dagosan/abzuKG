@@ -1,0 +1,28 @@
+{
+  "uiMode": "modern",
+  "rinfSparqlEndpoint": "https://graph.data.era.europa.eu/repositories/rinf-plus",
+  "tiamatBaseUrl": "https://api.dev.entur.io/stop-places/v1/graphql",
+  "tiamatEnv": "development",
+  "netexPrefix": "NSR",
+  "mapConfig": {
+    "baseLayers": [
+      {
+        "name": "OpenStreetMap",
+        "url": "//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://osm.org/copyright\">OpenStreetMap</a> contributors"
+      }
+    ],
+    "defaultBaseLayer": "OpenStreetMap",
+    "center": [
+      50.5,
+      4.5
+    ],
+    "zoom": 6
+  },
+  "localeConfig": {
+    "locales": [
+      "en"
+    ],
+    "defaultLocale": "en"
+  }
+}
