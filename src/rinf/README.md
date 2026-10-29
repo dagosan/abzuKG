@@ -43,6 +43,19 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   so it can be bookmarked or shared; a details panel opened from it has a back
   arrow to the results. At most 5,000 places are listed.
 
+## Running it locally
+
+The app reads its settings from `public/bootstrap.json`, which git ignores
+on purpose (upstream rule). After a fresh clone, copy the RINF example:
+
+```
+cp public/bootstrap.rinf.example.json public/bootstrap.json
+npm install
+npm start
+```
+
+Without that file the page stays blank.
+
 ## Data source
 
 - Endpoint: `https://graph.data.era.europa.eu/repositories/rinf-plus`

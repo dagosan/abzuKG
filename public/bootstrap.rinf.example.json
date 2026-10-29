@@ -1,0 +1,50 @@
+{
+  "tiamatBaseUrl": "https://api.dev.entur.io/stop-places/v1/graphql",
+  "OTPUrl": "https://api.dev.entur.io/journey-planner/v3/graphql",
+  "baatTokenProxyEndpoint": "/baat-token-proxy/v1/token",
+  "tiamatEnv": "development",
+  "netexPrefix": "NSR",
+  "hostname": "stoppested.dev.entur.org",
+  "googleApiKey": "AIzaSyB_8bdt2skRkdsyQO19m_gqTzr0_2gqo8U",
+  "claimsNamespace": "https://ror.entur.io/role_assignments",
+  "preferredNameNamespace": "https://ror.entur.io/preferred_name",
+  "oidcConfig": {
+    "authority": "https://ror-entur-dev.eu.auth0.com",
+    "client_id": "l3Vv5g3WIvuh9mHSly5rxR4EzzpCZlZM",
+    "scope": "openid profile offline_access",
+    "response_type": "code",
+    "extraQueryParams": {
+      "audience": "https://ror.api.dev.entur.io"
+    }
+  },
+  "featureFlags": {
+    "KartverketFlyFoto": true
+  },
+  "mapConfig": {
+    "baseLayers": [
+      {
+        "name": "OpenStreetMap",
+        "url": "//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "attribution": "&copy; <a href=\"https://osm.org/copyright\">OpenStreetMap</a> contributors"
+      }
+    ],
+    "defaultBaseLayer": "OpenStreetMap",
+    "center": [
+      50.85,
+      4.35
+    ],
+    "zoom": 10
+  },
+  "localeConfig": {
+    "locales": [
+      "nb",
+      "en",
+      "sv",
+      "fi",
+      "fr"
+    ],
+    "defaultLocale": "en"
+  },
+  "uiMode": "modern",
+  "rinfSparqlEndpoint": "https://graph.data.era.europa.eu/repositories/rinf-plus"
+}
