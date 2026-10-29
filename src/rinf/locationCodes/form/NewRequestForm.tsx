@@ -29,6 +29,7 @@ import { useIntl } from "react-intl";
 import { useAppSelector } from "../../../store/hooks";
 import { ChangeFields } from "./ChangeFields";
 import { FormSection, useFieldError } from "./FormSection";
+import { LocationElementField } from "./LocationElementField";
 import { useRequestForm } from "./hooks/useRequestForm";
 import { OperationSection } from "./OperationSection";
 import { PrimaryCodeFields } from "./PrimaryCodeFields";
@@ -63,6 +64,7 @@ export const NewRequestForm = () => {
           titleId="rinf_lc_form_location"
           hintId={`rinf_lc_form_location_hint_${data.codeType}`}
         >
+          <LocationElementField form={form} />
           {data.codeType === "primary" ? (
             <PrimaryCodeFields form={form} />
           ) : (

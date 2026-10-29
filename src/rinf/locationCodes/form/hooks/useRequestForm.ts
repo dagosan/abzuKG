@@ -14,7 +14,7 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import {
@@ -22,19 +22,33 @@ import {
   AdmissibilityErrors,
 } from "../../checks/admissibility";
 import { isCountryPrefix } from "../../model/countries";
-import type { RequestData, Requester } from "../../model/LocationCodeRequest";
+import type {
+  RequestData,
+  Requester,
+  RinfLink,
+} from "../../model/LocationCodeRequest";
 import {
   PREFILL_PARAMS,
   requestPath,
   RESUME_PARAM,
 } from "../../page/locationCodesPath";
-import { clearFormDraft, setActor } from "../../state/locationCodesSlice";
+import {
+  autofillStarted,
+  clearFormDraft,
+  setActor,
+} from "../../state/locationCodesSlice";
 import { submitLocationCodeRequest } from "../../state/locationCodesThunks";
 import { emptyRequestData } from "../../workflow/createRequest";
 import { readRequester, writeRequester } from "../requesterPreference";
 import { usePickOnMap } from "./usePickOnMap";
+import { RinfAutofillState, useRinfAutofill } from "./useRinfAutofill";
 
-export interface RequestForm {
+export interface RequestForm extends Omit<
+  RinfAutofillState,
+  "forgetFromRinf" | "chooseRinfElement"
+> {
+  /** Sets the RINF element and fills the rest of the form from RINF. */
+  chooseRinfElement: (link: RinfLink | null) => void;
   data: RequestData;
   update: (changes: Partial<RequestData>) => void;
   updateRequester: (changes: Partial<Requester>) => void;
@@ -79,24 +93,39 @@ export const useRequestForm = (): RequestForm => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { actor, formDraft } = useAppSelector(
+  const { actor, formDraft, pendingAutofill } = useAppSelector(
     (state) => state.rinf.locationCodes,
   );
+  const resumed = Boolean(params.get(RESUME_PARAM) && formDraft);
   // Back from the map: the form as it was, with the element picked there.
   const [data, setData] = useState<RequestData>(() =>
-    params.get(RESUME_PARAM) && formDraft
-      ? formDraft
-      : initialData(params, actor.name),
+    resumed && formDraft ? formDraft : initialData(params, actor.name),
   );
   const pickOnMap = usePickOnMap(data);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const autofill = useRinfAutofill(dataRef, setData);
+  const { chooseRinfElement, forgetFromRinf } = autofill;
+
+  // An element picked on the map, or given by an OP's panel: fill from RINF.
+  useEffect(() => {
+    const link = dataRef.current.rinfLink;
+    if (!link || (resumed && !pendingAutofill)) return;
+    dispatch(autofillStarted());
+    chooseRinfElement(link);
+    // Once, when the form opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const allErrors = useMemo(() => admissibilityErrors(data), [data]);
 
   const update = useCallback(
-    (changes: Partial<RequestData>) =>
-      setData((current) => ({ ...current, ...changes })),
-    [],
+    (changes: Partial<RequestData>) => {
+      setData((current) => ({ ...current, ...changes }));
+      forgetFromRinf(Object.keys(changes));
+    },
+    [forgetFromRinf],
   );
   const updateRequester = useCallback(
     (changes: Partial<Requester>) =>
@@ -135,5 +164,9 @@ export const useRequestForm = (): RequestForm => {
     submitting,
     submit,
     pickOnMap,
+    chooseRinfElement,
+    fromRinf: autofill.fromRinf,
+    notice: autofill.notice,
+    loading: autofill.loading,
   };
 };

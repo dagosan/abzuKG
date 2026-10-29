@@ -54,6 +54,8 @@ export interface RinfLink {
   label: string;
   /** Asset: what it is, e.g. "Running track". */
   assetClass?: string;
+  /** Asset: its RINF class URI, e.g. …/949/RunningTrack. */
+  assetClassUri?: string;
   /** Asset: the OP or section of line it is part of. */
   parent?: RinfLinkParent;
 }

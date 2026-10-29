@@ -20,17 +20,16 @@ import { isCreation } from "../model/codeTypes";
 import { COUNTRY_PREFIXES, countryName } from "../model/countries";
 import type { RequestForm } from "./hooks/useRequestForm";
 import { useFieldError } from "./FormSection";
-import { RinfElementPicker } from "./RinfElementPicker";
 
 interface PrimaryCodeFieldsProps {
   form: RequestForm;
 }
 
-/** A PLC: country, value, name, IM, RINF position (or the code to change). */
+/** A PLC: country, value, name and IM (or the code to change). */
 export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
   const { formatMessage, locale } = useIntl();
   const { data, update, errors } = form;
-  const fieldError = useFieldError(errors);
+  const fieldError = useFieldError(errors, form.fromRinf);
   const creating = isCreation(data.operation);
   const amending = data.operation === "amendment";
   const optionalSuffix = amending ? "_optional" : "";
@@ -96,13 +95,6 @@ export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
               update({ imOrganisationCode: event.target.value.toUpperCase() })
             }
             {...fieldError("imOrganisationCode", "rinf_lc_field_im_hint")}
-          />
-          <RinfElementPicker
-            value={data.rinfLink}
-            onChange={(rinfLink) => update({ rinfLink })}
-            onPickOnMap={form.pickOnMap}
-            label={formatMessage({ id: `rinf_lc_field_rinf${optionalSuffix}` })}
-            {...fieldError("rinfLink")}
           />
         </>
       )}

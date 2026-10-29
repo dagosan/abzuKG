@@ -181,7 +181,25 @@ Known limits of this first version:
 The OP details panel has a "Request a location code" button that opens the
 form positioned on that OP.
 
-**Picking the RINF element on the map.** In the form, "Pick on map" keeps the
+**The RINF element comes first.** The Location box opens with the RINF
+element: a search bar (name, UOPID or line number, on Enter) with a "Pick
+from a map" button beside it. Choosing the element fills the rest of the
+form from RINF (`form/rinfAutofill.ts`, one query of ~0.6 s), each field
+marked "From RINF" until edited:
+
+- new PLC: name, country (from `era:inCountry`, else the UOPID), IM (the
+  dataset declaring it, `…/graph/<code>`); a notice when the element
+  already has a PLC, suggesting an amendment;
+- existing code (first population): also the PLC RINF holds;
+- amendment or deactivation: the PLC concerned;
+- SLC: the parent PLC (the element's, or for an asset its OP's or section's),
+  and for an asset its name and type (running track 01, switch 10, platform
+  edge 15, tunnel 24, signal 27; a siding may be 06 or 07, so it is left to
+  the requester);
+- a border point declared by two IMs (e.g. EU00010: 0087 FR01092 and 0080
+  DE18314): only the name, with a notice listing the declarations.
+
+**Picking from a map.** "Pick from a map" keeps the
 form (`formDraft` in the slice) and opens the map with a banner. Clicking an
 OP or section of line (or finding it with the header search) opens its panel
 with "Use this operational point / section of line". For an SLC, each

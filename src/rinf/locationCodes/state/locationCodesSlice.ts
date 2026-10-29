@@ -43,6 +43,8 @@ export interface LocationCodesState {
   picking: MapPicking | null;
   /** The new request form, kept while the user is on the map. */
   formDraft: RequestData | null;
+  /** An element was picked on the map; the form fills in from RINF. */
+  pendingAutofill: boolean;
 }
 
 export interface MapPicking {
@@ -59,6 +61,7 @@ const initialState: LocationCodesState = {
   error: null,
   picking: null,
   formDraft: null,
+  pendingAutofill: false,
 };
 
 const replaceRequest = (
@@ -92,12 +95,16 @@ const locationCodesSlice = createSlice({
     pickRinfElement(state, action: PayloadAction<RinfLink>) {
       if (state.formDraft) state.formDraft.rinfLink = action.payload;
       state.picking = null;
+      state.pendingAutofill = true;
     },
     cancelPicking(state) {
       state.picking = null;
     },
     clearFormDraft(state) {
       state.formDraft = null;
+    },
+    autofillStarted(state) {
+      state.pendingAutofill = false;
     },
   },
   extraReducers: (builder) => {
@@ -139,6 +146,7 @@ export const {
   pickRinfElement,
   cancelPicking,
   clearFormDraft,
+  autofillStarted,
 } = locationCodesSlice.actions;
 
 export const locationCodesReducer = locationCodesSlice.reducer;

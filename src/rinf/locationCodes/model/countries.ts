@@ -89,3 +89,63 @@ export const countryName = (prefix: string, locale: string): string => {
     return prefix;
   }
 };
+
+/** ISO 3166 alpha-3 (as in era:inCountry) to the code prefix used here. */
+const PREFIX_OF_ALPHA3: Record<string, string> = {
+  AUT: "AT",
+  BEL: "BE",
+  BGR: "BG",
+  CZE: "CZ",
+  DEU: "DE",
+  DNK: "DK",
+  EST: "EE",
+  ESP: "ES",
+  FIN: "FI",
+  FRA: "FR",
+  GRC: "GR",
+  HRV: "HR",
+  HUN: "HU",
+  IRL: "IE",
+  ITA: "IT",
+  LTU: "LT",
+  LUX: "LU",
+  LVA: "LV",
+  NLD: "NL",
+  POL: "PL",
+  PRT: "PT",
+  ROU: "RO",
+  SWE: "SE",
+  SVN: "SI",
+  SVK: "SK",
+  ALB: "AL",
+  BIH: "BA",
+  BLR: "BY",
+  CHE: "CH",
+  GBR: "GB",
+  LIE: "LI",
+  MDA: "MD",
+  MNE: "ME",
+  MKD: "MK",
+  NOR: "NO",
+  SRB: "RS",
+  TUR: "TR",
+  UKR: "UA",
+};
+
+const UOPID_PREFIX_LENGTH = 2;
+
+/**
+ * The code prefix of an element's country: from era:inCountry (an EU
+ * country authority URI ending in the alpha-3 code), else from the UOPID,
+ * which starts with the alpha-2 code. Null when neither gives a known one.
+ */
+export const prefixOfCountry = (
+  countryUri: string | undefined,
+  uopid: string | undefined,
+): string | null => {
+  const alpha3 = countryUri?.split("/").pop() ?? "";
+  const fromCountry = PREFIX_OF_ALPHA3[alpha3];
+  if (fromCountry) return fromCountry;
+  const fromUopid = uopid?.slice(0, UOPID_PREFIX_LENGTH).toUpperCase() ?? "";
+  return isCountryPrefix(fromUopid) ? fromUopid : null;
+};

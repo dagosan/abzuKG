@@ -55,8 +55,9 @@ SELECT DISTINCT ?code WHERE {
 }`;
 
 /**
- * The versions of a RINF element with their validity, and the primary
- * location codes each version carries (~0.6 s).
+ * The versions of a RINF element with their validity, the IM dataset
+ * (named graph) declaring each, and what the form can reuse: name, UOPID,
+ * country and the primary location codes each version carries (~0.6 s).
  */
 export const buildElementCodesQuery = (
   kind: DetailsKind,
@@ -65,9 +66,12 @@ export const buildElementCodesQuery = (
   const uri = `${DETAILS_KINDS[kind].canonicalPrefix}${canonicalId}`;
   if (!isSafeIri(uri)) throw new Error(`Unsafe canonical id "${canonicalId}"`);
   return `${SPARQL_PREFIXES}
-SELECT ?element ?code ?from ?to ?label WHERE {
-  ?element era:canonicalURI <${uri}> .
+SELECT ?element ?graph ?code ?from ?to ?label ?name ?uopid ?country WHERE {
+  GRAPH ?graph { ?element era:canonicalURI <${uri}> }
   OPTIONAL { ?element rdfs:label ?label }
+  OPTIONAL { ?element era:opName ?name }
+  OPTIONAL { ?element era:uopid ?uopid }
+  OPTIONAL { ?element era:inCountry ?country }
   OPTIONAL { ?element era:primaryLocation/era:primaryLocationCode ?code }
   OPTIONAL { ?element era:validity/time:hasBeginning/time:inXSDDate ?from }
   OPTIONAL { ?element era:validity/time:hasEnd/time:inXSDDate ?to }

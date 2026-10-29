@@ -62,6 +62,7 @@ const context = (overrides: Partial<CheckContext> = {}): CheckContext => ({
     validToday: true,
     label: "Gembloux Nord",
     codes: [],
+    declarations: [],
   },
   register: [],
   otherOpenRequests: [],
@@ -142,6 +143,7 @@ describe("technical checks", () => {
         validToday: true,
         label: "X",
         codes: ["BE00438"],
+        declarations: [],
       },
     });
     expect(outcomeOf(completeData(), withCode, "noDuplicate")).toBe("fail");
@@ -226,6 +228,7 @@ describe("positioning on a RINF asset", () => {
         validToday: true,
         label: "Gembloux",
         codes: ["BE00438"],
+        declarations: [],
       },
     });
     expect(outcomeOf(slc, onParent, "rinfPosition")).toBe("pass");
@@ -238,6 +241,7 @@ describe("positioning on a RINF asset", () => {
         validToday: true,
         label: "X",
         codes: ["BE00187"],
+        declarations: [],
       },
     });
     expect(outcomeOf(slc, elsewhere, "rinfPosition")).toBe("warning");

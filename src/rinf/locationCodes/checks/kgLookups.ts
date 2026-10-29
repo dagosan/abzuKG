@@ -14,9 +14,10 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-import { runSparqlSelect } from "../../api/sparqlClient";
+import { runSparqlSelect, SparqlBinding } from "../../api/sparqlClient";
 import { canonicalIdFromUri, DetailsKind } from "../../detailsKinds";
-import { stripValidity } from "../../models/labels";
+import { localName, stripValidity } from "../../models/labels";
+import { prefixOfCountry } from "../model/countries";
 import {
   buildCountryCodesQuery,
   buildElementCodesQuery,
@@ -32,13 +33,25 @@ export interface KgPrimaryLocation {
   operationalPoints: string[];
 }
 
-/** A RINF element as far as code positioning needs it. */
+/** One IM's declaration of a RINF element, valid today. */
+export interface KgDeclaration {
+  /** Organisation code of the IM whose dataset declares it, e.g. "0088". */
+  imCode: string;
+  /** Code prefix of its country, e.g. "BE"; null when not known. */
+  countryPrefix: string | null;
+  name: string | null;
+  codes: string[];
+}
+
+/** A RINF element as far as code positioning and the form need it. */
 export interface KgElement {
   exists: boolean;
   validToday: boolean;
   label: string | null;
   /** Primary location codes on the version valid today. */
   codes: string[];
+  /** One per declaring IM; two for a border point. */
+  declarations: KgDeclaration[];
 }
 
 const unique = (values: (string | undefined)[]): string[] => [
@@ -127,5 +140,21 @@ export const fetchElement = async (
     validToday: validRows.length > 0,
     label: labelOf(validRows[0]?.label?.value ?? rows[0]?.label?.value),
     codes: unique(validRows.map((row) => row.code?.value)),
+    declarations: declarationsOf(validRows),
   };
 };
+
+/** The rows grouped by declaring IM (named graph …/graph/<code>). */
+const declarationsOf = (rows: SparqlBinding[]): KgDeclaration[] =>
+  unique(rows.map((row) => row.graph?.value)).map((graph) => {
+    const own = rows.filter((row) => row.graph?.value === graph);
+    const country = own.find((row) => row.country)?.country?.value;
+    const uopid = own.find((row) => row.uopid)?.uopid?.value;
+    const name = own.find((row) => row.name)?.name?.value;
+    return {
+      imCode: localName(graph),
+      countryPrefix: prefixOfCountry(country, uopid),
+      name: name ?? labelOf(own[0]?.label?.value),
+      codes: unique(own.map((row) => row.code?.value)),
+    };
+  });

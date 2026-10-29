@@ -53,6 +53,7 @@ export const UseAssetButton = ({ node }: UseAssetButtonProps) => {
       canonicalId: node.canonicalUri!,
       label: node.label || node.canonicalUri!,
       assetClass: node.classLabel ?? undefined,
+      assetClassUri: node.classUri ?? undefined,
       parent: { kind, canonicalId, label: parentName },
     });
   };

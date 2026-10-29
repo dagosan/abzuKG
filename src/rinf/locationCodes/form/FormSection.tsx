@@ -52,18 +52,22 @@ export const FormSection = ({
   );
 };
 
-/** Props giving a TextField its error state and translated message. */
-export const useFieldError = (errors: AdmissibilityErrors) => {
+/**
+ * Props giving a TextField its error state and message: the error, else
+ * the hint, marked "from RINF" while the value is RINF's and not edited.
+ */
+export const useFieldError = (
+  errors: AdmissibilityErrors,
+  fromRinf: RequestField[] = [],
+) => {
   const { formatMessage } = useIntl();
   return (field: RequestField, hintId?: string) => {
     const errorId = errors[field];
-    return {
-      error: Boolean(errorId),
-      helperText: errorId
-        ? formatMessage({ id: errorId })
-        : hintId
-          ? formatMessage({ id: hintId })
-          : undefined,
-    };
+    if (errorId)
+      return { error: true, helperText: formatMessage({ id: errorId }) };
+    const hint = hintId ? formatMessage({ id: hintId }) : undefined;
+    if (!fromRinf.includes(field)) return { error: false, helperText: hint };
+    const mark = formatMessage({ id: "rinf_lc_from_rinf" });
+    return { error: false, helperText: hint ? `${mark} · ${hint}` : mark };
   };
 };
