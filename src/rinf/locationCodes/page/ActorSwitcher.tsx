@@ -48,7 +48,8 @@ export const ActorSwitcher = () => {
         display: "flex",
         gap: 1,
         alignItems: "center",
-        width: { xs: "100%", sm: "auto" },
+        flex: { xs: 1, sm: "none" },
+        minWidth: 0,
       }}
     >
       <TextField

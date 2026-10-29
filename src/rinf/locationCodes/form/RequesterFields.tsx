@@ -14,19 +14,17 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-import { Box, MenuItem, TextField } from "@mui/material";
+import { MenuItem, TextField } from "@mui/material";
 import { useIntl } from "react-intl";
 import { languageName, OFFICIAL_EU_LANGUAGES } from "../model/languages";
 import { STAKEHOLDER_CATEGORIES } from "../model/stakeholderCategories";
+import { FieldRow } from "./FieldRow";
 import { FormSection, useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
 
 interface RequesterFieldsProps {
   form: RequestForm;
 }
-
-const ROW_SX = { display: "flex", gap: 2, flexWrap: "wrap" } as const;
-const HALF_SX = { flex: "1 1 220px" } as const;
 
 /** Who applies, as which Article 3(9) stakeholder, and in which language. */
 export const RequesterFields = ({ form }: RequesterFieldsProps) => {
@@ -40,10 +38,9 @@ export const RequesterFields = ({ form }: RequesterFieldsProps) => {
       titleId="rinf_lc_form_requester"
       hintId="rinf_lc_form_requester_hint"
     >
-      <Box sx={ROW_SX}>
+      <FieldRow>
         <TextField
           size="small"
-          sx={HALF_SX}
           label={formatMessage({ id: "rinf_lc_field_requester_name" })}
           value={requester.name}
           onChange={(event) => updateRequester({ name: event.target.value })}
@@ -51,17 +48,15 @@ export const RequesterFields = ({ form }: RequesterFieldsProps) => {
         />
         <TextField
           size="small"
-          sx={HALF_SX}
           label={formatMessage({ id: "rinf_lc_field_email" })}
           value={requester.email}
           onChange={(event) => updateRequester({ email: event.target.value })}
           {...fieldError("email")}
         />
-      </Box>
-      <Box sx={ROW_SX}>
+      </FieldRow>
+      <FieldRow>
         <TextField
           size="small"
-          sx={HALF_SX}
           label={formatMessage({ id: "rinf_lc_field_organisation" })}
           value={requester.organisation}
           onChange={(event) =>
@@ -71,7 +66,6 @@ export const RequesterFields = ({ form }: RequesterFieldsProps) => {
         />
         <TextField
           size="small"
-          sx={HALF_SX}
           label={formatMessage({ id: "rinf_lc_field_organisation_code" })}
           value={requester.organisationCode}
           onChange={(event) =>
@@ -84,7 +78,8 @@ export const RequesterFields = ({ form }: RequesterFieldsProps) => {
             "rinf_lc_field_organisation_code_hint",
           )}
         />
-      </Box>
+      </FieldRow>
+
       <TextField
         select
         size="small"

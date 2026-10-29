@@ -14,25 +14,48 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-import { alpha, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import PlaceOutlined from "@mui/icons-material/PlaceOutlined";
+import TrainOutlined from "@mui/icons-material/TrainOutlined";
+import {
+  alpha,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  type SvgIconProps,
+} from "@mui/material";
+import type { ComponentType } from "react";
 import { useIntl } from "react-intl";
 import type { SearchMode } from "../state/preferences";
 
 /** Border and selected-state strength on the header's coloured background. */
 const BORDER_OPACITY = 0.5;
 const SELECTED_OPACITY = 0.2;
-const MODES: { mode: SearchMode; labelId: string }[] = [
-  { mode: "rinf", labelId: "rinf_search_mode_rinf" },
-  { mode: "stopPlaces", labelId: "rinf_search_mode_stop_places" },
+const MODES: {
+  mode: SearchMode;
+  labelId: string;
+  Icon: ComponentType<SvgIconProps>;
+}[] = [
+  { mode: "rinf", labelId: "rinf_search_mode_rinf", Icon: TrainOutlined },
+  {
+    mode: "stopPlaces",
+    labelId: "rinf_search_mode_stop_places",
+    Icon: PlaceOutlined,
+  },
 ];
 
 interface SearchModeSwitchProps {
   mode: SearchMode;
   onChange: (mode: SearchMode) => void;
+  /** Icons instead of words, for a narrow header. */
+  compact?: boolean;
 }
 
 /** Chooses what the header search looks for: RINF OPs or Abzu's stop places. */
-export const SearchModeSwitch = ({ mode, onChange }: SearchModeSwitchProps) => {
+export const SearchModeSwitch = ({
+  mode,
+  onChange,
+  compact = false,
+}: SearchModeSwitchProps) => {
   const { formatMessage } = useIntl();
   return (
     <ToggleButtonGroup
@@ -51,7 +74,7 @@ export const SearchModeSwitch = ({ mode, onChange }: SearchModeSwitchProps) => {
             borderColor: alpha(contrast, BORDER_OPACITY),
             textTransform: "none",
             whiteSpace: "nowrap",
-            px: 1.25,
+            px: compact ? 0.75 : 1.25,
           },
           "& .MuiToggleButton-root.Mui-selected": {
             color: contrast,
@@ -60,11 +83,22 @@ export const SearchModeSwitch = ({ mode, onChange }: SearchModeSwitchProps) => {
         };
       }}
     >
-      {MODES.map(({ mode: value, labelId }) => (
-        <ToggleButton key={value} value={value}>
-          {formatMessage({ id: labelId })}
-        </ToggleButton>
-      ))}
+      {MODES.map(({ mode: value, labelId, Icon }) => {
+        const label = formatMessage({ id: labelId });
+        if (!compact)
+          return (
+            <ToggleButton key={value} value={value}>
+              {label}
+            </ToggleButton>
+          );
+        return (
+          <Tooltip key={value} title={label}>
+            <ToggleButton value={value} aria-label={label}>
+              <Icon fontSize="small" />
+            </ToggleButton>
+          </Tooltip>
+        );
+      })}
     </ToggleButtonGroup>
   );
 };

@@ -101,8 +101,18 @@ export const LocationCodesActionBar = ({
         ))}
       </ToggleButtonGroup>
       <Box sx={{ flexGrow: 1 }} />
-      <ActorSwitcher />
-      <DataMenu />
+      {/* On a phone this pair takes a line of its own, the menu at its end. */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          width: { xs: "100%", sm: "auto" },
+        }}
+      >
+        <ActorSwitcher />
+        <DataMenu />
+      </Box>
     </Box>
   );
 };

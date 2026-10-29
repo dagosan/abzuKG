@@ -18,6 +18,7 @@ import { MenuItem, TextField } from "@mui/material";
 import { useIntl } from "react-intl";
 import { isCreation } from "../model/codeTypes";
 import { SUBSIDIARY_TYPES } from "../model/subsidiaryTypes";
+import { FieldRow } from "./FieldRow";
 import { useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
 
@@ -32,68 +33,90 @@ export const SubsidiaryCodeFields = ({ form }: SubsidiaryCodeFieldsProps) => {
   const fieldError = useFieldError(errors, form.fromRinf);
   const creating = isCreation(data.operation);
 
+  const parentField = (
+    <TextField
+      size="small"
+      label={formatMessage({ id: "rinf_lc_field_parent" })}
+      value={data.parentPrimaryCode}
+      onChange={(event) =>
+        update({ parentPrimaryCode: event.target.value.toUpperCase() })
+      }
+      {...fieldError("parentPrimaryCode", "rinf_lc_field_parent_hint")}
+    />
+  );
+  const typeField = (
+    <TextField
+      select
+      size="small"
+      label={formatMessage({ id: "rinf_lc_field_type" })}
+      value={data.subsidiaryTypeCode}
+      onChange={(event) => update({ subsidiaryTypeCode: event.target.value })}
+      {...fieldError("subsidiaryTypeCode", "rinf_lc_field_type_hint")}
+    >
+      {SUBSIDIARY_TYPES.map((type) => (
+        <MenuItem key={type.code} value={type.code}>
+          {type.code} · {type.name}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+  const codeField = (
+    <TextField
+      size="small"
+      label={formatMessage({
+        id: creating
+          ? data.operation === "existingCode"
+            ? "rinf_lc_field_existing_code"
+            : "rinf_lc_field_proposed_code"
+          : "rinf_lc_field_target_subsidiary",
+      })}
+      value={creating ? data.proposedCode : data.targetCode}
+      onChange={(event) =>
+        update(
+          creating
+            ? { proposedCode: event.target.value }
+            : { targetCode: event.target.value },
+        )
+      }
+      {...fieldError(
+        creating ? "proposedCode" : "targetCode",
+        "rinf_lc_field_subsidiary_code_hint",
+      )}
+    />
+  );
+  const nameField = data.operation !== "deactivation" && (
+    <TextField
+      size="small"
+      label={formatMessage({
+        id: creating ? "rinf_lc_field_name" : "rinf_lc_field_name_optional",
+      })}
+      value={data.locationName}
+      onChange={(event) => update({ locationName: event.target.value })}
+      {...fieldError("locationName", "rinf_lc_field_name_hint")}
+    />
+  );
+
+  // Creating: parent and type, then code and name. Changing: parent and code.
+  if (creating)
+    return (
+      <>
+        <FieldRow>
+          {parentField}
+          {typeField}
+        </FieldRow>
+        <FieldRow>
+          {codeField}
+          {nameField}
+        </FieldRow>
+      </>
+    );
   return (
     <>
-      <TextField
-        size="small"
-        label={formatMessage({ id: "rinf_lc_field_parent" })}
-        value={data.parentPrimaryCode}
-        onChange={(event) =>
-          update({ parentPrimaryCode: event.target.value.toUpperCase() })
-        }
-        {...fieldError("parentPrimaryCode", "rinf_lc_field_parent_hint")}
-      />
-      {creating && (
-        <TextField
-          select
-          size="small"
-          label={formatMessage({ id: "rinf_lc_field_type" })}
-          value={data.subsidiaryTypeCode}
-          onChange={(event) =>
-            update({ subsidiaryTypeCode: event.target.value })
-          }
-          {...fieldError("subsidiaryTypeCode", "rinf_lc_field_type_hint")}
-        >
-          {SUBSIDIARY_TYPES.map((type) => (
-            <MenuItem key={type.code} value={type.code}>
-              {type.code} · {type.name}
-            </MenuItem>
-          ))}
-        </TextField>
-      )}
-      <TextField
-        size="small"
-        label={formatMessage({
-          id: creating
-            ? data.operation === "existingCode"
-              ? "rinf_lc_field_existing_code"
-              : "rinf_lc_field_proposed_code"
-            : "rinf_lc_field_target_subsidiary",
-        })}
-        value={creating ? data.proposedCode : data.targetCode}
-        onChange={(event) =>
-          update(
-            creating
-              ? { proposedCode: event.target.value }
-              : { targetCode: event.target.value },
-          )
-        }
-        {...fieldError(
-          creating ? "proposedCode" : "targetCode",
-          "rinf_lc_field_subsidiary_code_hint",
-        )}
-      />
-      {data.operation !== "deactivation" && (
-        <TextField
-          size="small"
-          label={formatMessage({
-            id: creating ? "rinf_lc_field_name" : "rinf_lc_field_name_optional",
-          })}
-          value={data.locationName}
-          onChange={(event) => update({ locationName: event.target.value })}
-          {...fieldError("locationName", "rinf_lc_field_name_hint")}
-        />
-      )}
+      <FieldRow>
+        {parentField}
+        {codeField}
+      </FieldRow>
+      {nameField && <FieldRow>{nameField}</FieldRow>}
     </>
   );
 };

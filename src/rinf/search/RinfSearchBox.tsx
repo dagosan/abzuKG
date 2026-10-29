@@ -51,8 +51,17 @@ const emptyListMessageId = (search: RinfSearch): string => {
   return "rinf_search_no_results";
 };
 
+interface RinfSearchBoxProps {
+  /** Called once a chosen result has been opened (e.g. to close a panel). */
+  onOpened?: () => void;
+  autoFocus?: boolean;
+}
+
 /** Header search for RINF OPs and sections of line; Enter searches, a result opens its panel. */
-export const RinfSearchBox = () => {
+export const RinfSearchBox = ({
+  onOpened,
+  autoFocus = false,
+}: RinfSearchBoxProps) => {
   const theme = useTheme();
   const { formatMessage } = useIntl();
   const search = useRinfSearch();
@@ -87,7 +96,11 @@ export const RinfSearchBox = () => {
         onInputChange={(_event, value, reason) => {
           if (reason === "input" || reason === "clear") setText(value);
         }}
-        onChange={(_event, result) => result && open(result)}
+        onChange={(_event, result) => {
+          if (!result) return;
+          open(result);
+          onOpened?.();
+        }}
         onKeyDown={handleKeyDown}
         noOptionsText={formatMessage({ id: emptyListMessageId(search) })}
         loadingText={
@@ -121,6 +134,7 @@ export const RinfSearchBox = () => {
           <TextField
             {...params}
             size="small"
+            autoFocus={autoFocus}
             placeholder={placeholder}
             sx={searchFieldSx(theme)}
             slotProps={{

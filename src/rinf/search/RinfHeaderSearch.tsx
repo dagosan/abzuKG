@@ -14,11 +14,12 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-import { Box } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import type { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setSearchMode } from "../state/searchSlice";
 import { RinfSearchBox } from "./RinfSearchBox";
+import { RinfSearchPanelButton } from "./RinfSearchPanelButton";
 import { SearchModeSwitch } from "./SearchModeSwitch";
 
 const MAX_WIDTH = 640;
@@ -34,6 +35,8 @@ export const RinfHeaderSearch = ({
 }: RinfHeaderSearchProps) => {
   const dispatch = useAppDispatch();
   const mode = useAppSelector((state) => state.rinf.search.mode);
+  // Below laptop width the words and the box crowd out the header buttons.
+  const isNarrow = useMediaQuery(useTheme().breakpoints.down("md"));
 
   return (
     <Box
@@ -48,9 +51,14 @@ export const RinfHeaderSearch = ({
       <SearchModeSwitch
         mode={mode}
         onChange={(next) => dispatch(setSearchMode(next))}
+        compact={isNarrow}
       />
       {mode === "rinf" ? (
-        <RinfSearchBox />
+        isNarrow ? (
+          <RinfSearchPanelButton />
+        ) : (
+          <RinfSearchBox />
+        )
       ) : (
         <Box sx={{ flex: 1, minWidth: 0, display: "flex" }}>
           {stopPlaceSearch}

@@ -18,8 +18,9 @@ import { Checkbox, FormControlLabel, MenuItem, TextField } from "@mui/material";
 import { useIntl } from "react-intl";
 import { isCreation } from "../model/codeTypes";
 import { COUNTRY_PREFIXES, countryName } from "../model/countries";
-import type { RequestForm } from "./hooks/useRequestForm";
+import { FieldRow } from "./FieldRow";
 import { useFieldError } from "./FormSection";
+import type { RequestForm } from "./hooks/useRequestForm";
 
 interface PrimaryCodeFieldsProps {
   form: RequestForm;
@@ -36,50 +37,52 @@ export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
 
   return (
     <>
-      {creating ? (
-        <TextField
-          select
-          size="small"
-          label={formatMessage({ id: "rinf_lc_field_country" })}
-          value={data.country}
-          onChange={(event) => update({ country: event.target.value })}
-          {...fieldError("country")}
-        >
-          {COUNTRY_PREFIXES.map((prefix) => (
-            <MenuItem key={prefix} value={prefix}>
-              {prefix} · {countryName(prefix, locale)}
-            </MenuItem>
-          ))}
-        </TextField>
-      ) : (
-        <TextField
-          size="small"
-          label={formatMessage({ id: "rinf_lc_field_target_primary" })}
-          value={data.targetCode}
-          onChange={(event) =>
-            update({ targetCode: event.target.value.toUpperCase() })
-          }
-          {...fieldError("targetCode", "rinf_lc_field_primary_code_hint")}
-        />
-      )}
-      {creating && (
-        <TextField
-          size="small"
-          label={formatMessage({
-            id:
-              data.operation === "existingCode"
-                ? "rinf_lc_field_existing_code"
-                : "rinf_lc_field_proposed_code",
-          })}
-          value={data.proposedCode}
-          onChange={(event) =>
-            update({ proposedCode: event.target.value.toUpperCase() })
-          }
-          {...fieldError("proposedCode", "rinf_lc_field_proposed_code_hint")}
-        />
-      )}
+      <FieldRow>
+        {creating ? (
+          <TextField
+            select
+            size="small"
+            label={formatMessage({ id: "rinf_lc_field_country" })}
+            value={data.country}
+            onChange={(event) => update({ country: event.target.value })}
+            {...fieldError("country")}
+          >
+            {COUNTRY_PREFIXES.map((prefix) => (
+              <MenuItem key={prefix} value={prefix}>
+                {prefix} · {countryName(prefix, locale)}
+              </MenuItem>
+            ))}
+          </TextField>
+        ) : (
+          <TextField
+            size="small"
+            label={formatMessage({ id: "rinf_lc_field_target_primary" })}
+            value={data.targetCode}
+            onChange={(event) =>
+              update({ targetCode: event.target.value.toUpperCase() })
+            }
+            {...fieldError("targetCode", "rinf_lc_field_primary_code_hint")}
+          />
+        )}
+        {creating && (
+          <TextField
+            size="small"
+            label={formatMessage({
+              id:
+                data.operation === "existingCode"
+                  ? "rinf_lc_field_existing_code"
+                  : "rinf_lc_field_proposed_code",
+            })}
+            value={data.proposedCode}
+            onChange={(event) =>
+              update({ proposedCode: event.target.value.toUpperCase() })
+            }
+            {...fieldError("proposedCode", "rinf_lc_field_proposed_code_hint")}
+          />
+        )}
+      </FieldRow>
       {data.operation !== "deactivation" && (
-        <>
+        <FieldRow>
           <TextField
             size="small"
             label={formatMessage({ id: `rinf_lc_field_name${optionalSuffix}` })}
@@ -96,7 +99,7 @@ export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
             }
             {...fieldError("imOrganisationCode", "rinf_lc_field_im_hint")}
           />
-        </>
+        </FieldRow>
       )}
       {creating && (
         <FormControlLabel
