@@ -222,3 +222,21 @@ describe("parameterSearchReducer", () => {
     expect(searching.showOnMap).toBe(false);
   });
 });
+
+describe("linked-from-place attachments", () => {
+  it("are read from the probe and kept apart from track links", () => {
+    const link = `${ERA}primaryLocation`;
+    expect(
+      toAttachment([
+        { how: literal("fromPlace"), link: uri(link), sampled: literal("190") },
+        { how: literal("viaTrack"), link: uri(link), sampled: literal("10") },
+      ]),
+    ).toEqual({ how: "fromPlace", link });
+    expect(
+      distinctAttachments([
+        { typeUri: "a", elements: 1, attachment: { how: "fromPlace", link } },
+        { typeUri: "b", elements: 1, attachment: { how: "viaTrack", link } },
+      ]),
+    ).toHaveLength(2);
+  });
+});

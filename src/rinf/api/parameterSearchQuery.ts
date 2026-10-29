@@ -37,7 +37,9 @@ const attachmentBranch = (attachment: Attachment): string => {
   if (!isSafeIri(attachment.link)) {
     throw new Error(`Not a usable link: "${attachment.link}"`);
   }
-  return `?track <${attachment.link}> ?element ; era:isPartOf ?place .`;
+  return attachment.how === "fromPlace"
+    ? `?place <${attachment.link}> ?element .`
+    : `?track <${attachment.link}> ?element ; era:isPartOf ?place .`;
 };
 
 /**

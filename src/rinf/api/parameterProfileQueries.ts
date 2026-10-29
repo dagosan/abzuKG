@@ -46,7 +46,9 @@ ORDER BY DESC(?elements)`;
 
 /**
  * How a sample of one carrier type reaches a section of line or OP: as part
- * of one, or through a track's link (and which link). ~0.5 s.
+ * of one, linked from one (e.g. its primary location), or through a track's
+ * link — and by which link. A direct link from the place wins over a track's:
+ * sidings also point to their OP's primary location. ~0.5 s.
  */
 export const buildAttachmentQuery = (
   property: string,
@@ -64,11 +66,19 @@ SELECT ?how ?link (COUNT(*) AS ?sampled) WHERE {
   OPTIONAL { ?element era:isPartOf ?container . ${currentPlaceFilter("?container")} }
   OPTIONAL {
     FILTER(!BOUND(?container))
+    ?owner ?ownerLink ?element . FILTER(?ownerLink != era:isPartOf)
+    ?owner a ?ownerKind . FILTER(?ownerKind IN (era:SectionOfLine, era:OperationalPoint))
+    ${currentPlaceFilter("?owner")}
+  }
+  OPTIONAL {
+    FILTER(!BOUND(?container) && !BOUND(?ownerLink))
     ?track ?trackLink ?element . FILTER(?trackLink != era:isPartOf)
     ?track era:isPartOf ?viaTrack . ${currentPlaceFilter("?viaTrack")}
   }
-  BIND(IF(BOUND(?container), "partOf", IF(BOUND(?trackLink), "viaTrack", "none")) AS ?how)
-  BIND(IF(BOUND(?container), ?unbound, ?trackLink) AS ?link)
+  BIND(IF(BOUND(?container), "partOf",
+       IF(BOUND(?ownerLink), "fromPlace",
+       IF(BOUND(?trackLink), "viaTrack", "none"))) AS ?how)
+  BIND(COALESCE(?ownerLink, ?trackLink) AS ?link)
 }
 GROUP BY ?how ?link`;
 };

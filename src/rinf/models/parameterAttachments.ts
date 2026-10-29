@@ -19,11 +19,17 @@ import type { SparqlBinding } from "../api/sparqlClient";
 
 /**
  * How elements carrying a parameter connect to a section of line or OP:
- * they are one ("itself"), part of one ("partOf", e.g. a track), or linked
- * from a track that is part of one ("viaTrack", e.g. a contact line system).
+ * they are one ("itself"), part of one ("partOf", e.g. a track), linked from
+ * one ("fromPlace", e.g. an OP's primary location), or linked from a track
+ * that is part of one ("viaTrack", e.g. a contact line system).
  */
 export type Attachment =
-  { how: "itself" } | { how: "partOf" } | { how: "viaTrack"; link: string };
+  | { how: "itself" }
+  | { how: "partOf" }
+  | { how: "fromPlace"; link: string }
+  | { how: "viaTrack"; link: string };
+
+const LINKED_HOWS = new Set(["fromPlace", "viaTrack"]);
 
 /** An element type that carries the parameter, how many of them, and how they attach. */
 export interface CarrierType {
@@ -59,11 +65,10 @@ export const toAttachment = (bindings: SparqlBinding[]): Attachment | null => {
         Number(second.sampled?.value ?? 0) - Number(first.sampled?.value ?? 0),
     );
   if (!best) return null;
-  if (best.how!.value === "partOf") return { how: "partOf" };
-  if (best.how!.value === "viaTrack" && best.link?.value) {
-    return { how: "viaTrack", link: best.link.value };
-  }
-  return null;
+  const how = best.how!.value;
+  if (how === "partOf") return { how: "partOf" };
+  if (!LINKED_HOWS.has(how) || !best.link?.value) return null;
+  return { how: how as "fromPlace" | "viaTrack", link: best.link.value };
 };
 
 /** The distinct ways to reach a place, so each is searched once. */
@@ -72,8 +77,8 @@ export const distinctAttachments = (types: CarrierType[]): Attachment[] => {
   types.forEach(({ attachment }) => {
     if (!attachment) return;
     const key =
-      attachment.how === "viaTrack"
-        ? `viaTrack:${attachment.link}`
+      "link" in attachment
+        ? `${attachment.how}:${attachment.link}`
         : attachment.how;
     seen.set(key, attachment);
   });

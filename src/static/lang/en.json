@@ -472,7 +472,7 @@
   "rinf_parameter_search_submit": "Search",
   "rinf_parameter_search_title": "Search by parameter",
   "rinf_parameter_search_truncated": "Only the first {count} are shown: narrow the search by country or IM to see all.",
-  "rinf_parameter_search_unplaced": "No section of line or operational point carries this parameter in the current data.",
+  "rinf_parameter_search_unplaced": "The search cannot yet connect this parameter to a section of line or operational point.",
   "rinf_parameter_search_uses": "{count, plural, one {# use} other {# uses}}",
   "rinf_parameter_search_value": "Value",
   "rinf_reports_back_to_report": "Back to report",
