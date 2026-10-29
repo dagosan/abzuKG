@@ -152,10 +152,19 @@ Rules enforced:
 
 Known limits of this first version:
 
-- **Storage is the browser** (`store/browserStore.ts`, local storage). Each
-  browser has its own requests; the ⋮ menu downloads and restores a JSON
-  backup. `store/LocationCodeStore.ts` is the contract a CAS or Tiamat
-  backend implements to replace it (`store/activeStore.ts`).
+- **Storage is the browser unless Tiamat is configured.** By default
+  requests and codes stay in this browser (`store/browserStore.ts`, local
+  storage), and the ⋮ menu downloads and restores a JSON backup. With
+  `"locationCodesApiUrl": "https://<tiamat>/era/v1/location-codes"` in
+  `bootstrap.json`, they live in Tiamat instead (`store/tiamatStore.ts`;
+  backend: dagosan/tiamatLCs, branch `location-codes`,
+  `tiamat-core/src/ext/resources/docs/era-location-codes.md`). Tiamat then
+  re-checks every code itself (form, KG position, not already in the KG,
+  parent in force), refuses a save made from an outdated copy ("someone
+  else changed this meanwhile"), and saves a publication's codes and
+  request together. The ⋮ menu shows where the data is; restoring a
+  browser backup into Tiamat is how existing requests move there (entries
+  already there are skipped; a backup that disagrees is refused whole).
 - **Roles are picked by hand** (the "Acting as" switch and a name), not
   taken from the login.
 - **The page depends on the role** (`page/RoleViews.tsx`). A requester gets
@@ -181,7 +190,7 @@ Known limits of this first version:
 | `model/`                                      | Request, register entry, code types, TD 103 Table 6, Art. 3(9) categories, Annex A and B, code format                 |
 | `workflow/`                                   | Who may take which step (`availableActions`), the steps themselves (`applyAction`), four eyes, deadlines, publication |
 | `checks/`                                     | Admissibility, the KG queries, and the technical checks                                                               |
-| `store/`                                      | The storage contract and the browser implementation                                                                   |
+| `store/`                                      | The storage contract, the browser and Tiamat implementations, and which one is used                                   |
 | `state/`                                      | Redux slice `state.rinf.locationCodes` and the thunks                                                                 |
 | `page/`, `form/`, `requestFile/`, `register/` | The screens                                                                                                           |
 
@@ -278,7 +287,7 @@ showed through the hidden map over the Reports footer:
   an inset shadow, not a 1 px border
 - `src/containers/modern/App.tsx` — map controls hidden with the map
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
-- `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` config field
+- `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` and `locationCodesApiUrl` config fields
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds
   English placeholders, to keep upstream's rule that both files carry every key)
 

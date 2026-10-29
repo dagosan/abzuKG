@@ -12,13 +12,45 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29; Tiamat backend added the same day. */
 
+import { getFetchedConfig } from "../../../config/fetchConfig";
 import { browserStore } from "./browserStore";
 import type { LocationCodeStore } from "./LocationCodeStore";
+import { createTiamatStore } from "./tiamatStore";
 
-/** The store in use. Swap this for a backend implementation. */
-export const locationCodeStore: LocationCodeStore = browserStore;
+let tiamatStore: { url: string; store: LocationCodeStore } | null = null;
+
+/**
+ * Tiamat when bootstrap.json sets `locationCodesApiUrl`, otherwise this
+ * browser. Read on each call, because the config loads after this module.
+ */
+export const currentLocationCodeStore = (): LocationCodeStore => {
+  const url = getFetchedConfig()?.locationCodesApiUrl;
+  if (!url) return browserStore;
+  if (tiamatStore?.url !== url)
+    tiamatStore = { url, store: createTiamatStore(url) };
+  return tiamatStore.store;
+};
+
+/** Where the data lives, for the UI: "tiamat" or "browser". */
+export const locationCodeStoreKind = (): "tiamat" | "browser" =>
+  getFetchedConfig()?.locationCodesApiUrl ? "tiamat" : "browser";
+
+/** The store in use, chosen per call (see currentLocationCodeStore). */
+export const locationCodeStore: LocationCodeStore = {
+  loadRequests: () => currentLocationCodeStore().loadRequests(),
+  saveRequest: (request) => currentLocationCodeStore().saveRequest(request),
+  saveRequestWithCodes: (request, codes) =>
+    currentLocationCodeStore().saveRequestWithCodes(request, codes),
+  loadCodes: () => currentLocationCodeStore().loadCodes(),
+  saveCodes: (codes) => currentLocationCodeStore().saveCodes(codes),
+  nextReferenceSequence: (year) =>
+    currentLocationCodeStore().nextReferenceSequence(year),
+  exportSnapshot: () => currentLocationCodeStore().exportSnapshot(),
+  importSnapshot: (snapshot) =>
+    currentLocationCodeStore().importSnapshot(snapshot),
+};
 
 const RANDOM_ID_RADIX = 36;
 const RANDOM_ID_START = 2;

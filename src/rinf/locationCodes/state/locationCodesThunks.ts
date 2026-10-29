@@ -119,8 +119,9 @@ export const performLocationCodeAction = createAsyncThunk<
             now,
           )
         : [];
-    if (codes.length > 0) await locationCodeStore.saveCodes(codes);
-    await locationCodeStore.saveRequest(updated);
+    if (codes.length > 0)
+      await locationCodeStore.saveRequestWithCodes(updated, codes);
+    else await locationCodeStore.saveRequest(updated);
     return { request: updated, codes };
   },
 );

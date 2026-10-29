@@ -79,5 +79,10 @@ read-only and shows public RINF data.
 
 - "Log in" and the "Stop places" search mode need a Tiamat backend and an OIDC
   login, which this config doesn't set up. The RINF features don't need them.
+- Location code requests are kept in each visitor's browser. To keep them in
+  one shared register, run the Tiamat fork (dagosan/tiamatLCs, profile
+  `era-location-codes`) and add `"locationCodesApiUrl":
+  "http://<tiamat-host>:<port>/era/v1/location-codes"` to your
+  `bootstrap.json`.
 - Map tiles come from openstreetmap.org; for heavier use, set a tile server of
   your own in `mapConfig.baseLayers`.

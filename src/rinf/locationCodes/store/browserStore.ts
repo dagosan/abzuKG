@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day. */
 
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import type { RegisteredCode } from "../model/RegisteredCode";
@@ -79,6 +79,14 @@ export const browserStore: LocationCodeStore = {
       requests: upsert(snapshot.requests, [request], requestKey),
     });
   },
+  saveRequestWithCodes: async (request, codes) => {
+    const snapshot = readSnapshot();
+    writeSnapshot({
+      ...snapshot,
+      requests: upsert(snapshot.requests, [request], requestKey),
+      codes: upsert(snapshot.codes, codes, codeKey),
+    });
+  },
   loadCodes: async () => readSnapshot().codes,
   saveCodes: async (codes) => {
     const snapshot = readSnapshot();
@@ -96,4 +104,7 @@ export const browserStore: LocationCodeStore = {
     });
     return next;
   },
+  exportSnapshot: async () => readSnapshot(),
+  /** Replaces what this browser holds. */
+  importSnapshot: async (snapshot) => writeSnapshot(snapshot),
 };

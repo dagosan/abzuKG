@@ -1,4 +1,5 @@
-/* Modified for the ERA RINF frontend, 2026-10-28: added rinfSparqlEndpoint. */
+/* Modified for the ERA RINF frontend, 2026-10-28: added rinfSparqlEndpoint;
+   2026-10-29: added locationCodesApiUrl. */
 import { OidcClientSettings } from "oidc-client-ts";
 import React, { useContext } from "react";
 import { FeatureFlags } from "./FeatureFlags";
@@ -10,6 +11,12 @@ export interface Config {
    * Defaults to ERA's public rinf-plus repository when unset.
    */
   rinfSparqlEndpoint?: string;
+  /**
+   * Location code register in Tiamat (ERA RINF frontend), e.g.
+   * "https://tiamat.example.org/era/v1/location-codes". When unset, requests
+   * and codes are kept in the browser.
+   */
+  locationCodesApiUrl?: string;
   baatTokenProxyEndpoint?: string;
   sentryDSN?: string;
   tiamatEnv?: string;

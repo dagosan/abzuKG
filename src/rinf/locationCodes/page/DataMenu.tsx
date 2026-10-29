@@ -12,35 +12,49 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29; backup through the store (browser or Tiamat) the same day. */
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, Menu, MenuItem, Snackbar, Tooltip } from "@mui/material";
 import { ChangeEvent, useRef, useState } from "react";
 import { useIntl } from "react-intl";
 import { useAppDispatch } from "../../../store/hooks";
-import { readSnapshot, writeSnapshot } from "../store/browserStore";
+import { locationCodeStore, locationCodeStoreKind } from "../store/activeStore";
 import { loadLocationCodes } from "../state/locationCodesThunks";
+import { parseBackup } from "../store/backupFile";
+import type { LocationCodeSnapshot } from "../store/LocationCodeStore";
 
 const BACKUP_FILE_NAME = "location-code-requests.json";
 const JSON_INDENT = 2;
-const MESSAGE_DURATION_MS = 6000;
+const MESSAGE_DURATION_MS = 8000;
+const TEXT_KEY_PREFIX = "rinf_lc_";
 
 /**
- * Backup and restore. Requests live in this browser only, so this is how
- * they move to another browser or survive clearing site data.
+ * Backup and restore, from whichever store is in use. With the browser store
+ * this is how requests move to another browser or into Tiamat; Tiamat adds
+ * a backup's entries and refuses one that disagrees with what it holds.
  */
 export const DataMenu = () => {
   const { formatMessage } = useIntl();
   const dispatch = useAppDispatch();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const [importFailed, setImportFailed] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const label = formatMessage({ id: "rinf_lc_data_menu" });
+  const storedIn = formatMessage({
+    id: `rinf_lc_data_stored_${locationCodeStoreKind()}`,
+  });
 
-  const exportData = () => {
+  const exportData = async () => {
     setAnchor(null);
-    const blob = new Blob([JSON.stringify(readSnapshot(), null, JSON_INDENT)], {
+    let snapshot: LocationCodeSnapshot;
+    try {
+      snapshot = await locationCodeStore.exportSnapshot();
+    } catch (error) {
+      setMessage(refusedMessage(error));
+      return;
+    }
+    const blob = new Blob([JSON.stringify(snapshot, null, JSON_INDENT)], {
       type: "application/json",
     });
     const link = document.createElement("a");
@@ -54,19 +68,29 @@ export const DataMenu = () => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    try {
-      const snapshot = JSON.parse(await file.text());
-      if (!Array.isArray(snapshot.requests) || !Array.isArray(snapshot.codes))
-        throw new Error("Not a backup");
-      writeSnapshot({
-        requests: snapshot.requests,
-        codes: snapshot.codes,
-        sequences: snapshot.sequences ?? {},
-      });
-      dispatch(loadLocationCodes());
-    } catch {
-      setImportFailed(true);
+    const snapshot = parseBackup(await file.text());
+    if (!snapshot) {
+      setMessage(formatMessage({ id: "rinf_lc_data_import_failed" }));
+      return;
     }
+    try {
+      await locationCodeStore.importSnapshot(snapshot);
+      dispatch(loadLocationCodes());
+    } catch (error) {
+      setMessage(refusedMessage(error));
+    }
+  };
+
+  const refusedMessage = (error: unknown): string => {
+    const reason = error instanceof Error ? error.message : String(error);
+    return formatMessage(
+      { id: "rinf_lc_data_refused" },
+      {
+        message: reason.startsWith(TEXT_KEY_PREFIX)
+          ? formatMessage({ id: reason })
+          : reason,
+      },
+    );
   };
 
   return (
@@ -85,6 +109,7 @@ export const DataMenu = () => {
         open={Boolean(anchor)}
         onClose={() => setAnchor(null)}
       >
+        <MenuItem disabled>{storedIn}</MenuItem>
         <MenuItem onClick={exportData}>
           {formatMessage({ id: "rinf_lc_data_export" })}
         </MenuItem>
@@ -98,10 +123,10 @@ export const DataMenu = () => {
         </MenuItem>
       </Menu>
       <Snackbar
-        open={importFailed}
+        open={message !== null}
         autoHideDuration={MESSAGE_DURATION_MS}
-        onClose={() => setImportFailed(false)}
-        message={formatMessage({ id: "rinf_lc_data_import_failed" })}
+        onClose={() => setMessage(null)}
+        message={message}
       />
       <input
         ref={fileInput}
