@@ -12,9 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: "use this" button while picking an asset. */
 
 import { Box, Typography } from "@mui/material";
+import { UseAssetButton } from "../locationCodes/picking/UseAssetButton";
 import { ParameterList } from "./ParameterList";
 import type { DisplayNode } from "./visibleParameters";
 
@@ -39,9 +40,16 @@ export const LinkedObjectSection = ({
         borderColor: "primary.light",
       }}
     >
-      <Typography variant="subtitle2" component="h4" sx={{ fontWeight: 700 }}>
-        {title}
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography
+          variant="subtitle2"
+          component="h4"
+          sx={{ fontWeight: 700, flex: 1 }}
+        >
+          {title}
+        </Typography>
+        <UseAssetButton node={displayNode.node} />
+      </Box>
       <ParameterList parameters={parameters} />
     </Box>
   );

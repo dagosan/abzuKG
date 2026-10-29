@@ -16,7 +16,11 @@ Added for the ERA RINF frontend, 2026-10-29. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RinfLoadStatus } from "../../state/loadStatus";
-import type { LocationCodeRequest } from "../model/LocationCodeRequest";
+import type {
+  LocationCodeRequest,
+  RequestData,
+  RinfLink,
+} from "../model/LocationCodeRequest";
 import type { RegisteredCode } from "../model/RegisteredCode";
 import type { Actor } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
@@ -35,6 +39,15 @@ export interface LocationCodesState {
   working: boolean;
   /** Text key or message of the last failed action. */
   error: string | null;
+  /** Set while the user picks a RINF element on the map for the form. */
+  picking: MapPicking | null;
+  /** The new request form, kept while the user is on the map. */
+  formDraft: RequestData | null;
+}
+
+export interface MapPicking {
+  /** Tracks, platform edges… may be picked too, not only OPs and SoLs. */
+  allowAssets: boolean;
 }
 
 const initialState: LocationCodesState = {
@@ -44,6 +57,8 @@ const initialState: LocationCodesState = {
   actor: readActor(),
   working: false,
   error: null,
+  picking: null,
+  formDraft: null,
 };
 
 const replaceRequest = (
@@ -66,6 +81,23 @@ const locationCodesSlice = createSlice({
     },
     clearLocationCodeError(state) {
       state.error = null;
+    },
+    startPicking(
+      state,
+      action: PayloadAction<{ draft: RequestData; allowAssets: boolean }>,
+    ) {
+      state.formDraft = action.payload.draft;
+      state.picking = { allowAssets: action.payload.allowAssets };
+    },
+    pickRinfElement(state, action: PayloadAction<RinfLink>) {
+      if (state.formDraft) state.formDraft.rinfLink = action.payload;
+      state.picking = null;
+    },
+    cancelPicking(state) {
+      state.picking = null;
+    },
+    clearFormDraft(state) {
+      state.formDraft = null;
     },
   },
   extraReducers: (builder) => {
@@ -100,6 +132,13 @@ const locationCodesSlice = createSlice({
   },
 });
 
-export const { setActor, clearLocationCodeError } = locationCodesSlice.actions;
+export const {
+  setActor,
+  clearLocationCodeError,
+  startPicking,
+  pickRinfElement,
+  cancelPicking,
+  clearFormDraft,
+} = locationCodesSlice.actions;
 
 export const locationCodesReducer = locationCodesSlice.reducer;

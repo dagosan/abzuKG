@@ -20,6 +20,7 @@ import { isCreation } from "../model/codeTypes";
 import { SUBSIDIARY_TYPES } from "../model/subsidiaryTypes";
 import { useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
+import { RinfElementPicker } from "./RinfElementPicker";
 
 interface SubsidiaryCodeFieldsProps {
   form: RequestForm;
@@ -92,6 +93,15 @@ export const SubsidiaryCodeFields = ({ form }: SubsidiaryCodeFieldsProps) => {
           value={data.locationName}
           onChange={(event) => update({ locationName: event.target.value })}
           {...fieldError("locationName", "rinf_lc_field_name_hint")}
+        />
+      )}
+      {data.operation !== "deactivation" && (
+        <RinfElementPicker
+          value={data.rinfLink}
+          onChange={(rinfLink) => update({ rinfLink })}
+          onPickOnMap={form.pickOnMap}
+          label={formatMessage({ id: "rinf_lc_field_rinf_subsidiary" })}
+          {...fieldError("rinfLink", "rinf_lc_field_rinf_subsidiary_hint")}
         />
       )}
     </>

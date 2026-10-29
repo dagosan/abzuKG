@@ -19,6 +19,7 @@ import { isCreation } from "../model/codeTypes";
 import { normalisePrimaryCode, subsidiaryKey } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import { isActiveOn } from "../model/RegisteredCode";
+import { elementOfLink } from "../model/rinfLink";
 import { findSubsidiaryType } from "../model/subsidiaryTypes";
 import { assignableCode } from "./assignableCode";
 import {
@@ -132,4 +133,40 @@ export const subsidiaryValueCheck = (
     : result("codeValueFree", "fail", "rinf_lc_detail_already_registered", {
         code: proposed,
       });
+};
+
+/**
+ * Item 12 for an SLC positioned on a RINF element (a track, a platform
+ * edge…): the element, or the OP or section of line the asset belongs to,
+ * exists today and is where the parent PLC is. Without one, the SLC simply
+ * inherits its parent's position.
+ */
+export const subsidiaryPositionCheck = (
+  { data }: LocationCodeRequest,
+  context: CheckContext,
+): CheckResult => {
+  if (!data.rinfLink || data.operation === "deactivation")
+    return result("rinfPosition", "notApplicable", "rinf_lc_detail_inherited");
+  const element = context.rinfElement;
+  if (!element?.exists)
+    return result("rinfPosition", "fail", "rinf_lc_detail_not_in_rinf");
+  if (!element.validToday)
+    return result("rinfPosition", "warning", "rinf_lc_detail_not_valid_today");
+  const parent = normalisePrimaryCode(data.parentPrimaryCode);
+  const elementOfAsset = elementOfLink(data.rinfLink);
+  const parentInRegister = context.register.some(
+    (code) =>
+      code.key === parent &&
+      code.rinfLink !== null &&
+      elementOfAsset !== null &&
+      elementOfLink(code.rinfLink)?.canonicalId === elementOfAsset.canonicalId,
+  );
+  if (element.codes.includes(parent) || parentInRegister)
+    return result("rinfPosition", "pass", "rinf_lc_detail_on_parent_element", {
+      code: parent,
+    });
+  return result("rinfPosition", "warning", "rinf_lc_detail_other_element", {
+    code: parent,
+    codes: element.codes.join(", ") || "—",
+  });
 };

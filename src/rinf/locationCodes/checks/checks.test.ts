@@ -193,3 +193,59 @@ describe("technical checks", () => {
     ).toBe("warning");
   });
 });
+
+describe("positioning on a RINF asset", () => {
+  const track = {
+    kind: "asset" as const,
+    canonicalId: "http://data.europa.eu/949/track/0088_BELGB_voie-III",
+    label: "Gembloux voie III",
+    assetClass: "Running track",
+    parent: {
+      kind: "operationalPoint" as const,
+      canonicalId: "BELGB",
+      label: "Gembloux",
+    },
+  };
+  const slc = completeData({
+    codeType: "subsidiary",
+    parentPrimaryCode: "BE00438",
+    subsidiaryTypeCode: "01",
+    rinfLink: track,
+  });
+
+  it("refuses an asset for a PLC", () => {
+    expect(
+      admissibilityErrors(completeData({ rinfLink: track })).rinfLink,
+    ).toBe("rinf_lc_error_asset_for_plc");
+  });
+
+  it("accepts a track of the OP the parent PLC is on", () => {
+    const onParent = context({
+      rinfElement: {
+        exists: true,
+        validToday: true,
+        label: "Gembloux",
+        codes: ["BE00438"],
+      },
+    });
+    expect(outcomeOf(slc, onParent, "rinfPosition")).toBe("pass");
+  });
+
+  it("warns when the track's OP carries another PLC", () => {
+    const elsewhere = context({
+      rinfElement: {
+        exists: true,
+        validToday: true,
+        label: "X",
+        codes: ["BE00187"],
+      },
+    });
+    expect(outcomeOf(slc, elsewhere, "rinfPosition")).toBe("warning");
+  });
+
+  it("lets an SLC without an element inherit its parent's position", () => {
+    expect(
+      outcomeOf({ ...slc, rinfLink: null }, context(), "rinfPosition"),
+    ).toBe("notApplicable");
+  });
+});

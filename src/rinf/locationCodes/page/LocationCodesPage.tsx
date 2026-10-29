@@ -24,6 +24,7 @@ import { useAppDispatch } from "../../../store/hooks";
 import { NewRequestForm } from "../form/NewRequestForm";
 import { RegisterTable } from "../register/RegisterTable";
 import { RequestFile } from "../requestFile/RequestFile";
+import { cancelPicking } from "../state/locationCodesSlice";
 import { loadLocationCodes } from "../state/locationCodesThunks";
 import { LocationCodesActionBar } from "./LocationCodesActionBar";
 import { REQUEST_ID_PARAM, requestPath } from "./locationCodesPath";
@@ -50,6 +51,8 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
 
   useEffect(() => {
     dispatch(loadLocationCodes());
+    // Came back without choosing (e.g. by the tab): the map stops picking.
+    dispatch(cancelPicking());
   }, [dispatch]);
 
   return (

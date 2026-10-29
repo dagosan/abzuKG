@@ -100,6 +100,7 @@ export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
           <RinfElementPicker
             value={data.rinfLink}
             onChange={(rinfLink) => update({ rinfLink })}
+            onPickOnMap={form.pickOnMap}
             label={formatMessage({ id: `rinf_lc_field_rinf${optionalSuffix}` })}
             {...fieldError("rinfLink")}
           />

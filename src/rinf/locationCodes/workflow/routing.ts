@@ -22,11 +22,14 @@ import type {
 } from "../model/LocationCodeRequest";
 
 /**
- * Step 5 applies to a PLC being created or amended. An SLC inherits the
- * position of its parent PLC (procedure Table 4); closing a code needs none.
+ * Step 5 applies to a PLC being created or amended, and to an SLC the
+ * requester positioned on a RINF element (e.g. a track). Otherwise an SLC
+ * inherits its parent's position (procedure Table 4); closing needs none.
  */
-export const needsRinfHarmonisation = ({ data }: LocationCodeRequest) =>
-  data.codeType === "primary" && data.operation !== "deactivation";
+export const needsRinfHarmonisation = ({ data }: LocationCodeRequest) => {
+  if (data.operation === "deactivation") return false;
+  return data.codeType === "primary" || data.rinfLink !== null;
+};
 
 /** Non-EU country or legacy range: uniqueness confirmed first (8.7, 10.3). */
 export const needsExternalCoordination = ({ data }: LocationCodeRequest) =>

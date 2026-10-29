@@ -180,6 +180,26 @@ Known limits of this first version:
 The OP details panel has a "Request a location code" button that opens the
 form positioned on that OP.
 
+**Picking the RINF element on the map.** In the form, "Pick on map" keeps the
+form (`formDraft` in the slice) and opens the map with a banner. Clicking an
+OP or section of line (or finding it with the header search) opens its panel
+with "Use this operational point / section of line". For an SLC, each
+running track, siding, platform edge and tunnel in the panel also has
+"Use this" (`picking/UseAssetButton.tsx`; classes in `model/rinfLink.ts`):
+assets are stored by their `era:canonicalURI` with the OP or section of
+line they belong to. The form comes back at `/location-codes/new?resume=1`.
+For an SLC the map opens on the OP its parent PLC is on.
+
+- A PLC is positioned on an OP or section of line only (Art. 9(6), procedure
+  8.6); an asset is refused for a PLC.
+- An SLC may be positioned on an OP, section of line or asset; it then goes
+  through RINF harmonisation (step 5) like a PLC, and a check warns when
+  the element does not carry the parent PLC. Without one it inherits the
+  parent's position.
+- Signals and switches are in the asset list but are rarely linked to an OP
+  or section of line in the KG (976 of 8,441 signals, 135 of 17,853
+  switches), so they seldom appear in a panel.
+
 ## Structure
 
 | Folder             | What it does                                                       |

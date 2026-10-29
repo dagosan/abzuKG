@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: "use this" button while picking an asset. */
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
@@ -23,6 +23,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useIntl } from "react-intl";
+import { UseAssetButton } from "../locationCodes/picking/UseAssetButton";
 import { LinkedObjectSection } from "./LinkedObjectSection";
 import { ParameterList } from "./ParameterList";
 import type { DisplayNode } from "./visibleParameters";
@@ -58,10 +59,11 @@ export const TrackAccordion = ({
         <Typography
           variant="subtitle1"
           component="h3"
-          sx={{ fontWeight: 700, flex: 1 }}
+          sx={{ fontWeight: 700, flex: 1, minWidth: 0, alignSelf: "center" }}
         >
           {title}
         </Typography>
+        <UseAssetButton node={displayNode.node} />
         <Chip
           size="small"
           label={formatMessage({ id: "rinf_parameter_count" }, { count })}

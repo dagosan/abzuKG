@@ -146,7 +146,7 @@ const changesOf = (
         status: statusAfterValidation(request),
         recommendation: payload.recommendation ?? null,
         rinfPosition:
-          request.data.codeType === "subsidiary"
+          request.data.codeType === "subsidiary" && !request.data.rinfLink
             ? { outcome: "inherited", link: null, by: actor, at: now }
             : request.rinfPosition,
       };

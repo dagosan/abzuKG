@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: keeps each node's canonical URI. */
 
 import { ERA_NAMESPACE } from "../api/queryParts";
 import type { SparqlBinding } from "../api/sparqlClient";
@@ -20,6 +20,7 @@ import { localName, stripValidity } from "./labels";
 
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
+const CANONICAL_URI = `${ERA_NAMESPACE}canonicalURI`;
 const NOT_APPLICABLE = `${ERA_NAMESPACE}notApplicable`;
 const NOT_YET_AVAILABLE = `${ERA_NAMESPACE}notYetAvailable`;
 const GENERIC_CLASS = `${ERA_NAMESPACE}InfrastructureElement`;
@@ -55,6 +56,8 @@ export interface DetailsNode {
   position: [number, number] | null;
   classUri: string | null;
   classLabel: string | null;
+  /** Stable id across versions (era:canonicalURI), e.g. …/track/0088_BELGB_…. */
+  canonicalUri: string | null;
   parameters: RawParameter[];
   children: DetailsNode[];
 }
@@ -67,6 +70,7 @@ export const newNode = (uri: string): DetailsNode => ({
   position: null,
   classUri: null,
   classLabel: null,
+  canonicalUri: null,
   parameters: [],
   children: [],
 });
@@ -119,6 +123,8 @@ export const applyStatement = (
   const object = binding.o?.value ?? "";
   if (property === RDFS_LABEL) {
     node.label = stripValidity(object);
+  } else if (property === CANONICAL_URI) {
+    node.canonicalUri ??= object;
   } else if (property === RDF_TYPE) {
     if (!object.startsWith(ERA_NAMESPACE) || object === GENERIC_CLASS) return;
     node.classUri ??= object;

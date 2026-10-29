@@ -263,3 +263,59 @@ describe("closing a PLC", () => {
     );
   });
 });
+
+describe("RINF harmonisation for an SLC", () => {
+  const slcData = (withTrack: boolean): RequestData => ({
+    ...emptyRequestData(),
+    codeType: "subsidiary",
+    parentPrimaryCode: "BE00438",
+    subsidiaryTypeCode: "01",
+    locationName: "Track III",
+    rinfLink: withTrack
+      ? {
+          kind: "asset",
+          canonicalId: "http://data.europa.eu/949/track/x",
+          label: "voie III",
+          parent: {
+            kind: "operationalPoint",
+            canonicalId: "BELGB",
+            label: "Gembloux",
+          },
+        }
+      : null,
+  });
+  const validated = (data: RequestData) => {
+    let request = createRequest("s", data, requester, "2026-10-01T09:00:00Z");
+    request = applyAction(
+      request,
+      "register",
+      administrator,
+      {},
+      "2026-10-01T10:00:00Z",
+    );
+    request = applyAction(
+      request,
+      "runChecks",
+      administrator,
+      { checks: [] },
+      "2026-10-01T11:00:00Z",
+    );
+    return applyAction(
+      request,
+      "completeValidation",
+      administrator,
+      {},
+      "2026-10-01T12:00:00Z",
+    );
+  };
+
+  it("goes to the RINF correspondent when positioned on a track", () => {
+    expect(validated(slcData(true)).status).toBe("rinfHarmonisation");
+  });
+
+  it("inherits the parent's position otherwise", () => {
+    const request = validated(slcData(false));
+    expect(request.status).toBe("awaitingDecision");
+    expect(request.rinfPosition?.outcome).toBe("inherited");
+  });
+});

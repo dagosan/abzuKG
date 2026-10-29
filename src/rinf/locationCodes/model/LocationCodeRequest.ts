@@ -36,11 +36,26 @@ export type RequestStatus =
   | "closed"
   | "underReview";
 
-/** A RINF operational point or section of line a code is positioned on. */
-export interface RinfLink {
+/** An OP or a section of line, or an asset (track, platform edge, …) of one. */
+export type RinfLinkKind = DetailsKind | "asset";
+
+/** The OP or section of line an asset belongs to. */
+export interface RinfLinkParent {
   kind: DetailsKind;
   canonicalId: string;
   label: string;
+}
+
+/** The RINF element a code is positioned on. */
+export interface RinfLink {
+  kind: RinfLinkKind;
+  /** OP or section of line: its canonical id (BELGB). Asset: its canonical URI. */
+  canonicalId: string;
+  label: string;
+  /** Asset: what it is, e.g. "Running track". */
+  assetClass?: string;
+  /** Asset: the OP or section of line it is part of. */
+  parent?: RinfLinkParent;
 }
 
 export interface Requester {
@@ -65,7 +80,8 @@ export interface RequestData {
   locationName: string;
   /** PLC: organisation code of the IM of the operating site (procedure 9). */
   imOrganisationCode: string;
-  /** PLC: the RINF element it is positioned on. */
+  /** PLC: the OP or section of line it is positioned on. SLC: optionally
+   *  the OP, section of line or asset (track, platform edge, …) it is. */
   rinfLink: RinfLink | null;
   /** SLC: the parent PLC. */
   parentPrimaryCode: string;

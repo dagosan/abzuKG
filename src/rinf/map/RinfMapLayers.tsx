@@ -12,13 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: banner while picking an element for a location code request. */
 
 import { RinfLoadingIndicator } from "./RinfLoadingIndicator";
 import { RinfOperationalPointsLayer } from "./RinfOperationalPointsLayer";
 import { RinfSearchResultsLayer } from "./RinfSearchResultsLayer";
 import { RinfSectionsOfLineLayer } from "./RinfSectionsOfLineLayer";
 import { ReportOnMapChip } from "./ReportOnMapChip";
+import { PickingBanner } from "../locationCodes/picking/PickingBanner";
 import { useAppSelector } from "../../store/hooks";
 
 /**
@@ -37,6 +38,7 @@ export const RinfMapLayers = () => {
       <RinfSearchResultsLayer />
       <RinfLoadingIndicator />
       {showReport && <ReportOnMapChip />}
+      <PickingBanner />
     </>
   );
 };

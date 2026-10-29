@@ -26,6 +26,10 @@ export const REQUEST_ID_PARAM = "requestId";
 export const newRequestPath = (prefill?: URLSearchParams): string =>
   `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}${prefill ? `?${prefill}` : ""}`;
 
+/** Back to the form being filled in, e.g. after picking on the map. */
+export const RESUME_PARAM = "resume";
+export const resumeRequestPath = `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${RESUME_PARAM}=1`;
+
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
 
 export const requestPath = (requestId: string): string =>

@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: link to request a location code for an OP. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: link to request a location code for an OP; "use this" while picking for a request. */
 
 import {
   Box,
@@ -34,6 +34,7 @@ import { DetailsContent } from "./DetailsContent";
 import { DetailsHeader } from "./DetailsHeader";
 import { ParameterFilter } from "./ParameterFilter";
 import { RequestCodeLink } from "../locationCodes/page/RequestCodeLink";
+import { UseElementButton } from "../locationCodes/picking/UseElementButton";
 import {
   DRAWER_WIDTH_DESKTOP,
   DRAWER_WIDTH_MOBILE,
@@ -65,6 +66,7 @@ export const DetailsPanel = ({
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [filter, setFilter] = useState("");
   const { status, roots } = useAppSelector((state) => state.rinf.details);
+  const picking = useAppSelector((state) => state.rinf.locationCodes.picking);
   const { titleId, notFoundId } = DETAILS_KINDS[kind];
   const drawerWidth = isMobile
     ? DRAWER_WIDTH_MOBILE
@@ -101,7 +103,10 @@ export const DetailsPanel = ({
         onClose={onClose}
         onBack={onBack}
       />
-      {kind === "operationalPoint" && status === "loaded" && (
+      {status === "loaded" && picking && (
+        <UseElementButton kind={kind} canonicalId={canonicalId} name={name} />
+      )}
+      {kind === "operationalPoint" && status === "loaded" && !picking && (
         <RequestCodeLink canonicalId={canonicalId} name={name} />
       )}
       <ParameterFilter value={filter} onChange={setFilter} />

@@ -18,6 +18,7 @@ import { isCreation } from "../model/codeTypes";
 import { normalisePrimaryCode } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import type { RegisteredCode } from "../model/RegisteredCode";
+import { elementOfLink } from "../model/rinfLink";
 import type { CheckContext } from "./checkContext";
 import {
   fetchCountryCodes,
@@ -55,6 +56,7 @@ export const gatherCheckContext = async (
   const concerned = primaryCodeConcerned(request);
   const needsSubsidiaries =
     data.codeType === "subsidiary" || data.operation === "deactivation";
+  const element = data.rinfLink ? elementOfLink(data.rinfLink) : null;
   const [
     kgCountryCodes,
     kgProposedCode,
@@ -70,13 +72,9 @@ export const gatherCheckContext = async (
     concerned && needsSubsidiaries
       ? fetchSubsidiaryCodes(endpoint, concerned)
       : [],
-    data.codeType === "primary" && data.rinfLink
-      ? fetchElement(
-          endpoint,
-          data.rinfLink.kind,
-          data.rinfLink.canonicalId,
-          today,
-        )
+    // For an asset, the OP or section of line it belongs to.
+    element
+      ? fetchElement(endpoint, element.kind, element.canonicalId, today)
       : null,
   ]);
   return {

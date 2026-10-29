@@ -14,30 +14,22 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
+import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
-  Autocomplete,
   Box,
+  Button,
   Chip,
-  CircularProgress,
+  FormHelperText,
   IconButton,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { KeyboardEvent, useState } from "react";
 import { useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router-dom";
-import { detailsPath } from "../../detailsKinds";
-import type { RinfSearchResult } from "../../models/RinfSearchResult";
-import { searchResultKey } from "../../models/RinfSearchResult";
-import { SearchResultOption } from "../../search/SearchResultOption";
 import type { RinfLink } from "../model/LocationCodeRequest";
-import { useRinfElementSearch } from "./hooks/useRinfElementSearch";
-
-const SPINNER_SIZE = 16;
-
-type MuiKeyboardEvent = KeyboardEvent & { defaultMuiPrevented?: boolean };
+import { rinfLinkPath, rinfLinkText } from "../model/rinfLink";
+import { RinfElementSearchField } from "./RinfElementSearchField";
 
 interface RinfElementPickerProps {
   value: RinfLink | null;
@@ -45,30 +37,42 @@ interface RinfElementPickerProps {
   label: string;
   helperText?: string;
   error?: boolean;
+  /** Offers "Pick on map" when given; the caller hands over to the map. */
+  onPickOnMap?: () => void;
 }
 
-const toLink = (result: RinfSearchResult): RinfLink => ({
-  kind: result.kind,
-  canonicalId: result.canonicalId,
-  label: result.name,
-});
-
-/** Picks the RINF OP or section of line a code is positioned on (8.6). */
+/**
+ * The RINF element a code is positioned on: picked on the map, or found by
+ * name, UOPID or line number.
+ */
 export const RinfElementPicker = ({
   value,
   onChange,
   label,
   helperText,
   error,
+  onPickOnMap,
 }: RinfElementPickerProps) => {
   const { formatMessage } = useIntl();
-  const { status, results, search } = useRinfElementSearch();
-  const [text, setText] = useState("");
-  const loading = status === "loading";
+  const openLabel = formatMessage({ id: "rinf_lc_open_in_rinf" });
+  const path = value ? rinfLinkPath(value) : null;
+  const pickButton = onPickOnMap && (
+    <Button
+      size="small"
+      variant="outlined"
+      startIcon={<MapOutlinedIcon />}
+      onClick={onPickOnMap}
+      sx={{ flexShrink: 0 }}
+    >
+      {formatMessage({
+        id: value ? "rinf_lc_pick_again" : "rinf_lc_pick_on_map",
+      })}
+    </Button>
+  );
 
-  if (value) {
-    return (
-      <Box>
+  return (
+    <Box>
+      {value && (
         <Typography
           variant="caption"
           component="div"
@@ -76,82 +80,62 @@ export const RinfElementPicker = ({
         >
           {label}
         </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            flexWrap: "wrap",
-          }}
-        >
-          <Chip
-            label={`${value.label} · ${value.canonicalId}`}
-            onDelete={() => onChange(null)}
-            color="primary"
-            variant="outlined"
+      )}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 1,
+          flexWrap: "wrap",
+        }}
+      >
+        {value ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              minWidth: 0,
+            }}
+          >
+            <Chip
+              label={rinfLinkText(value)}
+              onDelete={() => onChange(null)}
+              color="primary"
+              variant="outlined"
+              sx={{ maxWidth: "100%" }}
+            />
+            {path && (
+              <Tooltip title={openLabel}>
+                <IconButton
+                  size="small"
+                  component={RouterLink}
+                  to={path}
+                  target="_blank"
+                  aria-label={openLabel}
+                >
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        ) : (
+          <RinfElementSearchField
+            label={label}
+            error={error}
+            onPick={onChange}
           />
-          <Tooltip title={formatMessage({ id: "rinf_lc_open_in_rinf" })}>
-            <IconButton
-              size="small"
-              component={RouterLink}
-              to={detailsPath(value.kind, value.canonicalId)}
-              target="_blank"
-              aria-label={formatMessage({ id: "rinf_lc_open_in_rinf" })}
-            >
-              <OpenInNewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        )}
+        {pickButton}
       </Box>
-    );
-  }
-
-  const handleKeyDown = (event: MuiKeyboardEvent) => {
-    if (event.key !== "Enter") return;
-    event.defaultMuiPrevented = true;
-    event.preventDefault();
-    search(text);
-  };
-
-  return (
-    <Autocomplete<RinfSearchResult>
-      options={loading ? [] : results}
-      value={null}
-      inputValue={text}
-      loading={loading}
-      filterOptions={(all) => all}
-      getOptionLabel={(option) => option.name}
-      isOptionEqualToValue={(option, other) =>
-        searchResultKey(option) === searchResultKey(other)
-      }
-      onInputChange={(_event, next, reason) =>
-        reason === "input" && setText(next)
-      }
-      onChange={(_event, result) => result && onChange(toLink(result))}
-      onKeyDown={handleKeyDown}
-      noOptionsText={formatMessage({
-        id:
-          status === "idle"
-            ? "rinf_search_press_enter"
-            : "rinf_search_no_results",
-      })}
-      loadingText={<CircularProgress size={SPINNER_SIZE} />}
-      renderOption={(props, option) => (
-        <li {...props} key={searchResultKey(option)}>
-          <SearchResultOption result={option} />
-        </li>
-      )}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          size="small"
-          label={label}
-          error={error}
-          helperText={
-            helperText ?? formatMessage({ id: "rinf_lc_rinf_picker_hint" })
-          }
-        />
-      )}
-    />
+      <FormHelperText error={error} sx={{ mx: 1.75 }}>
+        {helperText ??
+          formatMessage({
+            id: onPickOnMap
+              ? "rinf_lc_rinf_picker_hint_map"
+              : "rinf_lc_rinf_picker_hint",
+          })}
+      </FormHelperText>
+    </Box>
   );
 };

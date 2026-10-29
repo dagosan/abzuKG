@@ -17,13 +17,13 @@ Added for the ERA RINF frontend, 2026-10-29. */
 import { Link } from "@mui/material";
 import { useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router-dom";
-import { detailsPath } from "../../detailsKinds";
 import { countryName } from "../model/countries";
 import { languageName } from "../model/languages";
 import type {
   LocationCodeRequest,
   RinfLink,
 } from "../model/LocationCodeRequest";
+import { rinfLinkPath, rinfLinkText } from "../model/rinfLink";
 import { findSubsidiaryType } from "../model/subsidiaryTypes";
 import { FactList, RequestFileSection } from "./RequestFileSection";
 
@@ -31,13 +31,18 @@ interface RinfLinkTextProps {
   link: RinfLink | null;
 }
 
-/** "Gembloux · BEGB", opening the element on the map. */
-export const RinfLinkText = ({ link }: RinfLinkTextProps) =>
-  link ? (
-    <Link component={RouterLink} to={detailsPath(link.kind, link.canonicalId)}>
-      {link.label} · {link.canonicalId}
+/** "Gembloux · BELGB", opening the element (or an asset's OP) on the map. */
+export const RinfLinkText = ({ link }: RinfLinkTextProps) => {
+  if (!link) return null;
+  const path = rinfLinkPath(link);
+  return path ? (
+    <Link component={RouterLink} to={path}>
+      {rinfLinkText(link)}
     </Link>
-  ) : null;
+  ) : (
+    <>{rinfLinkText(link)}</>
+  );
+};
 
 interface RequestDataSectionProps {
   request: LocationCodeRequest;

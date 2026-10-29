@@ -31,6 +31,7 @@ import {
 import {
   parentCheck,
   subsidiaryDuplicateCheck,
+  subsidiaryPositionCheck,
   subsidiaryValueCheck,
 } from "./subsidiaryChecks";
 
@@ -118,11 +119,7 @@ export const runTechnicalChecks = (
       : parentCheck(request, context),
     isPrimary
       ? primaryNetworkCheck(request, context)
-      : result(
-          "onNetworkNoCompetition",
-          "notApplicable",
-          "rinf_lc_detail_inherited",
-        ),
+      : subsidiaryPositionCheck(request, context),
     isPrimary && isCreation(data.operation)
       ? result("retailDoublet", "manual", "rinf_lc_detail_retail_manual")
       : result("retailDoublet", "notApplicable", NOT_APPLICABLE),

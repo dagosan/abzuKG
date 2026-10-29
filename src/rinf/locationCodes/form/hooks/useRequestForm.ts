@@ -23,11 +23,16 @@ import {
 } from "../../checks/admissibility";
 import { isCountryPrefix } from "../../model/countries";
 import type { RequestData, Requester } from "../../model/LocationCodeRequest";
-import { PREFILL_PARAMS, requestPath } from "../../page/locationCodesPath";
-import { setActor } from "../../state/locationCodesSlice";
+import {
+  PREFILL_PARAMS,
+  requestPath,
+  RESUME_PARAM,
+} from "../../page/locationCodesPath";
+import { clearFormDraft, setActor } from "../../state/locationCodesSlice";
 import { submitLocationCodeRequest } from "../../state/locationCodesThunks";
 import { emptyRequestData } from "../../workflow/createRequest";
 import { readRequester, writeRequester } from "../requesterPreference";
+import { usePickOnMap } from "./usePickOnMap";
 
 export interface RequestForm {
   data: RequestData;
@@ -37,6 +42,8 @@ export interface RequestForm {
   errors: AdmissibilityErrors;
   submitting: boolean;
   submit: () => void;
+  /** Leaves for the map to pick the RINF element; the form waits. */
+  pickOnMap: () => void;
 }
 
 /** The form's first state: remembered requester, and what the URL pre-fills. */
@@ -72,10 +79,16 @@ export const useRequestForm = (): RequestForm => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const actor = useAppSelector((state) => state.rinf.locationCodes.actor);
-  const [data, setData] = useState<RequestData>(() =>
-    initialData(params, actor.name),
+  const { actor, formDraft } = useAppSelector(
+    (state) => state.rinf.locationCodes,
   );
+  // Back from the map: the form as it was, with the element picked there.
+  const [data, setData] = useState<RequestData>(() =>
+    params.get(RESUME_PARAM) && formDraft
+      ? formDraft
+      : initialData(params, actor.name),
+  );
+  const pickOnMap = usePickOnMap(data);
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const allErrors = useMemo(() => admissibilityErrors(data), [data]);
@@ -107,7 +120,10 @@ export const useRequestForm = (): RequestForm => {
     if (!actor.name) dispatch(setActor(submitter));
     dispatch(submitLocationCodeRequest({ data, actor: submitter }))
       .unwrap()
-      .then((request) => navigate(requestPath(request.id)))
+      .then((request) => {
+        dispatch(clearFormDraft());
+        navigate(requestPath(request.id));
+      })
       .finally(() => setSubmitting(false));
   }, [allErrors, submitting, data, actor, dispatch, navigate]);
 
@@ -118,5 +134,6 @@ export const useRequestForm = (): RequestForm => {
     errors: attempted ? allErrors : {},
     submitting,
     submit,
+    pickOnMap,
   };
 };

@@ -91,6 +91,9 @@ const primaryErrors = (data: RequestData): AdmissibilityErrors => {
         imOrganisationCode: "rinf_lc_error_organisation_code",
       }),
     ...(creating && !data.rinfLink && { rinfLink: REQUIRED }),
+    ...(data.rinfLink?.kind === "asset" && {
+      rinfLink: "rinf_lc_error_asset_for_plc",
+    }),
   };
 };
 
