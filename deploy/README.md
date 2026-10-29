@@ -12,23 +12,22 @@ only serves files: one small nginx container, no database, no backend.
 | `docker-compose.yml` (repo root) | Runs it on port 8090, restarts with the NAS |
 | `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; caching |
 | `deploy/bootstrap.json` | Default config: modern UI, ERA endpoint, map centred on Europe |
+| `deploy/update.sh` | Installs or updates from GitHub (`master`) and rebuilds the container |
 
 ## Install on a QNAP NAS (Container Station)
 
 1. In QTS, turn on SSH (Control Panel → Network & File Services → Telnet/SSH),
    then from your Mac: `ssh admin@<nas-address>`.
-2. Download the branch and start it (the repository is public, so no git is needed):
+2. Download `master` and start it (the repository is public, so no git is needed):
 
    ```sh
-   cd /share/Container
-   wget -O abzukg.tar.gz https://github.com/dagosan/abzuKG/archive/refs/heads/rinf-operational-points.tar.gz
-   tar xzf abzukg.tar.gz && rm abzukg.tar.gz
-   mv abzuKG-rinf-operational-points abzukg && cd abzukg
-   docker compose up -d --build
+   wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/update.sh | sh
    ```
 
-   The first build takes a few minutes (npm install). The container then shows
-   up in Container Station as `abzukg`.
+   The script downloads the latest commit of `master` into
+   `/share/Container/abzukg` and runs `docker compose up -d --build`. The first
+   build takes a few minutes (npm install). The container then shows up in
+   Container Station as `abzukg`.
 3. Open `http://<nas-address>:8090`, or `http://ts464:8090` from any device on
    your tailnet.
 
@@ -37,13 +36,22 @@ If port 8090 is taken, change the left number in `docker-compose.yml`
 
 ## Update to the latest commit
 
+Run the same command again:
+
 ```sh
-cd /share/Container && rm -rf abzukg
-wget -O abzukg.tar.gz https://github.com/dagosan/abzuKG/archive/refs/heads/rinf-operational-points.tar.gz
-tar xzf abzukg.tar.gz && rm abzukg.tar.gz
-mv abzuKG-rinf-operational-points abzukg && cd abzukg
-docker compose up -d --build
+wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/update.sh | sh
 ```
+
+It replaces the app folder with the latest `master` and rebuilds; the old
+container keeps serving until the new one is ready. Your own config (below)
+lives outside that folder, so it survives.
+
+To check which version is running, open `http://<nas-address>:8090/version.txt`:
+it shows the branch and the commit it was built from, to compare with the
+latest commit on GitHub.
+
+To try another branch, add its name: `… | sh -s some-branch`. For a parent
+folder other than `/share/Container`, set `ABZUKG_DIR` before `sh`.
 
 ## Change the config without rebuilding
 
