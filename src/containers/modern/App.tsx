@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF routes. */
+/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF routes. 2026-10-29: map hidden on the RINF reports page. */
 
 import { ComponentToggle } from "@entur/react-component-toggle";
 import { Box } from "@mui/material";
@@ -44,6 +44,7 @@ import { UnsavedChangesGuard } from "../../components/modern/Shared/UnsavedChang
 import GroupOfStopPlaces from "./GroupOfStopPlaces";
 import ReportPage from "./ReportPage";
 import { rinfRoutes } from "../../rinf/routes";
+import { RINF_REPORTS_PATH } from "../../rinf/reports/rinfReportsPath";
 import { StopPlace } from "./StopPlace";
 import { StopPlaces } from "./StopPlaces";
 
@@ -56,8 +57,10 @@ import { StopPlaces } from "./StopPlaces";
  */
 const PersistentMap = () => {
   const matchReports = useMatch(`/${AppRoutes.REPORTS}`);
+  const matchRinfReports = useMatch(RINF_REPORTS_PATH);
+  const hidden = matchReports || matchRinfReports;
   return (
-    <Box sx={{ visibility: matchReports ? "hidden" : "visible" }}>
+    <Box sx={{ visibility: hidden ? "hidden" : "visible" }}>
       <ModernEditStopMap />
     </Box>
   );

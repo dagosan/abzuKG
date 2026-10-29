@@ -20,14 +20,14 @@ import type { DetailsKind } from "../../detailsKinds";
 import { matchedIds } from "../../models/parameterMatches";
 
 /**
- * Canonical ids of the places of `kind` matching the open parameter search,
- * or null when no search results are open (nothing to highlight).
+ * Canonical ids of the places of `kind` in the report shown on the map,
+ * or null when no report is shown there (nothing to highlight).
  */
 export const useMatchedIds = (kind: DetailsKind): string[] | null => {
-  const { resultsKey, resultsStatus, places } = useAppSelector(
+  const { resultsKey, resultsStatus, places, showOnMap } = useAppSelector(
     (state) => state.rinf.parameterSearch,
   );
-  const active = resultsKey !== null && resultsStatus === "loaded";
+  const active = showOnMap && resultsKey !== null && resultsStatus === "loaded";
   return useMemo(
     () => (active ? matchedIds(places, kind) : null),
     [active, places, kind],

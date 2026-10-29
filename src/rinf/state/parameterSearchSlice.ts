@@ -21,11 +21,7 @@ import type { PlaceMatch } from "../models/parameterMatches";
 import type { ValueInUse } from "../models/parameterValues";
 import type { ScopeOptions } from "../models/scopeOptions";
 import type { RinfLoadStatus } from "./loadStatus";
-import {
-  fetchCarrierTypes,
-  fetchScopeOptions,
-  fetchValuesInUse,
-} from "./parameterProfileThunks";
+import { addProfileCases } from "./parameterProfileCases";
 import {
   PLACE_MATCHES_LIMIT,
   runParameterSearch,
@@ -46,8 +42,12 @@ export interface ParameterSearchState {
   resultsStatus: RinfLoadStatus;
   places: PlaceMatch[];
   truncated: boolean;
-  /** Address of the search, so a details panel can lead back to it. */
+  /** Address of the report, so the tab and a details panel can lead back to it. */
   searchPath: string | null;
+  /** The results are drawn on the map, the rest faded ("Show on map"). */
+  showOnMap: boolean;
+  /** The map should zoom to the results once, then clears this. */
+  fitPending: boolean;
 }
 
 const initialState: ParameterSearchState = {
@@ -63,6 +63,8 @@ const initialState: ParameterSearchState = {
   places: [],
   truncated: false,
   searchPath: null,
+  showOnMap: false,
+  fitPending: false,
 };
 
 const parameterSearchSlice = createSlice({
@@ -72,57 +74,29 @@ const parameterSearchSlice = createSlice({
     setSearchPath(state, action: PayloadAction<string>) {
       state.searchPath = action.payload;
     },
-    /** Ends the search: results and their map highlight go away. */
-    clearParameterSearch(state) {
-      state.resultsKey = null;
-      state.resultsStatus = "idle";
-      state.places = [];
-      state.truncated = false;
-      state.searchPath = null;
+    showResultsOnMap(state) {
+      state.showOnMap = true;
+      state.fitPending = true;
+    },
+    hideResultsOnMap(state) {
+      state.showOnMap = false;
+      state.fitPending = false;
+    },
+    mapFittedToResults(state) {
+      state.fitPending = false;
     },
   },
   extraReducers: (builder) => {
+    addProfileCases(builder);
     builder
-      .addCase(fetchScopeOptions.pending, (state) => {
-        state.scopeStatus = "loading";
-      })
-      .addCase(fetchScopeOptions.fulfilled, (state, action) => {
-        state.scopeOptions = action.payload;
-        state.scopeStatus = "loaded";
-      })
-      .addCase(fetchScopeOptions.rejected, (state) => {
-        state.scopeStatus = "failed";
-      })
-      .addCase(fetchCarrierTypes.pending, (state) => {
-        state.carriersStatus = "loading";
-      })
-      .addCase(fetchCarrierTypes.fulfilled, (state, action) => {
-        state.carriersByProperty[action.meta.arg.property] = action.payload;
-        state.carriersStatus = "loaded";
-      })
-      .addCase(fetchCarrierTypes.rejected, (state, action) => {
-        if (!action.meta.aborted) state.carriersStatus = "failed";
-      })
-      .addCase(fetchValuesInUse.pending, (state, action) => {
-        state.valuesStatus = "loading";
-        state.values = [];
-        state.valuesProperty = action.meta.arg.property;
-      })
-      .addCase(fetchValuesInUse.fulfilled, (state, action) => {
-        if (action.meta.arg.property !== state.valuesProperty) return;
-        state.values = action.payload;
-        state.valuesStatus = "loaded";
-      })
-      .addCase(fetchValuesInUse.rejected, (state, action) => {
-        if (action.meta.aborted) return;
-        if (action.meta.arg.property !== state.valuesProperty) return;
-        state.valuesStatus = "failed";
-      })
       .addCase(runParameterSearch.pending, (state, action) => {
         state.resultsKey = criteriaKey(action.meta.arg.criteria);
         state.resultsStatus = "loading";
         state.places = [];
         state.truncated = false;
+        // New results are shown on the map only when asked for.
+        state.showOnMap = false;
+        state.fitPending = false;
       })
       .addCase(runParameterSearch.fulfilled, (state, action) => {
         if (criteriaKey(action.meta.arg.criteria) !== state.resultsKey) return;
@@ -138,7 +112,11 @@ const parameterSearchSlice = createSlice({
   },
 });
 
-export const { setSearchPath, clearParameterSearch } =
-  parameterSearchSlice.actions;
+export const {
+  setSearchPath,
+  showResultsOnMap,
+  hideResultsOnMap,
+  mapFittedToResults,
+} = parameterSearchSlice.actions;
 
 export const parameterSearchReducer = parameterSearchSlice.reducer;

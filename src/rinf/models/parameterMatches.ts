@@ -18,6 +18,7 @@ import { ERA_NAMESPACE } from "../api/queryParts";
 import type { SparqlBinding } from "../api/sparqlClient";
 import { canonicalIdFromUri, DetailsKind } from "../detailsKinds";
 import { localName, sectionOfLineName, stripValidity } from "./labels";
+import { LinePositions, parseWktLines } from "./wkt";
 
 /** A section of line or OP holding at least one element that matches. */
 export interface PlaceMatch {
@@ -25,14 +26,27 @@ export interface PlaceMatch {
   canonicalId: string;
   name: string;
   countryCode: string;
+  /** National line number of a section of line, e.g. "0504"; null for OPs. */
+  lineNumber: string | null;
   /** Organisation code of the IM whose dataset holds the match. */
   imCode: string;
   /** How many matching elements it holds, and of which type (e.g. RunningTrack). */
   matches: number;
   elementTypeUri: string | null;
+  /** Where the map draws it: a SoL's lines, or an OP's [lng, lat]. */
+  lines: LinePositions[];
+  lngLat: [number, number] | null;
 }
 
 const SECTION_OF_LINE_TYPE = `${ERA_NAMESPACE}SectionOfLine`;
+
+const toLngLat = (binding: SparqlBinding): [number, number] | null => {
+  const lat = Number(binding.latitude?.value);
+  const lng = Number(binding.longitude?.value);
+  return binding.latitude && Number.isFinite(lat) && Number.isFinite(lng)
+    ? [lng, lat]
+    : null;
+};
 
 export const toPlaceMatch = (binding: SparqlBinding): PlaceMatch | null => {
   const kind: DetailsKind =
@@ -50,9 +64,12 @@ export const toPlaceMatch = (binding: SparqlBinding): PlaceMatch | null => {
         ? sectionOfLineName(label)
         : stripValidity(label),
     countryCode: localName(binding.inCountry?.value ?? ""),
+    lineNumber: binding.line?.value || null,
     imCode: localName(binding.imDataset?.value ?? ""),
     matches: Number.parseInt(binding.matches?.value ?? "0", 10),
     elementTypeUri: binding.elementType?.value || null,
+    lines: binding.wkt?.value ? parseWktLines(binding.wkt.value) : [],
+    lngLat: toLngLat(binding),
   };
 };
 

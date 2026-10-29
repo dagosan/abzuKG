@@ -25,10 +25,13 @@ import { toPlaceMatch } from "../rinf/models/parameterMatches";
 import { inferValueKind, ValueInUse } from "../rinf/models/parameterValues";
 import { datasetsToSearch, toScopeOptions } from "../rinf/models/scopeOptions";
 import {
-  clearParameterSearch,
+  hideResultsOnMap,
+  mapFittedToResults,
   parameterSearchReducer,
   setSearchPath,
+  showResultsOnMap,
 } from "../rinf/state/parameterSearchSlice";
+import { runParameterSearch } from "../rinf/state/parameterSearchThunk";
 
 const ERA = "http://data.europa.eu/949/";
 const XSD = "http://www.w3.org/2001/XMLSchema#";
@@ -175,15 +178,47 @@ describe("matchOpacity", () => {
 });
 
 describe("parameterSearchReducer", () => {
-  it("forgets the results and the way back when the search is closed", () => {
-    const open = parameterSearchReducer(
-      undefined,
-      setSearchPath("/parameter-search?parameter=length"),
+  const criteria = {
+    property: "length",
+    operator: "hasValue" as const,
+    value: "",
+    countries: [],
+    infrastructureManagers: [],
+  };
+  const args = {
+    endpoint: "https://example.org",
+    criteria,
+    carriers: [],
+    scopeOptions: { infrastructureManagers: [], countries: [] },
+  };
+
+  it("shows results on the map only when asked, and zooms to them once", () => {
+    const loaded = parameterSearchReducer(
+      parameterSearchReducer(
+        parameterSearchReducer(
+          undefined,
+          setSearchPath("/rinf-reports?parameter=length"),
+        ),
+        runParameterSearch.pending("r1", args),
+      ),
+      runParameterSearch.fulfilled([], "r1", args),
     );
-    expect(open.searchPath).toBe("/parameter-search?parameter=length");
-    const closed = parameterSearchReducer(open, clearParameterSearch());
-    expect(closed.searchPath).toBeNull();
-    expect(closed.resultsKey).toBeNull();
-    expect(closed.places).toEqual([]);
+    expect(loaded.showOnMap).toBe(false);
+    const shown = parameterSearchReducer(loaded, showResultsOnMap());
+    expect(shown).toMatchObject({ showOnMap: true, fitPending: true });
+    const fitted = parameterSearchReducer(shown, mapFittedToResults());
+    expect(fitted).toMatchObject({ showOnMap: true, fitPending: false });
+    const hidden = parameterSearchReducer(fitted, hideResultsOnMap());
+    expect(hidden.showOnMap).toBe(false);
+    expect(hidden.searchPath).toBe("/rinf-reports?parameter=length");
+  });
+
+  it("takes results off the map when a new search starts", () => {
+    const shown = parameterSearchReducer(undefined, showResultsOnMap());
+    const searching = parameterSearchReducer(
+      shown,
+      runParameterSearch.pending("r2", args),
+    );
+    expect(searching.showOnMap).toBe(false);
   });
 });

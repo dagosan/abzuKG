@@ -31,7 +31,17 @@ import { useMatchedIds } from "./hooks/useMatchedIds";
 import { useOpenDetailsOnClick } from "./hooks/useOpenDetailsOnClick";
 import { useViewportLoader } from "./hooks/useViewportLoader";
 import { matchOpacity } from "./matchOpacity";
+import {
+  CASING_EXTRA_WIDTH,
+  FOCUS_SCALE,
+  lineWidth,
+  lineWidthFocusing,
+} from "./sectionOfLineWidth";
 import { OPERATIONAL_POINTS_LAYER_ID } from "./RinfOperationalPointsLayer";
+import {
+  RESULT_LINES_HIT_LAYER_ID,
+  RESULT_POINTS_LAYER_ID,
+} from "./searchResultsLayerIds";
 
 const SOURCE_ID = "rinf-sections-of-line";
 const CASING_LAYER_ID = "rinf-sections-of-line-focus";
@@ -39,47 +49,6 @@ const LINE_LAYER_ID = "rinf-sections-of-line-line";
 const HIT_LAYER_ID = "rinf-sections-of-line-hit";
 /** Invisible width around each line that still takes clicks. */
 const HIT_WIDTH = 14;
-const FOCUS_SCALE = 1.6;
-const CASING_EXTRA_WIDTH = 5;
-const OVERVIEW_ZOOM = 8;
-const OVERVIEW_WIDTH = 1.5;
-const STREET_ZOOM = 16;
-const STREET_WIDTH = 4;
-
-const lineWidth = (scale: number, extra = 0): ExpressionSpecification => [
-  "interpolate",
-  ["linear"],
-  ["zoom"],
-  OVERVIEW_ZOOM,
-  OVERVIEW_WIDTH * scale + extra,
-  STREET_ZOOM,
-  STREET_WIDTH * scale + extra,
-];
-
-/**
- * Width growing with zoom, the open SoL wider. MapLibre only accepts the zoom
- * interpolation at the top, so the open/closed choice sits inside each stop.
- */
-const lineWidthFocusing = (
-  isOpen: ExpressionSpecification,
-): ExpressionSpecification => {
-  const width = (base: number): ExpressionSpecification => [
-    "case",
-    isOpen,
-    base * FOCUS_SCALE,
-    base,
-  ];
-  return [
-    "interpolate",
-    ["linear"],
-    ["zoom"],
-    OVERVIEW_ZOOM,
-    width(OVERVIEW_WIDTH),
-    STREET_ZOOM,
-    width(STREET_WIDTH),
-  ];
-};
-
 /** RINF sections of line as lines; click one to open its parameters panel. */
 export const RinfSectionsOfLineLayer = () => {
   const theme = useTheme();
@@ -100,7 +69,12 @@ export const RinfSectionsOfLineLayer = () => {
   useOpenDetailsOnClick({
     kind: "sectionOfLine",
     layerId: HIT_LAYER_ID,
-    layersOnTop: [OPERATIONAL_POINTS_LAYER_ID],
+    // Report results drawn on top open with a way back to the report.
+    layersOnTop: [
+      OPERATIONAL_POINTS_LAYER_ID,
+      RESULT_LINES_HIT_LAYER_ID,
+      RESULT_POINTS_LAYER_ID,
+    ],
   });
 
   const geoJson = useMemo(

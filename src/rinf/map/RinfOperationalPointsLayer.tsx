@@ -32,6 +32,7 @@ import { useOpenDetailsOnClick } from "./hooks/useOpenDetailsOnClick";
 import { useViewportLoader } from "./hooks/useViewportLoader";
 import { matchOpacity } from "./matchOpacity";
 import { operationalPointRadius } from "./operationalPointRadius";
+import { RESULT_POINTS_LAYER_ID } from "./searchResultsLayerIds";
 
 const SOURCE_ID = "rinf-operational-points";
 /** Exported so other layers can tell when a click landed on an OP. */
@@ -61,6 +62,7 @@ export const RinfOperationalPointsLayer = () => {
   useOpenDetailsOnClick({
     kind: "operationalPoint",
     layerId: OPERATIONAL_POINTS_LAYER_ID,
+    layersOnTop: [RESULT_POINTS_LAYER_ID],
   });
 
   const geoJson = useMemo(

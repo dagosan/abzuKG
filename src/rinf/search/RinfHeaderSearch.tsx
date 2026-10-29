@@ -18,7 +18,6 @@ import { Box } from "@mui/material";
 import type { ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { setSearchMode } from "../state/searchSlice";
-import { ParameterSearchButton } from "./ParameterSearchButton";
 import { RinfSearchBox } from "./RinfSearchBox";
 import { SearchModeSwitch } from "./SearchModeSwitch";
 
@@ -51,10 +50,7 @@ export const RinfHeaderSearch = ({
         onChange={(next) => dispatch(setSearchMode(next))}
       />
       {mode === "rinf" ? (
-        <>
-          <RinfSearchBox />
-          <ParameterSearchButton />
-        </>
+        <RinfSearchBox />
       ) : (
         <Box sx={{ flex: 1, minWidth: 0, display: "flex" }}>
           {stopPlaceSearch}

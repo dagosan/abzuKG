@@ -21,8 +21,12 @@ import {
   DETAILS_KINDS,
 } from "./detailsKinds";
 import { DetailsPage } from "./pages/DetailsPage";
-import { ParameterSearchPage } from "./parameterSearch/ParameterSearchPage";
-import { PARAMETER_SEARCH_ROUTE } from "./parameterSearch/parameterSearchPath";
+import { LegacySearchRedirect } from "./reports/LegacySearchRedirect";
+import {
+  LEGACY_PARAMETER_SEARCH_ROUTE,
+  RINF_REPORTS_ROUTE,
+} from "./reports/rinfReportsPath";
+import { RinfReportsPage } from "./reports/RinfReportsPage";
 
 /**
  * The RINF routes, e.g. /operational-point/:canonicalId. A function, not a
@@ -38,8 +42,13 @@ export const rinfRoutes = (basePath: string) => [
     />
   )),
   <Route
-    key={PARAMETER_SEARCH_ROUTE}
-    path={`${basePath}${PARAMETER_SEARCH_ROUTE}`}
-    element={<ParameterSearchPage />}
+    key={RINF_REPORTS_ROUTE}
+    path={`${basePath}${RINF_REPORTS_ROUTE}`}
+    element={<RinfReportsPage />}
+  />,
+  <Route
+    key={LEGACY_PARAMETER_SEARCH_ROUTE}
+    path={`${basePath}${LEGACY_PARAMETER_SEARCH_ROUTE}`}
+    element={<LegacySearchRedirect />}
   />,
 ];

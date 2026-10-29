@@ -29,6 +29,8 @@ interface OpenDetailsOnClickOptions {
   layerId: string;
   /** Layers drawn on top: a click on one of them is left to that layer. */
   layersOnTop?: string[];
+  /** Router state for the opened page, e.g. that it came from the report. */
+  navigationState?: object;
 }
 
 /**
@@ -39,6 +41,7 @@ export const useOpenDetailsOnClick = ({
   kind,
   layerId,
   layersOnTop = [],
+  navigationState,
 }: OpenDetailsOnClickOptions): void => {
   const { current: mapRef } = useMap();
   const navigate = useNavigate();
@@ -46,7 +49,9 @@ export const useOpenDetailsOnClick = ({
   // Ref so the map listeners, attached once, always use the latest guard.
   const openRef = useRef<(canonicalId: string) => void>(() => undefined);
   openRef.current = (canonicalId: string) =>
-    confirmLeave(() => navigate(detailsPath(kind, canonicalId)));
+    confirmLeave(() =>
+      navigate(detailsPath(kind, canonicalId), { state: navigationState }),
+    );
   const layersOnTopKey = layersOnTop.join(",");
 
   useEffect(() => {

@@ -12,6 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
+/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports tab. */
+
 import { Map, Report } from "@mui/icons-material";
 import { alpha, Box, Tab, Tabs } from "@mui/material";
 import React from "react";
@@ -21,6 +23,12 @@ import { useAppSelector } from "../../../../store/hooks";
 import { NAVIGATION_LINE_HEIGHT } from "../headerMetrics";
 import { navigationPillSx } from "./navigationPillSx";
 import { NavigationUiModeSwitch } from "./NavigationUiModeSwitch";
+import { useGoToRinfReports } from "../../../../rinf/reports/hooks/useGoToRinfReports";
+import { isRinfReportsPath } from "../../../../rinf/reports/rinfReportsPath";
+import {
+  RINF_REPORTS_TAB,
+  RinfReportsTab,
+} from "../../../../rinf/reports/RinfReportsTab";
 
 const MAIN_TAB = "main";
 const REPORTS_TAB = "reports";
@@ -54,8 +62,13 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
 
   // Editor routes sit on top of the map, so they keep the map tab lit rather
   // than leaving the strip with nothing selected.
+  const goToRinfReports = useGoToRinfReports();
   const activeTab =
-    pathname === `/${AppRoutes.REPORTS}` ? REPORTS_TAB : MAIN_TAB;
+    pathname === `/${AppRoutes.REPORTS}`
+      ? REPORTS_TAB
+      : isRinfReportsPath(pathname)
+        ? RINF_REPORTS_TAB
+        : MAIN_TAB;
 
   const handleTabChange = (
     _event: React.SyntheticEvent,
@@ -63,6 +76,10 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
   ): void => {
     if (nextTab === REPORTS_TAB) {
       onNavigateToReports();
+      return;
+    }
+    if (nextTab === RINF_REPORTS_TAB) {
+      goToRinfReports();
       return;
     }
     onReturnToMap();
@@ -118,6 +135,7 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
           iconPosition="start"
           label={formatMessage({ id: "report_site" })}
         />
+        <RinfReportsTab value={RINF_REPORTS_TAB} />
       </Tabs>
       <NavigationUiModeSwitch />
     </Box>

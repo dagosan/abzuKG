@@ -16,17 +16,27 @@ Added for the ERA RINF frontend, 2026-10-28. */
 
 import { RinfLoadingIndicator } from "./RinfLoadingIndicator";
 import { RinfOperationalPointsLayer } from "./RinfOperationalPointsLayer";
+import { RinfSearchResultsLayer } from "./RinfSearchResultsLayer";
 import { RinfSectionsOfLineLayer } from "./RinfSectionsOfLineLayer";
+import { ReportOnMapChip } from "./ReportOnMapChip";
+import { useAppSelector } from "../../store/hooks";
 
 /**
- * Every RINF layer, in drawing order: lines first so OP circles sit on top.
- * The upstream map renders only this component, so new layers need no
- * further change there.
+ * Every RINF layer, in drawing order: lines first so OP circles sit on top,
+ * then the report's results over both. The upstream map renders only this
+ * component, so new layers need no further change there.
  */
-export const RinfMapLayers = () => (
-  <>
-    <RinfSectionsOfLineLayer />
-    <RinfOperationalPointsLayer />
-    <RinfLoadingIndicator />
-  </>
-);
+export const RinfMapLayers = () => {
+  const showReport = useAppSelector(
+    (state) => state.rinf.parameterSearch.showOnMap,
+  );
+  return (
+    <>
+      <RinfSectionsOfLineLayer />
+      <RinfOperationalPointsLayer />
+      <RinfSearchResultsLayer />
+      <RinfLoadingIndicator />
+      {showReport && <ReportOnMapChip />}
+    </>
+  );
+};

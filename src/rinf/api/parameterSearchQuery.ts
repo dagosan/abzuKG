@@ -42,7 +42,8 @@ const attachmentBranch = (attachment: Attachment): string => {
 
 /**
  * One row per section of line or OP (valid on `validOn`) holding elements
- * that meet the criteria, with how many. Only the given attachments are
+ * that meet the criteria, with how many, its line number (SoLs), and its
+ * shape or position for the map. Only the given attachments are
  * followed — following every possible link is 10–30 times slower.
  */
 export const buildParameterSearchQuery = (
@@ -65,6 +66,8 @@ SELECT ?place (SAMPLE(?placeKind) AS ?placeType)
        (SAMPLE(?canonicalUri) AS ?canonical) (SAMPLE(?placeLabel) AS ?label)
        (SAMPLE(?country) AS ?inCountry) (SAMPLE(?dataset) AS ?imDataset)
        (COUNT(DISTINCT ?element) AS ?matches) (SAMPLE(?type) AS ?elementType)
+       (SAMPLE(?shape) AS ?wkt) (SAMPLE(?lat) AS ?latitude)
+       (SAMPLE(?lng) AS ?longitude) (SAMPLE(?lineNumber) AS ?line)
 WHERE {
   ${datasetValues(datasets)}
   GRAPH ?dataset { ${conditionPattern(property, operator, value)} }
@@ -76,6 +79,13 @@ WHERE {
   ${countryValues(countries)}
   OPTIONAL { ?place rdfs:label ?placeLabel }
   ${validOnPattern("?place", validOn)}
+  # Where to draw it: a SoL's shape, an OP's position (its shape is not needed).
+  OPTIONAL { FILTER(?placeKind = era:SectionOfLine)
+    ?place era:netReference/geo:hasGeometry/geo:asWKT ?shape }
+  OPTIONAL { FILTER(?placeKind = era:SectionOfLine)
+    ?place era:nationalLine/era:lineId ?lineNumber }
+  OPTIONAL { FILTER(?placeKind = era:OperationalPoint)
+    ?place era:netReference ?reference . ?reference wgs:lat ?lat ; wgs:long ?lng }
   OPTIONAL {
     ?element a ?type .
     FILTER(?type != era:InfrastructureElement && STRSTARTS(STR(?type), "${ERA_NAMESPACE}"))

@@ -14,7 +14,10 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-/** Route segment of the parameter search panel; its criteria follow as ?parameter=…&… */
-export const PARAMETER_SEARCH_ROUTE = "parameter-search";
-
-export const PARAMETER_SEARCH_PATH = `/${PARAMETER_SEARCH_ROUTE}`;
+/**
+ * Layer ids of the report results drawn on the map. Kept apart from the
+ * layer components so the RINF layers can name each other without
+ * importing each other.
+ */
+export const RESULT_LINES_HIT_LAYER_ID = "rinf-report-results-line-hit";
+export const RESULT_POINTS_LAYER_ID = "rinf-report-results-point";

@@ -16,7 +16,7 @@ Added for the ERA RINF frontend, 2026-10-28. */
 
 import { useCallback, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useRinfSparqlEndpoint } from "../config/rinfEndpoint";
 import {
@@ -27,7 +27,7 @@ import {
 import { DetailsPanel } from "../panel/DetailsPanel";
 import { closeDetails, fetchDetails } from "../state/detailsSlice";
 import { fetchParameterDictionary } from "../state/parameterDictionarySlice";
-import { clearParameterSearch } from "../state/parameterSearchSlice";
+import { cameFromReport } from "../reports/reportNavigation";
 import { useMoveMapToElement } from "./hooks/useMoveMapToElement";
 
 interface DetailsPageProps {
@@ -68,18 +68,18 @@ export const DetailsPage = ({ kind }: DetailsPageProps) => {
     [dispatch],
   );
 
-  // A parameter search stays open behind the panel until it is closed here.
+  // Opened from the RINF report (its table or its map view): lead back to it.
+  const { state: navigationState } = useLocation();
   const searchPath = useAppSelector(
     (state) => state.rinf.parameterSearch.searchPath,
   );
+  const canGoBack = cameFromReport(navigationState) && searchPath !== null;
   const handleBack = useCallback(
     () => searchPath && navigate(searchPath),
     [navigate, searchPath],
   );
-  const handleClose = useCallback(() => {
-    dispatch(clearParameterSearch());
-    navigate("/");
-  }, [dispatch, navigate]);
+  // The report is kept: the RINF reports tab returns to it.
+  const handleClose = useCallback(() => navigate("/"), [navigate]);
 
   return (
     <>
@@ -89,7 +89,7 @@ export const DetailsPage = ({ kind }: DetailsPageProps) => {
         canonicalId={canonicalId}
         name={name}
         onClose={handleClose}
-        onBack={searchPath ? handleBack : undefined}
+        onBack={canGoBack ? handleBack : undefined}
       />
     </>
   );

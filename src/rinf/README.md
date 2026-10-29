@@ -31,17 +31,22 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   matches first. Picking a result opens its panel. The choice of mode is
   remembered; RINF is the default.
 
-- **Search by parameter** (the sliders button next to the RINF search box,
-  route `/parameter-search`): pick a parameter by RINF number or name, a
-  condition (offered by the kind of value: codes in use with their counts,
-  numbers with their unit, yes/no, text, or "not applicable" / "not yet
-  available"), and optionally countries and/or IMs. The result lists every
-  section of line and OP holding a matching element — the section or OP
-  itself, a running track or siding of it, or an object linked from such a
-  track (contact line system, ETCS, train detection, tunnel, platform edge) —
-  and fades everything else on the map. The search lives in the page address,
-  so it can be bookmarked or shared; a details panel opened from it has a back
-  arrow to the results. At most 5,000 places are listed.
+- **RINF reports** (a tab next to Map and Reports, route `/rinf-reports`),
+  laid out like Abzu's Reports: the search on the left, results in a table.
+  Pick a parameter by RINF number or name, a condition (offered by the kind
+  of value: codes in use with their counts, numbers with their unit, yes/no,
+  text, or "not applicable" / "not yet available"), and optionally countries
+  and/or IMs. The table lists every section of line and OP holding a matching
+  element — the section or OP itself, a running track or siding of it, or an
+  object linked from such a track (contact line system, ETCS, train
+  detection, tunnel, platform edge) — with name, type, ID, line, country, IM
+  and the matching elements; columns can be hidden, results come 50 a page,
+  and "Export to CSV" saves all of them. A row opens its details beside the
+  map, with a way back to the report. "Show on map" draws every result on
+  the map at any zoom, fades the rest and zooms to fit; a chip on the map
+  leads back to the report or hides the results. The search lives in the
+  page address, so it can be bookmarked or shared (old `/parameter-search`
+  links redirect). At most 5,000 places are listed.
 
 ## Running it locally
 
@@ -112,7 +117,8 @@ To run it on a server or NAS in Docker, see `deploy/README.md`.
 | `panel/`           | The details panel, shared by OPs and SoLs                          |
 | `pages/`           | Route element for `/<kind>/:canonicalId`, and moving the map there |
 | `search/`          | The header search switch and the RINF search box                   |
-| `parameterSearch/` | The search-by-parameter panel, its form and results                |
+| `parameterSearch/` | The report's search form and the hooks that run it                 |
+| `reports/`         | The RINF reports page: table, columns, paging, CSV, the tab        |
 
 `detailsKinds.ts` describes each kind (route, id prefix, labels, hidden
 statements); adding a kind there adds its route and panel.
@@ -126,6 +132,12 @@ Kept to one or two lines each, so upstream releases merge easily:
 - `src/containers/modern/App.tsx` — `{rinfRoutes(path)}` inside its `<Routes>`
 - `src/components/modern/Header/ModernHeader.tsx` — wraps `<HeaderSearch />` in
   `<RinfHeaderSearch stopPlaceSearch={…} />`
+- `src/components/modern/Header/components/NavigationLine.tsx` — the
+  `<RinfReportsTab />` tab, and choosing it
+- `src/components/modern/Header/hooks/useLastMapLocation.ts` — the RINF
+  reports page is not a map location (like Reports)
+- `src/containers/modern/App.tsx` — also hides the map on the RINF reports
+  page, as it does on Reports
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
 - `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` config field
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds
