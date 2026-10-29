@@ -48,6 +48,13 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   page address, so it can be bookmarked or shared (old `/parameter-search`
   links redirect). At most 5,000 places are listed.
 
+- **Location codes** (a tab next to RINF reports, route `/location-codes`):
+  the code allocation workflow of the Agency's _Procedure for the assignment
+  of location codes_ (v1.0) and TD 103 v4.0, for primary (PLC) and
+  subsidiary (SLC) location codes: new codes, first population with
+  existing codes, amendments and deactivations. See "Location code
+  workflow" below.
+
 ## Running it locally
 
 The app reads its settings from `public/bootstrap.json`, which git ignores
@@ -105,6 +112,74 @@ To run it on a server or NAS in Docker, see `deploy/README.md`.
   country limit picks the IMs active there and then checks each result's
   `era:inCountry`. IM names are not in the data, so IMs are shown by code.
 
+## Location code workflow
+
+Everything under `locationCodes/`. It follows the procedure step by step:
+
+| Step                        | Who                                                                            | In the app                                                                                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 Pre-submission check      | Requester                                                                      | Confirmation box on the form, with what to check for a PLC or an SLC                                                                                         |
+| 2 Submission, admissibility | Requester                                                                      | The form; mandatory elements, Art. 3(9) category and language are checked before it can be sent                                                              |
+| 3 Registration              | Code administrator                                                             | "Register request" gives the reference (LC-2026-0001) and starts T0; "Request information" stops the clock until the requester replies                       |
+| 4 Technical validation      | Code administrator                                                             | "Run checks" asks the ERA Knowledge Graph and this register (Annex A); manual lines are confirmed one by one; "Complete validation" records a recommendation |
+| 5 RINF harmonisation        | RINF correspondent                                                             | Confirms or corrects the OP / section of line, or records "not on the network". PLCs only: an SLC inherits its parent's position                             |
+| 6 Decision                  | Validating officer (+ external coordination point for non-EU or legacy ranges) | Assign or reject with an Annex B ground and the provision relied upon                                                                                        |
+| 7 Recording and publication | Code administrator                                                             | Writes the code to the register                                                                                                                              |
+| 8 Notification and closure  | Code administrator                                                             | Closes the file; the requester can ask for a review within 20 working days (section 14)                                                                      |
+
+Rules enforced:
+
+- **Four eyes** (procedure Table 3): the validating officer of a request
+  may not have acted on it as code administrator, and the other way round;
+  a review is decided by someone other than the original decider.
+- **Codes are never reused**: a value counts as taken if it is in the KG, in
+  the register (also when closed) or reserved by another open request.
+- **Value assigned**: the proposed one if free, otherwise the _lowest_ free
+  number in the country (not highest + 1: FI, CH and HR already use 99999).
+  It is checked against the KG again at the moment of assignment.
+- **PLC**: the RINF element must exist and have no PLC yet (KG or register);
+  no other open request for the same element.
+- **SLC**: an active parent PLC (KG or register); type code from TD 103,
+  Table 6 (full list, not only the procedure's extract). Where the requester
+  is not the party Table 6 names, the check asks to consult that party —
+  never a rejection (procedure 6.7).
+- **Closing a PLC** with active SLCs (register or KG) is refused unless the
+  request closes them in the same operation.
+- **Deadlines** (section 11, still "proposed"): working days from T0,
+  Monday to Friday, minus the time a request for information ran. Agency
+  holidays go in `AGENCY_HOLIDAYS` (`workflow/workingDays.ts`), empty for now.
+
+Known limits of this first version:
+
+- **Storage is the browser** (`store/browserStore.ts`, local storage). Each
+  browser has its own requests; the ⋮ menu downloads and restores a JSON
+  backup. `store/LocationCodeStore.ts` is the contract a CAS or Tiamat
+  backend implements to replace it (`store/activeStore.ts`).
+- **Roles are picked by hand** (the "Acting as" switch and a name), not
+  taken from the login. A requester sees only the requests they submitted.
+- **Publication** writes to this register only, not to the Knowledge Graph.
+- **Retail and virtual codes** are not handled yet; the retail doublet check
+  for a PLC is a manual line.
+- **Code format**: the KG writes PLCs as ISO alpha-2 + five digits
+  (`BE00438`), so the app does too. TD 103 4.10.1 and the procedure (Table 5) describe a two-digit _numeric_ country code (code list B.9.1).
+- SLC values the Agency assigns are numeric, zero-padded to ten characters
+  (TSI LocationSubsidiaryCode is up to ten characters); the SLCs in the KG
+  today are Bane NOR's (`NO-S.998`) and carry no type code.
+- Bulk first-population requests (one request, many codes) are not handled:
+  one request is one code.
+
+| Folder (under `locationCodes/`)               | What it does                                                                                                          |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `model/`                                      | Request, register entry, code types, TD 103 Table 6, Art. 3(9) categories, Annex A and B, code format                 |
+| `workflow/`                                   | Who may take which step (`availableActions`), the steps themselves (`applyAction`), four eyes, deadlines, publication |
+| `checks/`                                     | Admissibility, the KG queries, and the technical checks                                                               |
+| `store/`                                      | The storage contract and the browser implementation                                                                   |
+| `state/`                                      | Redux slice `state.rinf.locationCodes` and the thunks                                                                 |
+| `page/`, `form/`, `requestFile/`, `register/` | The screens                                                                                                           |
+
+The OP details panel has a "Request a location code" button that opens the
+form positioned on that OP.
+
 ## Structure
 
 | Folder             | What it does                                                       |
@@ -119,6 +194,7 @@ To run it on a server or NAS in Docker, see `deploy/README.md`.
 | `search/`          | The header search switch and the RINF search box                   |
 | `parameterSearch/` | The report's search form and the hooks that run it                 |
 | `reports/`         | The RINF reports page: table, columns, paging, CSV, the tab        |
+| `locationCodes/`   | The location code allocation workflow (see above)                  |
 
 `detailsKinds.ts` describes each kind (route, id prefix, labels, hidden
 statements); adding a kind there adds its route and panel.
@@ -133,11 +209,13 @@ Kept to one or two lines each, so upstream releases merge easily:
 - `src/components/modern/Header/ModernHeader.tsx` — wraps `<HeaderSearch />` in
   `<RinfHeaderSearch stopPlaceSearch={…} />`
 - `src/components/modern/Header/components/NavigationLine.tsx` — the
-  `<RinfReportsTab />` tab, and choosing it
+  `<RinfReportsTab />` and `<LocationCodesTab />` tabs, and choosing them
 - `src/components/modern/Header/hooks/useLastMapLocation.ts` — the RINF
-  reports page is not a map location (like Reports)
+  reports and location code pages are not map locations (like Reports);
+  `fullPagePaths.ts` lists them
 - `src/containers/modern/App.tsx` — also hides the map on the RINF reports
-  page, as it does on Reports, and hides the map's controls with it
+  and location code pages, as it does on Reports, and hides the map's
+  controls with it
 
 Upstream fixes (also useful to Abzu itself; candidates to offer upstream).
 Abzu sizes pages from a 104 px header (64 + 40), but it rendered at 119 px,

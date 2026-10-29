@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports tab; separator no longer adds to the strip's height. */
+/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports and location codes tabs; separator no longer adds to the strip's height. */
 
 import { Map, Report } from "@mui/icons-material";
 import { alpha, Box, Tab, Tabs } from "@mui/material";
@@ -29,6 +29,12 @@ import {
   RINF_REPORTS_TAB,
   RinfReportsTab,
 } from "../../../../rinf/reports/RinfReportsTab";
+import { useGoToLocationCodes } from "../../../../rinf/locationCodes/page/hooks/useGoToLocationCodes";
+import { isLocationCodesPath } from "../../../../rinf/locationCodes/page/locationCodesPath";
+import {
+  LOCATION_CODES_TAB,
+  LocationCodesTab,
+} from "../../../../rinf/locationCodes/page/LocationCodesTab";
 
 const MAIN_TAB = "main";
 const REPORTS_TAB = "reports";
@@ -63,12 +69,15 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
   // Editor routes sit on top of the map, so they keep the map tab lit rather
   // than leaving the strip with nothing selected.
   const goToRinfReports = useGoToRinfReports();
+  const goToLocationCodes = useGoToLocationCodes();
   const activeTab =
     pathname === `/${AppRoutes.REPORTS}`
       ? REPORTS_TAB
       : isRinfReportsPath(pathname)
         ? RINF_REPORTS_TAB
-        : MAIN_TAB;
+        : isLocationCodesPath(pathname)
+          ? LOCATION_CODES_TAB
+          : MAIN_TAB;
 
   const handleTabChange = (
     _event: React.SyntheticEvent,
@@ -80,6 +89,10 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
     }
     if (nextTab === RINF_REPORTS_TAB) {
       goToRinfReports();
+      return;
+    }
+    if (nextTab === LOCATION_CODES_TAB) {
+      goToLocationCodes();
       return;
     }
     onReturnToMap();
@@ -137,6 +150,7 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
           label={formatMessage({ id: "report_site" })}
         />
         <RinfReportsTab value={RINF_REPORTS_TAB} />
+        <LocationCodesTab value={LOCATION_CODES_TAB} />
       </Tabs>
       <NavigationUiModeSwitch />
     </Box>

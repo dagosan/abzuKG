@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF routes. 2026-10-29: map hidden on the RINF reports page; map controls hidden with it. */
+/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF routes. 2026-10-29: map hidden on the RINF reports and location code pages; map controls hidden with it. */
 
 import { ComponentToggle } from "@entur/react-component-toggle";
 import { Box } from "@mui/material";
@@ -20,7 +20,7 @@ import { StyledEngineProvider } from "@mui/material/styles";
 import { useContext, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { IntlProvider } from "react-intl";
-import { Route, Routes, useMatch } from "react-router-dom";
+import { Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { HistoryRouter as Router } from "redux-first-history/rr6";
 import { StopPlaceActions, UserActions } from "../../actions";
 import { fetchUserPermissions, updateAuth } from "../../actions/UserActions";
@@ -44,7 +44,7 @@ import { UnsavedChangesGuard } from "../../components/modern/Shared/UnsavedChang
 import GroupOfStopPlaces from "./GroupOfStopPlaces";
 import ReportPage from "./ReportPage";
 import { rinfRoutes } from "../../rinf/routes";
-import { RINF_REPORTS_PATH } from "../../rinf/reports/rinfReportsPath";
+import { isRinfFullPagePath } from "../../rinf/fullPagePaths";
 import { StopPlace } from "./StopPlace";
 import { StopPlaces } from "./StopPlaces";
 
@@ -57,8 +57,8 @@ import { StopPlaces } from "./StopPlaces";
  */
 const PersistentMap = () => {
   const matchReports = useMatch(`/${AppRoutes.REPORTS}`);
-  const matchRinfReports = useMatch(RINF_REPORTS_PATH);
-  const hidden = matchReports || matchRinfReports;
+  const { pathname } = useLocation();
+  const hidden = matchReports || isRinfFullPagePath(pathname);
   return (
     <Box
       sx={{

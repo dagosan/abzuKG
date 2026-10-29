@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: location code routes. */
 
 import { Route } from "react-router-dom";
 import {
@@ -27,6 +27,24 @@ import {
   RINF_REPORTS_ROUTE,
 } from "./reports/rinfReportsPath";
 import { RinfReportsPage } from "./reports/RinfReportsPage";
+import {
+  LOCATION_CODES_ROUTE,
+  NEW_REQUEST_SEGMENT,
+  REGISTER_SEGMENT,
+  REQUEST_ID_PARAM,
+} from "./locationCodes/page/locationCodesPath";
+import {
+  LocationCodesPage,
+  LocationCodesPageMode,
+} from "./locationCodes/page/LocationCodesPage";
+
+/** Location code workflow routes, relative to /location-codes. */
+const LOCATION_CODES_SUBROUTES: [string, LocationCodesPageMode][] = [
+  ["", "home"],
+  [`/${NEW_REQUEST_SEGMENT}`, "new"],
+  [`/${REGISTER_SEGMENT}`, "register"],
+  [`/:${REQUEST_ID_PARAM}`, "request"],
+];
 
 /**
  * The RINF routes, e.g. /operational-point/:canonicalId. A function, not a
@@ -51,4 +69,11 @@ export const rinfRoutes = (basePath: string) => [
     path={`${basePath}${LEGACY_PARAMETER_SEARCH_ROUTE}`}
     element={<LegacySearchRedirect />}
   />,
+  ...LOCATION_CODES_SUBROUTES.map(([subpath, mode]) => (
+    <Route
+      key={`${LOCATION_CODES_ROUTE}${subpath}`}
+      path={`${basePath}${LOCATION_CODES_ROUTE}${subpath}`}
+      element={<LocationCodesPage mode={mode} />}
+    />
+  )),
 ];

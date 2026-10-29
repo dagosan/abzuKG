@@ -12,12 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-29: the RINF reports page is not a map location either. */
+/* Modified for the ERA RINF frontend, 2026-10-29: the RINF reports and location code pages are not map locations either. */
 
 import { useCallback, useEffect, useRef } from "react";
 import AppRoutes from "../../../../routes";
 import { useAppSelector } from "../../../../store/hooks";
-import { isRinfReportsPath } from "../../../../rinf/reports/rinfReportsPath";
+import { isRinfFullPagePath } from "../../../../rinf/fullPagePaths";
 
 const REPORTS_PATHNAME = `/${AppRoutes.REPORTS}`;
 const MAP_OVERVIEW_LOCATION = "/";
@@ -42,7 +42,7 @@ export const useLastMapLocation = (): (() => string) => {
   const lastMapLocationRef = useRef(MAP_OVERVIEW_LOCATION);
 
   useEffect(() => {
-    if (pathname === REPORTS_PATHNAME || isRinfReportsPath(pathname)) return;
+    if (pathname === REPORTS_PATHNAME || isRinfFullPagePath(pathname)) return;
     lastMapLocationRef.current = pathname + search;
   }, [pathname, search]);
 

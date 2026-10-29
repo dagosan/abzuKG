@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: location codes state. */
 
 import { combineReducers } from "@reduxjs/toolkit";
 import { detailsReducer } from "./detailsSlice";
@@ -21,6 +21,7 @@ import { parameterDictionaryReducer } from "./parameterDictionarySlice";
 import { parameterSearchReducer } from "./parameterSearchSlice";
 import { searchReducer } from "./searchSlice";
 import { sectionsOfLineReducer } from "./sectionsOfLineSlice";
+import { locationCodesReducer } from "../locationCodes/state/locationCodesSlice";
 
 /** All RINF state, registered once in the root reducer as `rinf`. */
 export const rinfReducer = combineReducers({
@@ -30,4 +31,5 @@ export const rinfReducer = combineReducers({
   parameterDictionary: parameterDictionaryReducer,
   search: searchReducer,
   parameterSearch: parameterSearchReducer,
+  locationCodes: locationCodesReducer,
 });
