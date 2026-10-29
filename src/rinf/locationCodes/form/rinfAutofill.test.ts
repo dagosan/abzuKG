@@ -9,6 +9,7 @@ const gembloux: KgElement = {
   validToday: true,
   label: "Gembloux",
   codes: ["BE00438"],
+  codeNames: {},
   declarations: [
     {
       imCode: "0088",
@@ -23,6 +24,7 @@ const myrbacken: KgElement = {
   validToday: true,
   label: "TRV-Atrain border Myrbacken",
   codes: [],
+  codeNames: {},
   declarations: [
     {
       imCode: "0074",
@@ -70,9 +72,45 @@ describe("filling the form from RINF", () => {
     expect(fill.notice).toBeNull();
   });
 
-  it("warns that the OP already has a PLC when a new one is asked", () => {
+  it("tells, without blocking, which PLCs the OP already holds", () => {
     const fill = autofillFromRinf(data(), op("BELGB", "Gembloux"), gembloux);
-    expect(fill.notice?.id).toBe("rinf_lc_autofill_already_coded");
+    expect(fill.notice).toMatchObject({
+      id: "rinf_lc_autofill_existing_codes",
+      severity: "info",
+    });
+    expect(fill.changes.locationName).toBe("Gembloux");
+  });
+
+  it("lets the user choose the parent among several PLCs of the OP", () => {
+    const lyon: KgElement = {
+      exists: true,
+      validToday: true,
+      label: "Lyon-Part-Dieu",
+      codes: ["FR06520", "FR06524"],
+      codeNames: {
+        FR06520: "Lyon-Part-Dieu-Bât Voyageurs",
+        FR06524: "Lyon-Part-Dieu - Km 508,508",
+      },
+      declarations: [
+        {
+          imCode: "0087",
+          countryPrefix: "FR",
+          name: "Lyon-Part-Dieu",
+          codes: ["FR06520", "FR06524"],
+        },
+      ],
+    };
+    const fill = autofillFromRinf(
+      data({ codeType: "subsidiary" }),
+      op("FR0000003887", "Lyon-Part-Dieu"),
+      lyon,
+    );
+    expect(fill.changes.parentPrimaryCode).toBeUndefined();
+    expect(fill.notice?.choiceField).toBe("parentPrimaryCode");
+    expect(fill.notice?.choices).toEqual([
+      { code: "FR06520", name: "Lyon-Part-Dieu-Bât Voyageurs" },
+      { code: "FR06524", name: "Lyon-Part-Dieu - Km 508,508" },
+    ]);
   });
 
   it("takes the existing code for an amendment or a first population", () => {
@@ -111,6 +149,7 @@ describe("filling the form from RINF", () => {
       validToday: true,
       label: "Perl Grenze",
       codes: ["FR01092", "DE18314"],
+      codeNames: {},
       declarations: [
         {
           imCode: "0087",

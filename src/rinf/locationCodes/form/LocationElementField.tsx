@@ -19,6 +19,7 @@ import { useIntl } from "react-intl";
 import { isCreation } from "../model/codeTypes";
 import { useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
+import { CodeChoices } from "./CodeChoices";
 import { RinfElementPicker } from "./RinfElementPicker";
 
 interface LocationElementFieldProps {
@@ -39,7 +40,15 @@ const labelId = ({ data }: RequestForm): string => {
  */
 export const LocationElementField = ({ form }: LocationElementFieldProps) => {
   const { formatMessage } = useIntl();
-  const { data, errors, chooseRinfElement, pickOnMap, notice, loading } = form;
+  const {
+    data,
+    errors,
+    chooseRinfElement,
+    pickOnMap,
+    notice,
+    loading,
+    applyRinfChoice,
+  } = form;
   const fieldError = useFieldError(errors);
 
   return (
@@ -55,6 +64,15 @@ export const LocationElementField = ({ form }: LocationElementFieldProps) => {
       {notice && !loading && (
         <Alert severity={notice.severity} sx={{ mt: 1 }}>
           {formatMessage({ id: notice.id }, notice.values)}
+          {notice.choices && notice.choiceField && (
+            <CodeChoices
+              choices={notice.choices}
+              selected={data[notice.choiceField]}
+              onChoose={(code) =>
+                notice.choiceField && applyRinfChoice(notice.choiceField, code)
+              }
+            />
+          )}
         </Alert>
       )}
     </Box>

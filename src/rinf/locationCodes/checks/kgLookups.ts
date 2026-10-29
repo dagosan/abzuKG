@@ -48,8 +48,10 @@ export interface KgElement {
   exists: boolean;
   validToday: boolean;
   label: string | null;
-  /** Primary location codes on the version valid today. */
+  /** Primary location codes on the version valid today; an OP may have several. */
   codes: string[];
+  /** Each code's primary location name, e.g. FR06520 → "Lyon-Part-Dieu-Bât Voyageurs". */
+  codeNames: Record<string, string>;
   /** One per declaring IM; two for a border point. */
   declarations: KgDeclaration[];
 }
@@ -140,9 +142,17 @@ export const fetchElement = async (
     validToday: validRows.length > 0,
     label: labelOf(validRows[0]?.label?.value ?? rows[0]?.label?.value),
     codes: unique(validRows.map((row) => row.code?.value)),
+    codeNames: codeNamesOf(validRows),
     declarations: declarationsOf(validRows),
   };
 };
+
+const codeNamesOf = (rows: SparqlBinding[]): Record<string, string> =>
+  Object.fromEntries(
+    rows
+      .filter((row) => row.code?.value && row.codeName?.value)
+      .map((row) => [row.code!.value, row.codeName!.value]),
+  );
 
 /** The rows grouped by declaring IM (named graph …/graph/<code>). */
 const declarationsOf = (rows: SparqlBinding[]): KgDeclaration[] =>

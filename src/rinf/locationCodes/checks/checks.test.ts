@@ -62,6 +62,7 @@ const context = (overrides: Partial<CheckContext> = {}): CheckContext => ({
     validToday: true,
     label: "Gembloux Nord",
     codes: [],
+    codeNames: {},
     declarations: [],
   },
   register: [],
@@ -136,17 +137,32 @@ describe("admissibility", () => {
 });
 
 describe("technical checks", () => {
-  it("fails when the OP already carries a PLC", () => {
-    const withCode = context({
+  it("allows another PLC on an OP that already has some", () => {
+    const lyon = context({
+      kgCountryCodes: ["FR06519", "FR06520", "FR06524"],
       rinfElement: {
         exists: true,
         validToday: true,
-        label: "X",
-        codes: ["BE00438"],
+        label: "Lyon-Part-Dieu",
+        codes: ["FR06520", "FR06524", "FR06519"],
+        codeNames: {
+          FR06520: "Lyon-Part-Dieu-Bât Voyageurs",
+          FR06524: "Lyon-Part-Dieu - Km 508,508",
+          FR06519: "Lyon-Part-Dieu - Km 507,847",
+        },
         declarations: [],
       },
     });
-    expect(outcomeOf(completeData(), withCode, "noDuplicate")).toBe("fail");
+    const newLocation = completeData({
+      country: "FR",
+      locationName: "Lyon-Part-Dieu - Km 509,000",
+    });
+    expect(outcomeOf(newLocation, lyon, "noDuplicate")).toBe("pass");
+    const sameName = {
+      ...newLocation,
+      locationName: "lyon-part-dieu - km 508,508",
+    };
+    expect(outcomeOf(sameName, lyon, "noDuplicate")).toBe("warning");
   });
 
   it("fails for an SLC whose parent is unknown", () => {
@@ -228,6 +244,7 @@ describe("positioning on a RINF asset", () => {
         validToday: true,
         label: "Gembloux",
         codes: ["BE00438"],
+        codeNames: {},
         declarations: [],
       },
     });
@@ -241,6 +258,7 @@ describe("positioning on a RINF asset", () => {
         validToday: true,
         label: "X",
         codes: ["BE00187"],
+        codeNames: {},
         declarations: [],
       },
     });

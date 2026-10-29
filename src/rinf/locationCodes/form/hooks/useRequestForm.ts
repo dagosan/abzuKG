@@ -168,5 +168,6 @@ export const useRequestForm = (): RequestForm => {
     fromRinf: autofill.fromRinf,
     notice: autofill.notice,
     loading: autofill.loading,
+    applyRinfChoice: autofill.applyRinfChoice,
   };
 };

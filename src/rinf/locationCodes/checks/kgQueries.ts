@@ -66,13 +66,17 @@ export const buildElementCodesQuery = (
   const uri = `${DETAILS_KINDS[kind].canonicalPrefix}${canonicalId}`;
   if (!isSafeIri(uri)) throw new Error(`Unsafe canonical id "${canonicalId}"`);
   return `${SPARQL_PREFIXES}
-SELECT ?element ?graph ?code ?from ?to ?label ?name ?uopid ?country WHERE {
+SELECT ?element ?graph ?code ?codeName ?from ?to ?label ?name ?uopid ?country WHERE {
   GRAPH ?graph { ?element era:canonicalURI <${uri}> }
   OPTIONAL { ?element rdfs:label ?label }
   OPTIONAL { ?element era:opName ?name }
   OPTIONAL { ?element era:uopid ?uopid }
   OPTIONAL { ?element era:inCountry ?country }
-  OPTIONAL { ?element era:primaryLocation/era:primaryLocationCode ?code }
+  OPTIONAL {
+    ?element era:primaryLocation ?location .
+    ?location era:primaryLocationCode ?code .
+    OPTIONAL { ?location era:primaryLocationName ?codeName }
+  }
   OPTIONAL { ?element era:validity/time:hasBeginning/time:inXSDDate ?from }
   OPTIONAL { ?element era:validity/time:hasEnd/time:inXSDDate ?to }
 }

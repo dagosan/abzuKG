@@ -30,7 +30,12 @@ import {
   sameLink,
 } from "./checkContext";
 
-/** Item 6: no PLC already covers the RINF element. */
+/**
+ * Item 6: no PLC already covers the same location. An OP or section of line
+ * may hold several locations, each with its own PLC (Lyon-Part-Dieu has
+ * three), so codes already on the element are listed for the code
+ * administrator; only one with the same name is flagged.
+ */
 export const primaryDuplicateCheck = (
   { data }: LocationCodeRequest,
   context: CheckContext,
@@ -44,24 +49,38 @@ export const primaryDuplicateCheck = (
   const ownCode = normalisePrimaryCode(
     isCreation(data.operation) ? data.proposedCode : data.targetCode,
   );
-  const otherKgCodes = (context.rinfElement?.codes ?? []).filter(
-    (code) => code !== ownCode,
+  const names = context.rinfElement?.codeNames ?? {};
+  const onElement = [
+    ...(context.rinfElement?.codes ?? []).map((code) => ({
+      code,
+      name: names[code] ?? "",
+    })),
+    ...registeredPrimaryCodes(context.register)
+      .filter(
+        (code) =>
+          isActiveOn(code, context.today) &&
+          sameLink(code.rinfLink, data.rinfLink),
+      )
+      .map(({ code, name }) => ({ code, name })),
+  ].filter(({ code }) => code !== ownCode);
+  if (onElement.length === 0)
+    return result("noDuplicate", "pass", "rinf_lc_detail_no_duplicate");
+  const listed = onElement
+    .map(({ code, name }) => (name ? `${code} ${name}` : code))
+    .join(", ");
+  const sameName = onElement.find(
+    ({ name }) =>
+      name !== "" &&
+      name.trim().toLowerCase() === data.locationName.trim().toLowerCase(),
   );
-  if (otherKgCodes.length > 0)
-    return result("noDuplicate", "fail", "rinf_lc_detail_element_has_code", {
-      codes: otherKgCodes.join(", "),
-    });
-  const registered = registeredPrimaryCodes(context.register).find(
-    (code) =>
-      code.code !== ownCode &&
-      isActiveOn(code, context.today) &&
-      sameLink(code.rinfLink, data.rinfLink),
-  );
-  if (registered)
-    return result("noDuplicate", "fail", "rinf_lc_detail_element_has_code", {
-      codes: registered.code,
-    });
-  return result("noDuplicate", "pass", "rinf_lc_detail_no_duplicate");
+  return sameName
+    ? result("noDuplicate", "warning", "rinf_lc_detail_same_name", {
+        code: sameName.code,
+        codes: listed,
+      })
+    : result("noDuplicate", "pass", "rinf_lc_detail_other_locations", {
+        codes: listed,
+      });
 };
 
 /** Item 8: on an IM network (in RINF today), no competing request. */
@@ -80,9 +99,10 @@ export const primaryNetworkCheck = (
     sameLink(other.data.rinfLink, data.rinfLink),
   );
   if (competing)
+    // Several locations of one OP may be coded at once: a warning to look.
     return result(
       "onNetworkNoCompetition",
-      "fail",
+      "warning",
       "rinf_lc_detail_competing",
       {
         reference: competing.reference ?? competing.id,

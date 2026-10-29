@@ -188,11 +188,14 @@ form from RINF (`form/rinfAutofill.ts`, one query of ~0.6 s), each field
 marked "From RINF" until edited:
 
 - new PLC: name, country (from `era:inCountry`, else the UOPID), IM (the
-  dataset declaring it, `…/graph/<code>`); a notice when the element
-  already has a PLC, suggesting an amendment;
+  dataset declaring it, `…/graph/<code>`). An OP or section of line may
+  hold any number of PLCs (1,595 OPs in RINF have several, Lyon-Part-Dieu
+  three), so codes already on it are listed with their names as
+  information, never as a reason to refuse;
 - existing code (first population): also the PLC RINF holds;
-- amendment or deactivation: the PLC concerned;
-- SLC: the parent PLC (the element's, or for an asset its OP's or section's),
+- amendment or deactivation: the PLC concerned; with several, the user
+  picks it from the notice;
+- SLC: the parent PLC (picked from the notice when the element has several) (the element's, or for an asset its OP's or section's),
   and for an asset its name and type (running track 01, switch 10, platform
   edge 15, tunnel 24, signal 27; a siding may be 06 or 07, so it is left to
   the requester);

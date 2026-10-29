@@ -30,11 +30,24 @@ const SUBSIDIARY_TYPE_OF_CLASS: Record<string, string> = {
   [`${ERA_NAMESPACE}Signal`]: "27",
 };
 
+/** One of the codes RINF holds for the element, with its location name. */
+export interface CodeChoice {
+  code: string;
+  name: string;
+}
+
+/** Fields the user can fill by choosing one of the element's codes. */
+export type CodeChoiceField =
+  "parentPrimaryCode" | "targetCode" | "proposedCode";
+
 /** A message under the RINF element: text key and its values. */
 export interface RinfNotice {
   id: string;
   values?: Record<string, string>;
   severity: "info" | "warning";
+  /** Several codes and the form needs one: the user picks it here. */
+  choices?: CodeChoice[];
+  choiceField?: CodeChoiceField;
 }
 
 export interface RinfAutofill {
@@ -74,14 +87,6 @@ export const autofillFromRinf = (
     distinct(declarations.map((each) => each.countryPrefix)),
   );
   const name = single?.name ?? element.label ?? link.label;
-  const borderNotice: RinfNotice | null =
-    declarations.length > 1
-      ? {
-          id: "rinf_lc_autofill_several_ims",
-          values: { declarations: declarationList(element) },
-          severity: "warning",
-        }
-      : null;
   const changes: Partial<RequestData> =
     data.codeType === "primary"
       ? primaryChanges(data, {
@@ -91,14 +96,23 @@ export const autofillFromRinf = (
           code,
         })
       : subsidiaryChanges(data, link, code);
-  const filled = (Object.keys(changes) as (keyof RequestData)[]).filter(
-    (key): key is RequestField & keyof RequestData => key !== "rinfLink",
+  const filled = (Object.keys(changes) as string[]).filter(
+    (key) => key !== "rinfLink",
   ) as RequestField[];
-  return {
-    changes,
-    filled,
-    notice: borderNotice ?? noticeFor(data, link, codes),
-  };
+  const choices = codes.map((each) => ({
+    code: each,
+    name: element.codeNames[each] ?? "",
+  }));
+  const notice =
+    declarations.length > 1
+      ? {
+          id: "rinf_lc_autofill_several_ims",
+          values: { declarations: declarationList(element) },
+          severity: "warning" as const,
+          ...choicesFor(data, choices),
+        }
+      : noticeFor(data, link, choices);
+  return { changes, filled, notice };
 };
 
 interface PrimaryFacts {
@@ -139,31 +153,54 @@ const subsidiaryChanges = (
   };
 };
 
-/** What to tell the user about the codes RINF already holds. */
+/** The field one of the element's codes goes into, if the form needs one. */
+const choiceFieldOf = (data: RequestData): CodeChoiceField | null => {
+  if (data.codeType === "subsidiary") return "parentPrimaryCode";
+  if (!isCreation(data.operation)) return "targetCode";
+  return data.operation === "existingCode" ? "proposedCode" : null;
+};
+
+/** With several codes, the user picks the one the form needs. */
+const choicesFor = (
+  data: RequestData,
+  choices: CodeChoice[],
+): Pick<RinfNotice, "choices" | "choiceField"> => {
+  const choiceField = choiceFieldOf(data);
+  return choiceField && choices.length > 1 ? { choices, choiceField } : {};
+};
+
+const listOf = (choices: CodeChoice[]): string =>
+  choices
+    .map(({ code, name }) => (name ? `${code} (${name})` : code))
+    .join(", ");
+
+/**
+ * What to tell the user about the codes RINF already holds. An element may
+ * hold any number of locations, each with its own PLC: existing codes are
+ * information, never a reason not to ask for another.
+ */
 const noticeFor = (
   data: RequestData,
   link: RinfLink,
-  codes: string[],
+  choices: CodeChoice[],
 ): RinfNotice | null => {
-  const listed = codes.join(", ");
-  if (data.codeType === "subsidiary") {
-    if (codes.length === 0)
+  const choiceField = choiceFieldOf(data);
+  if (choices.length === 0) {
+    if (data.codeType === "subsidiary")
       return { id: "rinf_lc_autofill_no_parent", severity: "warning" };
-    return codes.length > 1
-      ? {
-          id: "rinf_lc_autofill_several_codes",
-          values: { codes: listed },
-          severity: "warning",
-        }
+    return choiceField
+      ? { id: "rinf_lc_autofill_no_code", severity: "warning" }
       : null;
   }
-  if (data.operation === "newCode" && codes.length > 0)
+  const values = { name: link.label, codes: listOf(choices) };
+  if (choices.length > 1 && choiceField)
     return {
-      id: "rinf_lc_autofill_already_coded",
-      values: { name: link.label, codes: listed },
-      severity: "warning",
+      id: "rinf_lc_autofill_choose_code",
+      values,
+      severity: "info",
+      ...choicesFor(data, choices),
     };
-  if (!isCreation(data.operation) && codes.length === 0)
-    return { id: "rinf_lc_autofill_no_code", severity: "warning" };
+  if (data.operation === "newCode" && data.codeType === "primary")
+    return { id: "rinf_lc_autofill_existing_codes", values, severity: "info" };
   return null;
 };

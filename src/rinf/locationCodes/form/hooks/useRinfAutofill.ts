@@ -29,7 +29,7 @@ import type { RequestField } from "../../checks/admissibility";
 import { fetchElement } from "../../checks/kgLookups";
 import type { RequestData, RinfLink } from "../../model/LocationCodeRequest";
 import { elementOfLink } from "../../model/rinfLink";
-import { autofillFromRinf, RinfNotice } from "../rinfAutofill";
+import { autofillFromRinf, CodeChoiceField, RinfNotice } from "../rinfAutofill";
 
 export interface RinfAutofillState {
   /** Sets the element and fills the form from RINF; null clears it. */
@@ -40,6 +40,8 @@ export interface RinfAutofillState {
   forgetFromRinf: (fields: string[]) => void;
   notice: RinfNotice | null;
   loading: boolean;
+  /** Puts one of the element's codes in the field the notice offers it for. */
+  applyRinfChoice: (field: CodeChoiceField, code: string) => void;
 }
 
 /**
@@ -101,5 +103,22 @@ export const useRinfAutofill = (
     [],
   );
 
-  return { chooseRinfElement, fromRinf, forgetFromRinf, notice, loading };
+  const applyRinfChoice = useCallback(
+    (field: CodeChoiceField, code: string) => {
+      setData((current) => ({ ...current, [field]: code }));
+      setFromRinf((current) =>
+        current.includes(field) ? current : [...current, field],
+      );
+    },
+    [setData],
+  );
+
+  return {
+    chooseRinfElement,
+    fromRinf,
+    forgetFromRinf,
+    notice,
+    loading,
+    applyRinfChoice,
+  };
 };
