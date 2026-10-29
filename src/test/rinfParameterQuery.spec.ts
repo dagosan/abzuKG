@@ -160,3 +160,23 @@ describe("buildParameterSearchQuery", () => {
     ).toThrow();
   });
 });
+
+describe("objects linked from the place", () => {
+  it("are searched through the link from the section or OP", () => {
+    const query = buildParameterSearchQuery(
+      {
+        property: "primaryLocationCode",
+        operator: "equals",
+        value: "BE00438",
+        countries: [],
+        infrastructureManagers: [],
+      },
+      [{ how: "fromPlace", link: `${ERA}primaryLocation` }],
+      null,
+      10,
+      "2026-10-29",
+    );
+    expect(query).toContain(`{ ?place <${ERA}primaryLocation> ?element . }`);
+    expect(query).toContain('STR(?value) = "BE00438"');
+  });
+});

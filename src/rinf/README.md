@@ -37,9 +37,10 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   of value: codes in use with their counts, numbers with their unit, yes/no,
   text, or "not applicable" / "not yet available"), and optionally countries
   and/or IMs. The table lists every section of line and OP holding a matching
-  element — the section or OP itself, a running track or siding of it, or an
-  object linked from such a track (contact line system, ETCS, train
-  detection, tunnel, platform edge) — with name, type, ID, line, country, IM
+  element — the section or OP itself, a running track or siding of it, an
+  object linked from the section or OP (e.g. its primary location, for the
+  primary location code), or an object linked from a track (contact line
+  system, ETCS, train detection, tunnel, platform edge) — with name, type, ID, line, country, IM
   and the matching elements; columns can be hidden, results come 50 a page,
   and "Export to CSV" saves all of them. A row opens its details beside the
   map, with a way back to the report. "Show on map" draws every result on
