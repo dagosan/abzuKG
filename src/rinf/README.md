@@ -137,7 +137,19 @@ Kept to one or two lines each, so upstream releases merge easily:
 - `src/components/modern/Header/hooks/useLastMapLocation.ts` — the RINF
   reports page is not a map location (like Reports)
 - `src/containers/modern/App.tsx` — also hides the map on the RINF reports
-  page, as it does on Reports
+  page, as it does on Reports, and hides the map's controls with it
+
+Upstream fixes (also useful to Abzu itself; candidates to offer upstream).
+Abzu sizes pages from a 104 px header (64 + 40), but it rendered at 119 px,
+so its Reports page ran 15 px past the window, and MapLibre's attribution
+showed through the hidden map over the Reports footer:
+
+- `src/components/modern/styles.ts` — logo button padding fits 64 px
+- `src/components/modern/Header/components/navigationPillSx.ts` — no extra
+  vertical tab padding, so the strip stays 40 px
+- `src/components/modern/Header/components/NavigationLine.tsx` — separator as
+  an inset shadow, not a 1 px border
+- `src/containers/modern/App.tsx` — map controls hidden with the map
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
 - `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` config field
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds

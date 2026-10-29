@@ -12,6 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
+/* Modified for the ERA RINF frontend, 2026-10-29: logo button fits the 64 px toolbar. */
+
 import { SxProps, Theme } from "@mui/material";
 import {
   appChromeTop,
@@ -248,7 +250,10 @@ export const headerSearchIconButton = (
 });
 
 export const appLogoButton: SxProps<Theme> = {
-  p: { xs: 1, sm: 1.5 },
+  // 8 px from md up: the 48 px logo plus 12 px above and below made the
+  // toolbar 72 px, past HEADER_HEIGHT_DESKTOP, so pages sized from it ran
+  // past the window.
+  p: { xs: 1, sm: 1.5, md: 1 },
   "&:hover": {
     backgroundColor: "rgba(255, 255, 255, 0.08)",
   },

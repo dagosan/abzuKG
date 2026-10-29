@@ -31,7 +31,6 @@ import { ParameterSearchFormView } from "../parameterSearch/ParameterSearchFormV
 import { showResultsOnMap } from "../state/parameterSearchSlice";
 import { useCellContext } from "./hooks/useCellContext";
 import { useReportColumns } from "./hooks/useReportColumns";
-import { useHeightToViewportBottom } from "./hooks/useHeightToViewportBottom";
 import { useReportExport } from "./hooks/useReportExport";
 import { useReportRows } from "./hooks/useReportRows";
 import { FROM_REPORT_STATE } from "./reportNavigation";
@@ -86,20 +85,15 @@ export const RinfReportsPage = () => {
     navigate("/");
   }, [dispatch, navigate]);
   const loaded = resultsStatus === "loaded";
-  const page = useHeightToViewportBottom();
 
   return (
     <Box
-      ref={page.ref}
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: page.height ?? belowAppChromeViewportHeight,
+        height: belowAppChromeViewportHeight,
         overflow: "hidden",
         bgcolor: "background.default",
-        // Above the hidden map, whose attribution would otherwise show through.
-        position: "relative",
-        zIndex: 1,
       }}
     >
       <Helmet title={formatMessage({ id: "rinf_reports_tab" })} />

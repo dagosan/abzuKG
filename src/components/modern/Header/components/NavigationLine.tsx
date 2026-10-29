@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports tab. */
+/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports tab; separator no longer adds to the strip's height. */
 
 import { Map, Report } from "@mui/icons-material";
 import { alpha, Box, Tab, Tabs } from "@mui/material";
@@ -91,9 +91,10 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
         display: "flex",
         alignItems: "center",
         px: { xs: 1, sm: 2 },
-        borderTop: 1,
-        borderColor: (theme) =>
-          alpha(theme.palette.primary.contrastText, SEPARATOR_OPACITY),
+        // An inset shadow, not a border: a 1 px border made the strip 41 px,
+        // one more than NAVIGATION_LINE_HEIGHT.
+        boxShadow: (theme) =>
+          `inset 0 1px 0 ${alpha(theme.palette.primary.contrastText, SEPARATOR_OPACITY)}`,
       }}
     >
       <Tabs

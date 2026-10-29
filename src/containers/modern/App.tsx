@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF routes. 2026-10-29: map hidden on the RINF reports page. */
+/* Modified for the ERA RINF frontend, 2026-10-28: added the RINF routes. 2026-10-29: map hidden on the RINF reports page; map controls hidden with it. */
 
 import { ComponentToggle } from "@entur/react-component-toggle";
 import { Box } from "@mui/material";
@@ -60,7 +60,17 @@ const PersistentMap = () => {
   const matchRinfReports = useMatch(RINF_REPORTS_PATH);
   const hidden = matchReports || matchRinfReports;
   return (
-    <Box sx={{ visibility: hidden ? "hidden" : "visible" }}>
+    <Box
+      sx={{
+        visibility: hidden ? "hidden" : "visible",
+        // MapLibre styles its open attribution and logo as always visible,
+        // so they showed through the report pages; the controls are only
+        // overlays, so hiding them leaves the canvas size alone.
+        "& .maplibregl-control-container": {
+          display: hidden ? "none" : undefined,
+        },
+      }}
+    >
       <ModernEditStopMap />
     </Box>
   );

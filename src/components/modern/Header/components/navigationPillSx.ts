@@ -12,6 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
+/* Modified for the ERA RINF frontend, 2026-10-29: pills keep the strip at NAVIGATION_LINE_HEIGHT. */
+
 import { alpha, Theme } from "@mui/material";
 import type { SystemStyleObject } from "@mui/system";
 import { NAVIGATION_LINE_HEIGHT } from "../headerMetrics";
@@ -30,6 +32,9 @@ const PILL_INSET = 4;
 export const navigationPillSx: SystemStyleObject<Theme> = {
   minHeight: NAVIGATION_LINE_HEIGHT - PILL_INSET * 2,
   my: `${PILL_INSET}px`,
+  // MUI pads a tab with an icon 9 px top and bottom, making the pill 38 px
+  // and the strip 47 px instead of NAVIGATION_LINE_HEIGHT.
+  py: 0,
   minWidth: 0,
   px: 2,
   borderRadius: 1,
