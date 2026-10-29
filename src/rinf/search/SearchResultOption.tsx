@@ -15,24 +15,38 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29. */
 
 import { Box, Typography } from "@mui/material";
-import type { OperationalPointSearchResult } from "../models/OperationalPointSearchResult";
+import { useIntl } from "react-intl";
+import type { RinfSearchResult } from "../models/RinfSearchResult";
 
 const SEPARATOR = " · ";
 
 interface SearchResultOptionProps {
-  result: OperationalPointSearchResult;
+  result: RinfSearchResult;
 }
 
-/** One result: the OP name, then UOPID · location code · type · country. */
+/**
+ * One result: the name, then for an OP "UOPID · location code · type ·
+ * country", for a section of line "Line 0504 · 0504_BEFLT_BEFIA · country".
+ */
 export const SearchResultOption = ({ result }: SearchResultOptionProps) => {
-  const { name, uopid, locationCode, type, countryCode } = result;
-  const details = [uopid, locationCode, type, countryCode]
-    .filter(Boolean)
-    .join(SEPARATOR);
+  const { formatMessage } = useIntl();
+  const parts =
+    result.kind === "operationalPoint"
+      ? [result.uopid, result.locationCode, result.type, result.countryCode]
+      : [
+          result.lineNumber &&
+            formatMessage(
+              { id: "rinf_search_line" },
+              { line: result.lineNumber },
+            ),
+          result.canonicalId,
+          result.countryCode,
+        ];
+  const details = parts.filter(Boolean).join(SEPARATOR);
   return (
     <Box sx={{ minWidth: 0 }}>
       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-        {name}
+        {result.name}
       </Typography>
       <Typography variant="caption" sx={{ color: "text.secondary" }}>
         {details}

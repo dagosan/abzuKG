@@ -21,28 +21,28 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { MIN_SEARCH_LENGTH } from "../../api/operationalPointSearchQuery";
 import { useRinfSparqlEndpoint } from "../../config/rinfEndpoint";
 import { detailsPath } from "../../detailsKinds";
-import type { OperationalPointSearchResult } from "../../models/OperationalPointSearchResult";
+import type { RinfSearchResult } from "../../models/RinfSearchResult";
 import type { RinfLoadStatus } from "../../state/loadStatus";
-import { clearSearch, searchOperationalPoints } from "../../state/searchSlice";
+import { clearSearch, searchRinf } from "../../state/searchSlice";
 
-export interface OperationalPointSearch {
+export interface RinfSearch {
   text: string;
   setText: (text: string) => void;
   /** Runs the search for the current text; too-short text does nothing. */
   submit: () => void;
-  open: (result: OperationalPointSearchResult) => void;
+  open: (result: RinfSearchResult) => void;
   status: RinfLoadStatus;
-  results: OperationalPointSearchResult[];
+  results: RinfSearchResult[];
   /** True when the text differs from what the shown results are for. */
   isStale: boolean;
   isTooShort: boolean;
 }
 
 /**
- * State and actions of the RINF search box. Searching takes 2–3 s, so it
- * runs on Enter rather than on every keystroke.
+ * State and actions of the RINF search box (OPs and sections of line).
+ * Searching takes about 3 s, so it runs on Enter rather than on every keystroke.
  */
-export const useOperationalPointSearch = (): OperationalPointSearch => {
+export const useRinfSearch = (): RinfSearch => {
   const dispatch = useAppDispatch();
   const confirmLeave = useConfirmLeave();
   const endpoint = useRinfSparqlEndpoint();
@@ -67,18 +67,14 @@ export const useOperationalPointSearch = (): OperationalPointSearch => {
   const submit = useCallback(() => {
     if (trimmed.length < MIN_SEARCH_LENGTH) return;
     pendingRef.current?.abort();
-    pendingRef.current = dispatch(
-      searchOperationalPoints({ endpoint, text: trimmed }),
-    );
+    pendingRef.current = dispatch(searchRinf({ endpoint, text: trimmed }));
   }, [dispatch, endpoint, trimmed]);
 
   // The header sits outside the router, so it navigates through the store,
   // as Abzu's own header does.
   const open = useCallback(
-    ({ canonicalId }: OperationalPointSearchResult) =>
-      confirmLeave(() =>
-        dispatch(push(detailsPath("operationalPoint", canonicalId))),
-      ),
+    ({ kind, canonicalId }: RinfSearchResult) =>
+      confirmLeave(() => dispatch(push(detailsPath(kind, canonicalId)))),
     [confirmLeave, dispatch],
   );
 

@@ -21,10 +21,16 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   locations (km on each line). Opening a panel moves the map to the element
   when it is out of sight or the map is zoomed out too far to draw it.
 - **Search**: a switch in the header chooses between RINF and Abzu's own stop
-  place search (unchanged). RINF mode searches OPs by name (contains), UOPID
-  or primary location code (starts with); press Enter to search, as a search
-  takes about 2 s. Picking a result opens its panel. The choice of mode is
+  place search (unchanged). RINF mode searches, on Enter (~3 s), both:
+  - OPs by name (contains), UOPID or primary location code (starts with);
+  - sections of line by national line number (starts with), canonical id or
+    name (contains; the label's "Section of Line …" / "(from … until …)"
+    boilerplate is ignored).
+
+  OPs are listed first, then sections of line, each group ranked exact
+  matches first. Picking a result opens its panel. The choice of mode is
   remembered; RINF is the default.
+
 - **Search by parameter** (the sliders button next to the RINF search box,
   route `/parameter-search`): pick a parameter by RINF number or name, a
   condition (offered by the kind of value: codes in use with their counts,

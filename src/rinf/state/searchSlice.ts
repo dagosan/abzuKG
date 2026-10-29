@@ -17,23 +17,28 @@ Added for the ERA RINF frontend, 2026-10-29. */
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { buildOperationalPointSearchQuery } from "../api/operationalPointSearchQuery";
 import { todayIsoDate } from "../api/queryParts";
+import { buildSectionOfLineSearchQuery } from "../api/sectionOfLineSearchQuery";
 import { runSparqlSelect } from "../api/sparqlClient";
+import { toOperationalPointSearchResults } from "../models/OperationalPointSearchResult";
 import {
-  OperationalPointSearchResult,
-  toOperationalPointSearchResults,
-} from "../models/OperationalPointSearchResult";
+  combineSearchResults,
+  RinfSearchResult,
+} from "../models/RinfSearchResult";
+import { toSectionOfLineSearchResults } from "../models/SectionOfLineSearchResult";
 import type { RinfLoadStatus } from "./loadStatus";
 import { readSearchMode, SearchMode, writeSearchMode } from "./preferences";
 
 /** A list longer than this is better narrowed by typing more. */
 export const SEARCH_RESULTS_LIMIT = 20;
+/** Higher, so that a line number lists most of the line's sections. */
+export const SECTION_RESULTS_LIMIT = 40;
 
 export interface SearchState {
   mode: SearchMode;
   /** The text the current results are for. */
   searchedText: string;
   status: RinfLoadStatus;
-  results: OperationalPointSearchResult[];
+  results: RinfSearchResult[];
 }
 
 const initialState: SearchState = {
@@ -48,19 +53,38 @@ interface SearchArgs {
   text: string;
 }
 
-export const searchOperationalPoints = createAsyncThunk<
-  OperationalPointSearchResult[],
-  SearchArgs
->("rinf/searchOperationalPoints", async ({ endpoint, text }, { signal }) => {
-  const query = buildOperationalPointSearchQuery(
-    text,
-    SEARCH_RESULTS_LIMIT,
-    todayIsoDate(),
-  );
-  return toOperationalPointSearchResults(
-    await runSparqlSelect(endpoint, query, signal),
-  );
-});
+/**
+ * Searches OPs and sections of line in parallel (~2 s and ~3 s). If one of
+ * the two fails, the other's results are still shown; it fails only if both do.
+ */
+export const searchRinf = createAsyncThunk<RinfSearchResult[], SearchArgs>(
+  "rinf/search",
+  async ({ endpoint, text }, { signal }) => {
+    const validOn = todayIsoDate();
+    const [operationalPoints, sectionsOfLine] = await Promise.allSettled([
+      runSparqlSelect(
+        endpoint,
+        buildOperationalPointSearchQuery(text, SEARCH_RESULTS_LIMIT, validOn),
+        signal,
+      ).then(toOperationalPointSearchResults),
+      runSparqlSelect(
+        endpoint,
+        buildSectionOfLineSearchQuery(text, SECTION_RESULTS_LIMIT, validOn),
+        signal,
+      ).then(toSectionOfLineSearchResults),
+    ]);
+    if (
+      operationalPoints.status === "rejected" &&
+      sectionsOfLine.status === "rejected"
+    ) {
+      throw operationalPoints.reason;
+    }
+    return combineSearchResults(
+      operationalPoints.status === "fulfilled" ? operationalPoints.value : [],
+      sectionsOfLine.status === "fulfilled" ? sectionsOfLine.value : [],
+    );
+  },
+);
 
 const searchSlice = createSlice({
   name: "rinfSearch",
@@ -78,17 +102,17 @@ const searchSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(searchOperationalPoints.pending, (state, action) => {
+      .addCase(searchRinf.pending, (state, action) => {
         state.searchedText = action.meta.arg.text;
         state.status = "loading";
         state.results = [];
       })
-      .addCase(searchOperationalPoints.fulfilled, (state, action) => {
+      .addCase(searchRinf.fulfilled, (state, action) => {
         if (action.meta.arg.text !== state.searchedText) return;
         state.results = action.payload;
         state.status = "loaded";
       })
-      .addCase(searchOperationalPoints.rejected, (state, action) => {
+      .addCase(searchRinf.rejected, (state, action) => {
         if (action.meta.aborted) return;
         if (action.meta.arg.text !== state.searchedText) return;
         state.status = "failed";

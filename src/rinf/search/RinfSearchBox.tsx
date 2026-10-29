@@ -26,20 +26,24 @@ import {
 import type { KeyboardEvent } from "react";
 import { useIntl } from "react-intl";
 import { searchFieldSx } from "../../components/modern/styles";
-import type { OperationalPointSearchResult } from "../models/OperationalPointSearchResult";
-import { useOperationalPointSearch } from "./hooks/useOperationalPointSearch";
+import type { DetailsKind } from "../detailsKinds";
+import { RinfSearchResult, searchResultKey } from "../models/RinfSearchResult";
+import { RinfSearch, useRinfSearch } from "./hooks/useRinfSearch";
 import { SearchResultOption } from "./SearchResultOption";
 
 const LIST_MAX_WIDTH = { xs: "calc(100vw - 32px)", sm: "460px" };
 const BOX_MAX_WIDTH = 480;
 const SPINNER_SIZE = 16;
+/** Heading of each group in the list. */
+const GROUP_LABEL_IDS: Record<DetailsKind, string> = {
+  operationalPoint: "rinf_search_group_operational_points",
+  sectionOfLine: "rinf_search_group_sections_of_line",
+};
 
 type MuiKeyboardEvent = KeyboardEvent & { defaultMuiPrevented?: boolean };
 
 /** Which hint the empty dropdown shows, from the search's state. */
-const emptyListMessageId = (
-  search: ReturnType<typeof useOperationalPointSearch>,
-): string => {
+const emptyListMessageId = (search: RinfSearch): string => {
   if (search.isTooShort) return "rinf_search_too_short";
   if (search.isStale || search.status === "idle")
     return "rinf_search_press_enter";
@@ -47,11 +51,11 @@ const emptyListMessageId = (
   return "rinf_search_no_results";
 };
 
-/** Header search for RINF operational points; Enter searches, a result opens its panel. */
+/** Header search for RINF OPs and sections of line; Enter searches, a result opens its panel. */
 export const RinfSearchBox = () => {
   const theme = useTheme();
   const { formatMessage } = useIntl();
-  const search = useOperationalPointSearch();
+  const search = useRinfSearch();
   const { text, setText, submit, open, status, results, isStale } = search;
   const loading = status === "loading";
   const options = isStale || loading ? [] : results;
@@ -66,7 +70,7 @@ export const RinfSearchBox = () => {
 
   return (
     <Box sx={{ flex: 1, minWidth: 0, maxWidth: BOX_MAX_WIDTH }}>
-      <Autocomplete<OperationalPointSearchResult>
+      <Autocomplete<RinfSearchResult>
         options={options}
         value={null}
         inputValue={text}
@@ -74,8 +78,11 @@ export const RinfSearchBox = () => {
         loading={loading}
         filterOptions={(all) => all}
         getOptionLabel={(option) => option.name}
+        groupBy={(option) =>
+          formatMessage({ id: GROUP_LABEL_IDS[option.kind] })
+        }
         isOptionEqualToValue={(option, value) =>
-          option.canonicalId === value.canonicalId
+          searchResultKey(option) === searchResultKey(value)
         }
         onInputChange={(_event, value, reason) => {
           if (reason === "input" || reason === "clear") setText(value);
@@ -90,7 +97,7 @@ export const RinfSearchBox = () => {
           </Box>
         }
         renderOption={(props, option) => (
-          <li {...props} key={option.canonicalId}>
+          <li {...props} key={searchResultKey(option)}>
             <SearchResultOption result={option} />
           </li>
         )}

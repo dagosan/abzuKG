@@ -22,7 +22,7 @@ import { toDetailsTrees } from "../rinf/models/detailsTree";
 import { toOperationalPointSearchResult } from "../rinf/models/OperationalPointSearchResult";
 import { positionFromBinding } from "../rinf/models/rootPosition";
 import {
-  searchOperationalPoints,
+  searchRinf,
   searchReducer,
   setSearchMode,
 } from "../rinf/state/searchSlice";
@@ -91,18 +91,12 @@ describe("search results", () => {
     const rinf = searchReducer(undefined, setSearchMode("stopPlaces"));
     expect(rinf.mode).toBe("stopPlaces");
     const args = { endpoint: "https://example.org", text: "gembl" };
-    const pending = searchReducer(
-      rinf,
-      searchOperationalPoints.pending("r1", args),
-    );
+    const pending = searchReducer(rinf, searchRinf.pending("r1", args));
     const newer = searchReducer(
       pending,
-      searchOperationalPoints.pending("r2", { ...args, text: "gemblo" }),
+      searchRinf.pending("r2", { ...args, text: "gemblo" }),
     );
-    const stale = searchReducer(
-      newer,
-      searchOperationalPoints.fulfilled([], "r1", args),
-    );
+    const stale = searchReducer(newer, searchRinf.fulfilled([], "r1", args));
     expect(stale.status).toBe("loading");
   });
 });
