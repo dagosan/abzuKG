@@ -30,6 +30,24 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>`;
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const COORDINATE_DECIMALS = 6;
+/** Characters that may not appear inside a SPARQL IRI, plus whitespace. */
+const UNSAFE_IRI_CHARACTERS = /[\s<>"{}|\\^`]/;
+
+/** An absolute http(s) URI that can go between < and > in a query. */
+export const isSafeIri = (iri: string): boolean =>
+  /^https?:\/\//.test(iri) && !UNSAFE_IRI_CHARACTERS.test(iri);
+
+/** Current-model sections of line and OPs; older model generations use other URI forms. */
+export const CURRENT_PLACE_PREFIXES = [
+  `${ERA_NAMESPACE}sectionOfLine/`,
+  `${ERA_NAMESPACE}operationalPoint/`,
+];
+
+/** FILTER keeping only current-model sections of line and OPs bound to `variable`. */
+export const currentPlaceFilter = (variable: string): string =>
+  `FILTER(${CURRENT_PLACE_PREFIXES.map(
+    (prefix) => `STRSTARTS(STR(${variable}), "${prefix}")`,
+  ).join(" || ")})`;
 
 export interface BoundingBox {
   south: number;

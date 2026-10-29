@@ -21,17 +21,25 @@ import {
   DETAILS_KINDS,
 } from "./detailsKinds";
 import { DetailsPage } from "./pages/DetailsPage";
+import { ParameterSearchPage } from "./parameterSearch/ParameterSearchPage";
+import { PARAMETER_SEARCH_ROUTE } from "./parameterSearch/parameterSearchPath";
 
 /**
  * The RINF routes, e.g. /operational-point/:canonicalId. A function, not a
  * component, because <Routes> only accepts <Route> elements as children:
  * App.tsx calls it inside its <Routes> with `{rinfRoutes(path)}`.
  */
-export const rinfRoutes = (basePath: string) =>
-  DETAILS_KIND_NAMES.map((kind) => (
+export const rinfRoutes = (basePath: string) => [
+  ...DETAILS_KIND_NAMES.map((kind) => (
     <Route
       key={kind}
       path={`${basePath}${DETAILS_KINDS[kind].route}/:${CANONICAL_ID_PARAM}`}
       element={<DetailsPage key={kind} kind={kind} />}
     />
-  ));
+  )),
+  <Route
+    key={PARAMETER_SEARCH_ROUTE}
+    path={`${basePath}${PARAMETER_SEARCH_ROUTE}`}
+    element={<ParameterSearchPage />}
+  />,
+];

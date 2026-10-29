@@ -18,6 +18,7 @@ import { combineReducers } from "@reduxjs/toolkit";
 import { detailsReducer } from "./detailsSlice";
 import { operationalPointsReducer } from "./operationalPointsSlice";
 import { parameterDictionaryReducer } from "./parameterDictionarySlice";
+import { parameterSearchReducer } from "./parameterSearchSlice";
 import { searchReducer } from "./searchSlice";
 import { sectionsOfLineReducer } from "./sectionsOfLineSlice";
 
@@ -28,4 +29,5 @@ export const rinfReducer = combineReducers({
   details: detailsReducer,
   parameterDictionary: parameterDictionaryReducer,
   search: searchReducer,
+  parameterSearch: parameterSearchReducer,
 });

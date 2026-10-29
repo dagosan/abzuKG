@@ -27,8 +27,10 @@ import {
 } from "../state/operationalPointsSlice";
 import { buildOperationalPointsGeoJson } from "./buildOperationalPointsGeoJson";
 import { useOpenCanonicalId } from "./hooks/useOpenCanonicalId";
+import { useMatchedIds } from "./hooks/useMatchedIds";
 import { useOpenDetailsOnClick } from "./hooks/useOpenDetailsOnClick";
 import { useViewportLoader } from "./hooks/useViewportLoader";
+import { matchOpacity } from "./matchOpacity";
 import { operationalPointRadius } from "./operationalPointRadius";
 
 const SOURCE_ID = "rinf-operational-points";
@@ -47,6 +49,8 @@ export const RinfOperationalPointsLayer = () => {
     (state) => state.rinf.operationalPoints.items,
   );
   const openCanonicalId = useOpenCanonicalId("operationalPoint");
+  const matched = useMatchedIds("operationalPoint");
+  const opacity = useMemo(() => matchOpacity(matched), [matched]);
 
   useViewportLoader({
     enabled: show,
@@ -79,6 +83,8 @@ export const RinfOperationalPointsLayer = () => {
         type="circle"
         paint={{
           "circle-color": theme.palette.secondary.main,
+          "circle-opacity": opacity,
+          "circle-stroke-opacity": opacity,
           "circle-radius": operationalPointRadius(isOpen),
           "circle-stroke-color": [
             "case",

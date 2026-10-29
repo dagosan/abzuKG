@@ -25,6 +25,17 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   or primary location code (starts with); press Enter to search, as a search
   takes about 2 s. Picking a result opens its panel. The choice of mode is
   remembered; RINF is the default.
+- **Search by parameter** (the sliders button next to the RINF search box,
+  route `/parameter-search`): pick a parameter by RINF number or name, a
+  condition (offered by the kind of value: codes in use with their counts,
+  numbers with their unit, yes/no, text, or "not applicable" / "not yet
+  available"), and optionally countries and/or IMs. The result lists every
+  section of line and OP holding a matching element — the section or OP
+  itself, a running track or siding of it, or an object linked from such a
+  track (contact line system, ETCS, train detection, tunnel, platform edge) —
+  and fades everything else on the map. The search lives in the page address,
+  so it can be bookmarked or shared; a details panel opened from it has a back
+  arrow to the results. At most 5,000 places are listed.
 
 ## Data source
 
@@ -61,19 +72,26 @@ draws it on Abzu's modern (MapLibre) map. It is read-only.
   no `onto:fts`), so search scans names: the query first finds matching OPs,
   then looks up only those, which takes ~2 s instead of 5–7 s. Very short,
   common text ("de") still takes ~6 s, hence the 2-character minimum.
+- Parameter search first asks which element types carry the parameter and
+  how each reaches a section of line or OP (sampled), then searches only
+  along those links: following every possible link is 10–30× slower. IM
+  limits use the named graph each IM publishes in (`…/949/graph/<code>`); a
+  country limit picks the IMs active there and then checks each result's
+  `era:inCountry`. IM names are not in the data, so IMs are shown by code.
 
 ## Structure
 
-| Folder    | What it does                                                       |
-| --------- | ------------------------------------------------------------------ |
-| `config/` | Endpoint from `bootstrap.json`, with ERA's public one as default   |
-| `api/`    | SPARQL client and query builders                                   |
-| `models/` | Mapping from SPARQL rows to typed objects                          |
-| `state/`  | Redux state (`state.rinf`): one slice per concern, and the toggles |
-| `map/`    | MapLibre layers, click handling, loading bar                       |
-| `panel/`  | The details panel, shared by OPs and SoLs                          |
-| `pages/`  | Route element for `/<kind>/:canonicalId`, and moving the map there |
-| `search/` | The header search switch and the RINF search box                   |
+| Folder             | What it does                                                       |
+| ------------------ | ------------------------------------------------------------------ |
+| `config/`          | Endpoint from `bootstrap.json`, with ERA's public one as default   |
+| `api/`             | SPARQL client and query builders                                   |
+| `models/`          | Mapping from SPARQL rows to typed objects                          |
+| `state/`           | Redux state (`state.rinf`): one slice per concern, and the toggles |
+| `map/`             | MapLibre layers, click handling, loading bar                       |
+| `panel/`           | The details panel, shared by OPs and SoLs                          |
+| `pages/`           | Route element for `/<kind>/:canonicalId`, and moving the map there |
+| `search/`          | The header search switch and the RINF search box                   |
+| `parameterSearch/` | The search-by-parameter panel, its form and results                |
 
 `detailsKinds.ts` describes each kind (route, id prefix, labels, hidden
 statements); adding a kind there adds its route and panel.

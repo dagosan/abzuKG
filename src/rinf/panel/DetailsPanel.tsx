@@ -46,6 +46,8 @@ interface DetailsPanelProps {
   canonicalId: string;
   name: string;
   onClose: () => void;
+  /** Set when opened from parameter search results, to go back to them. */
+  onBack?: () => void;
 }
 
 /** Left-hand panel listing every parameter of the open SoL or OP and its parts. */
@@ -54,6 +56,7 @@ export const DetailsPanel = ({
   canonicalId,
   name,
   onClose,
+  onBack,
 }: DetailsPanelProps) => {
   const { formatMessage } = useIntl();
   const theme = useTheme();
@@ -95,6 +98,7 @@ export const DetailsPanel = ({
         name={name}
         canonicalId={canonicalId}
         onClose={onClose}
+        onBack={onBack}
       />
       <ParameterFilter value={filter} onChange={setFilter} />
       <Box sx={{ flex: 1, overflowY: "auto" }}>

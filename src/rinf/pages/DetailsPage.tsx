@@ -27,6 +27,7 @@ import {
 import { DetailsPanel } from "../panel/DetailsPanel";
 import { closeDetails, fetchDetails } from "../state/detailsSlice";
 import { fetchParameterDictionary } from "../state/parameterDictionarySlice";
+import { clearParameterSearch } from "../state/parameterSearchSlice";
 import { useMoveMapToElement } from "./hooks/useMoveMapToElement";
 
 interface DetailsPageProps {
@@ -67,7 +68,18 @@ export const DetailsPage = ({ kind }: DetailsPageProps) => {
     [dispatch],
   );
 
-  const handleClose = useCallback(() => navigate("/"), [navigate]);
+  // A parameter search stays open behind the panel until it is closed here.
+  const searchPath = useAppSelector(
+    (state) => state.rinf.parameterSearch.searchPath,
+  );
+  const handleBack = useCallback(
+    () => searchPath && navigate(searchPath),
+    [navigate, searchPath],
+  );
+  const handleClose = useCallback(() => {
+    dispatch(clearParameterSearch());
+    navigate("/");
+  }, [dispatch, navigate]);
 
   return (
     <>
@@ -77,6 +89,7 @@ export const DetailsPage = ({ kind }: DetailsPageProps) => {
         canonicalId={canonicalId}
         name={name}
         onClose={handleClose}
+        onBack={searchPath ? handleBack : undefined}
       />
     </>
   );

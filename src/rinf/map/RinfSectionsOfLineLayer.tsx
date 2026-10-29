@@ -27,8 +27,10 @@ import {
 } from "../state/sectionsOfLineSlice";
 import { buildSectionsOfLineGeoJson } from "./buildSectionsOfLineGeoJson";
 import { useOpenCanonicalId } from "./hooks/useOpenCanonicalId";
+import { useMatchedIds } from "./hooks/useMatchedIds";
 import { useOpenDetailsOnClick } from "./hooks/useOpenDetailsOnClick";
 import { useViewportLoader } from "./hooks/useViewportLoader";
+import { matchOpacity } from "./matchOpacity";
 import { OPERATIONAL_POINTS_LAYER_ID } from "./RinfOperationalPointsLayer";
 
 const SOURCE_ID = "rinf-sections-of-line";
@@ -86,6 +88,8 @@ export const RinfSectionsOfLineLayer = () => {
   const show = useAppSelector((state) => state.rinf.sectionsOfLine.show);
   const sections = useAppSelector((state) => state.rinf.sectionsOfLine.items);
   const openCanonicalId = useOpenCanonicalId("sectionOfLine");
+  const matched = useMatchedIds("sectionOfLine");
+  const opacity = useMemo(() => matchOpacity(matched), [matched]);
 
   useViewportLoader({
     enabled: show,
@@ -131,6 +135,7 @@ export const RinfSectionsOfLineLayer = () => {
         paint={{
           "line-color": theme.palette.primary.dark,
           "line-width": lineWidthFocusing(isOpen),
+          "line-opacity": opacity,
         }}
       />
       <Layer

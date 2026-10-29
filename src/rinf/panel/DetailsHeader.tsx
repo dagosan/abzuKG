@@ -14,6 +14,7 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. */
 
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
@@ -25,16 +26,20 @@ interface DetailsHeaderProps {
   name: string;
   canonicalId: string;
   onClose: () => void;
+  /** Set when the panel was opened from search results, to go back to them. */
+  onBack?: () => void;
 }
 
-/** Kind, name, id with a copy button, and the close button. */
+/** Back (from search results), kind, name, id with a copy button, and close. */
 export const DetailsHeader = ({
   titleId,
   name,
   canonicalId,
   onClose,
+  onBack,
 }: DetailsHeaderProps) => {
   const { formatMessage } = useIntl();
+  const backLabel = formatMessage({ id: "rinf_back_to_results" });
   return (
     <Box
       sx={{
@@ -45,6 +50,13 @@ export const DetailsHeader = ({
         pb: 1,
       }}
     >
+      {onBack && (
+        <Tooltip title={backLabel}>
+          <IconButton onClick={onBack} aria-label={backLabel} sx={{ ml: -1 }}>
+            <ArrowBackIcon />
+          </IconButton>
+        </Tooltip>
+      )}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="overline"

@@ -31,6 +31,7 @@ import { useOperationalPointSearch } from "./hooks/useOperationalPointSearch";
 import { SearchResultOption } from "./SearchResultOption";
 
 const LIST_MAX_WIDTH = { xs: "calc(100vw - 32px)", sm: "460px" };
+const BOX_MAX_WIDTH = 480;
 const SPINNER_SIZE = 16;
 
 type MuiKeyboardEvent = KeyboardEvent & { defaultMuiPrevented?: boolean };
@@ -64,7 +65,7 @@ export const RinfSearchBox = () => {
   };
 
   return (
-    <Box sx={{ flex: 1, minWidth: 0, maxWidth: 480 }}>
+    <Box sx={{ flex: 1, minWidth: 0, maxWidth: BOX_MAX_WIDTH }}>
       <Autocomplete<OperationalPointSearchResult>
         options={options}
         value={null}
