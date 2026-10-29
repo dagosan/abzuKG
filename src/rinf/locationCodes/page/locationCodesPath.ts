@@ -21,6 +21,8 @@ export const LOCATION_CODES_PATH = `/${LOCATION_CODES_ROUTE}`;
 /** Sub-routes: the new request form and one request file. */
 export const NEW_REQUEST_SEGMENT = "new";
 export const REGISTER_SEGMENT = "register";
+/** A requester's own requests. */
+export const MY_REQUESTS_SEGMENT = "mine";
 export const REQUEST_ID_PARAM = "requestId";
 
 export const newRequestPath = (prefill?: URLSearchParams): string =>
@@ -31,6 +33,8 @@ export const RESUME_PARAM = "resume";
 export const resumeRequestPath = `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${RESUME_PARAM}=1`;
 
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
+
+export const myRequestsPath = `${LOCATION_CODES_PATH}/${MY_REQUESTS_SEGMENT}`;
 
 export const requestPath = (requestId: string): string =>
   `${LOCATION_CODES_PATH}/${encodeURIComponent(requestId)}`;

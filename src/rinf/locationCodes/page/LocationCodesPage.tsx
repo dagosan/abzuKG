@@ -18,36 +18,50 @@ import { Box, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useIntl } from "react-intl";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { belowAppChromeViewportHeight } from "../../../components/modern/Header/headerMetrics";
-import { useAppDispatch } from "../../../store/hooks";
-import { NewRequestForm } from "../form/NewRequestForm";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RegisterTable } from "../register/RegisterTable";
-import { RequestFile } from "../requestFile/RequestFile";
 import { cancelPicking } from "../state/locationCodesSlice";
 import { loadLocationCodes } from "../state/locationCodesThunks";
-import { LocationCodesActionBar } from "./LocationCodesActionBar";
-import { REQUEST_ID_PARAM, requestPath } from "./locationCodesPath";
-import { RequestList } from "./RequestList";
+import {
+  LocationCodesActionBar,
+  LocationCodesView,
+} from "./LocationCodesActionBar";
+import { REQUEST_ID_PARAM } from "./locationCodesPath";
+import { AgencyView, RequesterView, WorkMode } from "./RoleViews";
 
 /** Which part of the page a route shows. */
-export type LocationCodesPageMode = "home" | "new" | "request" | "register";
+export type LocationCodesPageMode = WorkMode | "register";
+
+/** The view the action bar shows as selected. */
+const viewOf = (
+  mode: LocationCodesPageMode,
+  isRequester: boolean,
+): LocationCodesView => {
+  if (mode === "register") return "register";
+  if (!isRequester) return "requests";
+  return mode === "mine" || mode === "request" ? "mine" : "new";
+};
 
 interface LocationCodesPageProps {
   mode: LocationCodesPageMode;
 }
 
 /**
- * Routes /location-codes[/new|/register|/:requestId] — the code allocation
- * workflow of the procedure for the assignment of location codes.
+ * Routes /location-codes[/new|/mine|/register|/:requestId] — the code
+ * allocation workflow of the procedure for the assignment of location
+ * codes, laid out for the role the user acts in.
  */
 export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
   const { formatMessage } = useIntl();
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const params = useParams<Record<string, string>>();
   const requestId =
     mode === "request" ? (params[REQUEST_ID_PARAM] ?? null) : null;
+  const isRequester = useAppSelector(
+    (state) => state.rinf.locationCodes.actor.role === "requester",
+  );
 
   useEffect(() => {
     dispatch(loadLocationCodes());
@@ -66,56 +80,15 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
       }}
     >
       <Helmet title={formatMessage({ id: "rinf_lc_tab" })} />
-      <LocationCodesActionBar
-        view={mode === "register" ? "register" : "requests"}
-      />
+      <LocationCodesActionBar view={viewOf(mode, isRequester)} />
       {mode === "register" ? (
         <Box sx={{ flex: 1, overflow: "auto" }}>
           <RegisterTable />
         </Box>
+      ) : isRequester ? (
+        <RequesterView mode={mode} requestId={requestId} />
       ) : (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            minHeight: 0,
-            flexDirection: { xs: "column", md: "row" },
-          }}
-        >
-          <Box
-            sx={{
-              display: { xs: mode === "home" ? "flex" : "none", md: "flex" },
-              minHeight: 0,
-              flex: { xs: 1, md: "none" },
-            }}
-          >
-            <RequestList
-              selectedId={requestId}
-              onOpen={(id) => navigate(requestPath(id))}
-            />
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              overflow: "auto",
-              minWidth: 0,
-              display: { xs: mode === "home" ? "none" : "block", md: "block" },
-            }}
-          >
-            {mode === "new" && <NewRequestForm />}
-            {mode === "request" && requestId && (
-              <RequestFile key={requestId} requestId={requestId} />
-            )}
-            {mode === "home" && (
-              <Typography
-                variant="body2"
-                sx={{ p: 3, color: "text.secondary", maxWidth: 640 }}
-              >
-                {formatMessage({ id: "rinf_lc_home_hint" })}
-              </Typography>
-            )}
-          </Box>
-        </Box>
+        <AgencyView mode={mode} requestId={requestId} />
       )}
     </Box>
   );

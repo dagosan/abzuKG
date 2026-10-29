@@ -14,10 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29. */
 
-import AddIcon from "@mui/icons-material/Add";
 import {
   Box,
-  Button,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -29,25 +27,45 @@ import { ActorSwitcher } from "./ActorSwitcher";
 import { DataMenu } from "./DataMenu";
 import {
   LOCATION_CODES_PATH,
+  myRequestsPath,
   newRequestPath,
   registerPath,
 } from "./locationCodesPath";
 
 const BAR_MIN_HEIGHT = 56;
 
-export type LocationCodesView = "requests" | "register";
+export type LocationCodesView = "new" | "mine" | "requests" | "register";
+
+/** Views per role: a requester asks and follows; Agency roles handle cases. */
+const REQUESTER_VIEWS: LocationCodesView[] = ["new", "mine", "register"];
+const AGENCY_VIEWS: LocationCodesView[] = ["requests", "register"];
+
+const PATH_OF_VIEW: Record<LocationCodesView, string> = {
+  new: newRequestPath(),
+  mine: myRequestsPath,
+  requests: LOCATION_CODES_PATH,
+  register: registerPath,
+};
+
+const LABEL_OF_VIEW: Record<LocationCodesView, string> = {
+  new: "rinf_lc_new_request",
+  mine: "rinf_lc_view_mine",
+  requests: "rinf_lc_view_requests",
+  register: "rinf_lc_view_register",
+};
 
 interface LocationCodesActionBarProps {
   view: LocationCodesView;
 }
 
-/** Requests or register, who the user acts as, and a new request. */
+/** The views of the user's role, and who the user acts as. */
 export const LocationCodesActionBar = ({
   view,
 }: LocationCodesActionBarProps) => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
   const role = useAppSelector((state) => state.rinf.locationCodes.actor.role);
+  const views = role === "requester" ? REQUESTER_VIEWS : AGENCY_VIEWS;
 
   return (
     <Box
@@ -68,34 +86,22 @@ export const LocationCodesActionBar = ({
       <Typography variant="subtitle1" component="h1" sx={{ fontWeight: 700 }}>
         {formatMessage({ id: "rinf_lc_title" })}
       </Typography>
-      <ToggleButtonGroup
-        exclusive
-        size="small"
-        value={view}
-        onChange={(_event, next: LocationCodesView | null) =>
-          next &&
-          navigate(next === "register" ? registerPath : LOCATION_CODES_PATH)
-        }
-      >
-        <ToggleButton value="requests" sx={{ textTransform: "none" }}>
-          {formatMessage({ id: "rinf_lc_view_requests" })}
-        </ToggleButton>
-        <ToggleButton value="register" sx={{ textTransform: "none" }}>
-          {formatMessage({ id: "rinf_lc_view_register" })}
-        </ToggleButton>
+      <ToggleButtonGroup exclusive size="small" value={view}>
+        {views.map((each) => (
+          // A click always navigates: from a request file, "My requests"
+          // is already selected but must still lead back to the list.
+          <ToggleButton
+            key={each}
+            value={each}
+            onClick={() => navigate(PATH_OF_VIEW[each])}
+            sx={{ textTransform: "none" }}
+          >
+            {formatMessage({ id: LABEL_OF_VIEW[each] })}
+          </ToggleButton>
+        ))}
       </ToggleButtonGroup>
       <Box sx={{ flexGrow: 1 }} />
       <ActorSwitcher />
-      {role === "requester" && (
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={() => navigate(newRequestPath())}
-        >
-          {formatMessage({ id: "rinf_lc_new_request" })}
-        </Button>
-      )}
       <DataMenu />
     </Box>
   );

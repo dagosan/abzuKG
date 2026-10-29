@@ -29,6 +29,7 @@ import {
 import { RinfReportsPage } from "./reports/RinfReportsPage";
 import {
   LOCATION_CODES_ROUTE,
+  MY_REQUESTS_SEGMENT,
   NEW_REQUEST_SEGMENT,
   REGISTER_SEGMENT,
   REQUEST_ID_PARAM,
@@ -43,6 +44,7 @@ const LOCATION_CODES_SUBROUTES: [string, LocationCodesPageMode][] = [
   ["", "home"],
   [`/${NEW_REQUEST_SEGMENT}`, "new"],
   [`/${REGISTER_SEGMENT}`, "register"],
+  [`/${MY_REQUESTS_SEGMENT}`, "mine"],
   [`/:${REQUEST_ID_PARAM}`, "request"],
 ];
 

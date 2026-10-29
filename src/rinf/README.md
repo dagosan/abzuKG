@@ -157,7 +157,14 @@ Known limits of this first version:
   backup. `store/LocationCodeStore.ts` is the contract a CAS or Tiamat
   backend implements to replace it (`store/activeStore.ts`).
 - **Roles are picked by hand** (the "Acting as" switch and a name), not
-  taken from the login. A requester sees only the requests they submitted.
+  taken from the login.
+- **The page depends on the role** (`page/RoleViews.tsx`). A requester gets
+  New request (the form, also the tab's landing page), My requests
+  (`/location-codes/mine`, only their own) and Code register, with no
+  queue of other cases. Agency roles get Requests (the queue on the left,
+  the open case on the right) and Code register, with no request form:
+  `/new` and `/mine` lead back to the queue, and the OP panel's "Request a
+  location code" button shows for requesters only.
 - **Publication** writes to this register only, not to the Knowledge Graph.
 - **Retail and virtual codes** are not handled yet; the retail doublet check
   for a PLC is a manual line.

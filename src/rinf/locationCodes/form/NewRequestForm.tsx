@@ -26,7 +26,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useIntl } from "react-intl";
-import { useAppSelector } from "../../../store/hooks";
 import { ChangeFields } from "./ChangeFields";
 import { FormSection, useFieldError } from "./FormSection";
 import { LocationElementField } from "./LocationElementField";
@@ -41,11 +40,9 @@ const FORM_MAX_WIDTH = 760;
 /** Steps 1 and 2: the requester's check, then the request itself. */
 export const NewRequestForm = () => {
   const { formatMessage } = useIntl();
-  const actor = useAppSelector((state) => state.rinf.locationCodes.actor);
   const form = useRequestForm();
   const { data, update, errors, submit, submitting } = form;
   const fieldError = useFieldError(errors);
-  const isRequester = actor.role === "requester";
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
@@ -53,11 +50,6 @@ export const NewRequestForm = () => {
       <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
         {formatMessage({ id: "rinf_lc_form_title" })}
       </Typography>
-      {!isRequester && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {formatMessage({ id: "rinf_lc_form_switch_to_requester" })}
-        </Alert>
-      )}
       <Stack spacing={2}>
         <OperationSection form={form} />
         <FormSection
@@ -111,11 +103,7 @@ export const NewRequestForm = () => {
           </Alert>
         )}
         <Box>
-          <Button
-            variant="contained"
-            onClick={submit}
-            disabled={!isRequester || submitting}
-          >
+          <Button variant="contained" onClick={submit} disabled={submitting}>
             {formatMessage({ id: "rinf_lc_form_submit" })}
           </Button>
         </Box>
