@@ -163,6 +163,8 @@
   "rinf_lc_blocked_revise_assignment": "A published code is changed by an amendment or deactivation request.",
   "rinf_lc_blocked_run_checks": "Run the checks first.",
   "rinf_lc_blocked_uniqueness": "Uniqueness not secured: the code cannot be assigned.",
+  "rinf_lc_blocked_wrong_role": "This step belongs to another role.",
+  "rinf_lc_blocked_wrong_status": "This step cannot be taken at the request's current stage. Reload the page to see where it stands.",
   "rinf_lc_by_on": "{name}, {date}",
   "rinf_lc_category_capacityAllocationBody": "Body allocating capacity",
   "rinf_lc_category_capacityApplicant": "Applicant for infrastructure or service facility capacity",

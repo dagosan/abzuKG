@@ -12,26 +12,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-10-30: steps are taken by the store (Tiamat or this browser), not here. */
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { todayIsoDate } from "../../api/queryParts";
 import { assignableCode } from "../checks/assignableCode";
 import { gatherCheckContext } from "../checks/gatherCheckContext";
-import { fetchSubsidiaryCodes } from "../checks/kgLookups";
 import { runTechnicalChecks } from "../checks/technicalChecks";
-import { normalisePrimaryCode } from "../model/codeFormat";
 import type {
   LocationCodeRequest,
   RequestData,
 } from "../model/LocationCodeRequest";
 import type { RegisteredCode } from "../model/RegisteredCode";
 import type { Actor } from "../model/roles";
-import { locationCodeStore, newId } from "../store/activeStore";
+import { locationCodeStore } from "../store/activeStore";
+import type { StepResult } from "../store/LocationCodeStore";
 import type { WorkflowAction } from "../workflow/actions";
-import { ActionPayload, applyAction } from "../workflow/applyAction";
-import { createRequest, formatReference } from "../workflow/createRequest";
-import { registerChanges } from "../workflow/publication";
+import type { ActionPayload } from "../workflow/applyAction";
 
 export interface LoadedData {
   requests: LocationCodeRequest[];
@@ -49,11 +47,9 @@ export const loadLocationCodes = createAsyncThunk<LoadedData>(
 export const submitLocationCodeRequest = createAsyncThunk<
   LocationCodeRequest,
   { data: RequestData; actor: Actor }
->("rinf/locationCodes/submit", async ({ data, actor }) => {
-  const request = createRequest(newId(), data, actor, new Date().toISOString());
-  await locationCodeStore.saveRequest(request);
-  return request;
-});
+>("rinf/locationCodes/submit", ({ data, actor }) =>
+  locationCodeStore.submitRequest(data, actor),
+);
 
 interface ActionArgs {
   endpoint: string;
@@ -61,44 +57,43 @@ interface ActionArgs {
   action: WorkflowAction;
   actor: Actor;
   payload: ActionPayload;
+  /** Events in the copy the actor is looking at. */
+  expectedEventCount: number;
 }
 
-export interface ActionResult {
-  request: LocationCodeRequest;
-  codes: RegisteredCode[];
-}
+export type ActionResult = StepResult;
 
 /**
- * Takes one workflow step. Steps that need outside facts get them first:
- * the checks and the decision ask the KG again, so the value assigned is
- * still free at the moment of assignment.
+ * Asks the store to take one step. The facts the register cannot work out
+ * yet are gathered here first: the checks and the decision ask the KG, so the
+ * value assigned is still free at the moment of assignment. The store (Tiamat,
+ * or this browser) decides whether the step may be taken and what it changes.
  */
 export const performLocationCodeAction = createAsyncThunk<
   ActionResult,
   ActionArgs
 >(
   "rinf/locationCodes/action",
-  async ({ endpoint, requestId, action, actor, payload }) => {
-    const requests = await locationCodeStore.loadRequests();
-    const register = await locationCodeStore.loadCodes();
-    const request = requests.find((candidate) => candidate.id === requestId);
-    if (!request) throw new Error(`No request ${requestId}`);
-    const now = new Date().toISOString();
-    const today = todayIsoDate();
+  async ({
+    endpoint,
+    requestId,
+    action,
+    actor,
+    payload,
+    expectedEventCount,
+  }) => {
     const fullPayload = { ...payload };
-
-    if (action === "register") {
-      const year = new Date().getFullYear();
-      const sequence = await locationCodeStore.nextReferenceSequence(year);
-      fullPayload.reference = formatReference(year, sequence);
-    }
     if (action === "runChecks" || action === "assign") {
+      const requests = await locationCodeStore.loadRequests();
+      const register = await locationCodeStore.loadCodes();
+      const request = requests.find((candidate) => candidate.id === requestId);
+      if (!request) throw new Error(`No request ${requestId}`);
       const context = await gatherCheckContext(
         endpoint,
         request,
         requests,
         register,
-        today,
+        todayIsoDate(),
       );
       const code = assignableCode(request, context);
       if (action === "runChecks") {
@@ -109,34 +104,13 @@ export const performLocationCodeAction = createAsyncThunk<
         fullPayload.code = code;
       }
     }
-    const updated = applyAction(request, action, actor, fullPayload, now);
-    const codes =
-      action === "publish"
-        ? registerChanges(
-            updated,
-            register,
-            await kgDependants(endpoint, updated),
-            now,
-          )
-        : [];
-    if (codes.length > 0)
-      await locationCodeStore.saveRequestWithCodes(updated, codes);
-    else await locationCodeStore.saveRequest(updated);
-    return { request: updated, codes };
+    return locationCodeStore.takeStep({
+      requestId,
+      action,
+      actor,
+      payload: fullPayload,
+      expectedEventCount,
+      endpoint,
+    });
   },
 );
-
-/** SLCs the KG links to a PLC being closed with its dependants. */
-const kgDependants = async (
-  endpoint: string,
-  request: LocationCodeRequest,
-): Promise<string[]> => {
-  const { data } = request;
-  const closesDependants =
-    data.codeType === "primary" &&
-    data.operation === "deactivation" &&
-    data.closeDependentCodes;
-  return closesDependants
-    ? fetchSubsidiaryCodes(endpoint, normalisePrimaryCode(data.targetCode))
-    : [];
-};

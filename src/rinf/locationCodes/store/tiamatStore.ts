@@ -12,23 +12,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-10-30: Tiamat takes the workflow steps; this store only asks for them. */
 
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import type { RegisteredCode } from "../model/RegisteredCode";
 import type {
   LocationCodeSnapshot,
   LocationCodeStore,
+  StepResult,
 } from "./LocationCodeStore";
+import {
+  KG_UNAVAILABLE_ERROR,
+  STALE_ERROR,
+  UNREACHABLE_ERROR,
+} from "./storeErrors";
 
 const JSON_TYPE = "application/json";
 const CONFLICT = 409;
 const UNAVAILABLE = 503;
-
-/** Text keys shown when Tiamat refuses or cannot be reached. */
-export const STALE_ERROR = "rinf_lc_error_store_stale";
-export const UNREACHABLE_ERROR = "rinf_lc_error_store_unreachable";
-export const KG_UNAVAILABLE_ERROR = "rinf_lc_error_store_kg_unavailable";
+const TEXT_KEY_PREFIX = "rinf_lc_";
 
 /** Tiamat's error body (ext/era/locationcodes, LocationCodeController). */
 interface RegisterError {
@@ -38,6 +41,8 @@ interface RegisterError {
 }
 
 const STALE_ERRORS = ["staleRequest", "staleCode"];
+/** Refusals whose detail is one of the frontend's text keys. */
+const STEP_REFUSALS = ["actionNotAllowed", "actionNotAvailable"];
 
 const readError = async (response: Response): Promise<RegisterError> => {
   try {
@@ -56,6 +61,12 @@ const refusal = async (response: Response): Promise<Error> => {
   if (response.status === CONFLICT && STALE_ERRORS.includes(body.error ?? ""))
     return new Error(STALE_ERROR);
   if (response.status === UNAVAILABLE) return new Error(KG_UNAVAILABLE_ERROR);
+  const [firstDetail] = body.details ?? [];
+  if (
+    STEP_REFUSALS.includes(body.error ?? "") &&
+    firstDetail?.startsWith(TEXT_KEY_PREFIX)
+  )
+    return new Error(firstDetail);
   const reasons = body.details?.length ? body.details.join("; ") : body.message;
   return new Error(reasons || `Tiamat answered ${response.status}`);
 };
@@ -86,31 +97,24 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
     return response;
   };
 
-  const read = async <Result>(path: string): Promise<Result> =>
-    (await (await call(path)).json()) as Result;
-
-  const requestPath = (id: string) => `/requests/${encodeURIComponent(id)}`;
+  const read = async <Result>(
+    path: string,
+    method = "GET",
+    body?: unknown,
+  ): Promise<Result> =>
+    (await (await call(path, method, body)).json()) as Result;
 
   return {
     loadRequests: () => read<LocationCodeRequest[]>("/requests"),
-    saveRequest: async (request) => {
-      await call(requestPath(request.id), "PUT", request);
-    },
-    saveRequestWithCodes: async (request, codes) => {
-      await call(`${requestPath(request.id)}/with-codes`, "PUT", {
-        request,
-        codes,
-      });
-    },
     loadCodes: () => read<RegisteredCode[]>("/codes"),
-    saveCodes: async (codes) => {
-      await call("/codes", "PUT", codes);
-    },
-    nextReferenceSequence: async (year) => {
-      const response = await call(`/reference-sequences/${year}/next`, "POST");
-      const { value } = (await response.json()) as { value: number };
-      return value;
-    },
+    submitRequest: (data, actor) =>
+      read<LocationCodeRequest>("/requests", "POST", { actor, data }),
+    takeStep: ({ requestId, action, actor, payload, expectedEventCount }) =>
+      read<StepResult>(
+        `/requests/${encodeURIComponent(requestId)}/actions`,
+        "POST",
+        { action, actor, payload, expectedEventCount },
+      ),
     exportSnapshot: () => read<LocationCodeSnapshot>("/snapshot"),
     importSnapshot: async (snapshot) => {
       await call("/import", "POST", snapshot);

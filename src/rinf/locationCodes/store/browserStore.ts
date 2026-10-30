@@ -12,14 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day. */
+Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
+Modified 2026-10-30: takes the workflow steps itself (browserWorkflow.ts). */
 
-import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import type { RegisteredCode } from "../model/RegisteredCode";
+import { createRequest } from "../workflow/createRequest";
+import { takeStepInBrowser } from "./browserWorkflow";
 import type {
   LocationCodeSnapshot,
   LocationCodeStore,
 } from "./LocationCodeStore";
+import { newId } from "./newId";
 
 const STORAGE_KEY = "abzuKG.locationCodes.v1";
 
@@ -54,55 +56,25 @@ export const writeSnapshot = (snapshot: LocationCodeSnapshot): void => {
   }
 };
 
-const upsert = <Item>(
-  items: Item[],
-  replacements: Item[],
-  keyOf: (item: Item) => string,
-): Item[] => {
-  const replacementKeys = new Set(replacements.map(keyOf));
-  return [
-    ...items.filter((item) => !replacementKeys.has(keyOf(item))),
-    ...replacements,
-  ];
-};
-
-const requestKey = (request: LocationCodeRequest) => request.id;
-const codeKey = (code: RegisteredCode) => code.key;
-
-/** The store kept in this browser's local storage. */
+/** The store kept in this browser's local storage; steps are taken here too. */
 export const browserStore: LocationCodeStore = {
   loadRequests: async () => readSnapshot().requests,
-  saveRequest: async (request) => {
-    const snapshot = readSnapshot();
-    writeSnapshot({
-      ...snapshot,
-      requests: upsert(snapshot.requests, [request], requestKey),
-    });
-  },
-  saveRequestWithCodes: async (request, codes) => {
-    const snapshot = readSnapshot();
-    writeSnapshot({
-      ...snapshot,
-      requests: upsert(snapshot.requests, [request], requestKey),
-      codes: upsert(snapshot.codes, codes, codeKey),
-    });
-  },
   loadCodes: async () => readSnapshot().codes,
-  saveCodes: async (codes) => {
+  submitRequest: async (data, actor) => {
+    const request = createRequest(
+      newId(),
+      data,
+      actor,
+      new Date().toISOString(),
+    );
     const snapshot = readSnapshot();
-    writeSnapshot({
-      ...snapshot,
-      codes: upsert(snapshot.codes, codes, codeKey),
-    });
+    writeSnapshot({ ...snapshot, requests: [...snapshot.requests, request] });
+    return request;
   },
-  nextReferenceSequence: async (year) => {
-    const snapshot = readSnapshot();
-    const next = (snapshot.sequences[String(year)] ?? 0) + 1;
-    writeSnapshot({
-      ...snapshot,
-      sequences: { ...snapshot.sequences, [String(year)]: next },
-    });
-    return next;
+  takeStep: async (step) => {
+    const { result, snapshot } = await takeStepInBrowser(readSnapshot(), step);
+    writeSnapshot(snapshot);
+    return result;
   },
   exportSnapshot: async () => readSnapshot(),
   /** Replaces what this browser holds. */

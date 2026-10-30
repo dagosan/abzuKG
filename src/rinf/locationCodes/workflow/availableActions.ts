@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-10-30: canBeTakenFrom, for the stores' refusals. */
 
 import { isBlocking } from "../model/checklist";
 import type {
@@ -47,6 +48,12 @@ const ACTION_FROM: Record<WorkflowAction, RequestStatus[]> = {
   upholdDecision: ["underReview"],
   reviseDecision: ["underReview"],
 };
+
+/** Whether `action` can be taken from `status` at all, whoever asks. */
+export const canBeTakenFrom = (
+  action: WorkflowAction,
+  status: RequestStatus,
+): boolean => ACTION_FROM[action].includes(status);
 
 export interface AvailableAction {
   action: WorkflowAction;

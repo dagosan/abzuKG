@@ -12,30 +12,50 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day. */
+Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
+Modified 2026-10-30: the store takes workflow steps (submitRequest, takeStep) instead of saving documents. */
 
-import type { LocationCodeRequest } from "../model/LocationCodeRequest";
+import type {
+  LocationCodeRequest,
+  RequestData,
+} from "../model/LocationCodeRequest";
 import type { RegisteredCode } from "../model/RegisteredCode";
+import type { Actor } from "../model/roles";
+import type { WorkflowAction } from "../workflow/actions";
+import type { ActionPayload } from "../workflow/applyAction";
+
+/** One step on a request, as the actor asks for it. */
+export interface WorkflowStep {
+  requestId: string;
+  action: WorkflowAction;
+  actor: Actor;
+  payload: ActionPayload;
+  /** Events in the copy the actor acted on; the step is refused if others were added since. */
+  expectedEventCount: number;
+  /** SPARQL endpoint, for the browser store's lookups; Tiamat uses its own. */
+  endpoint: string;
+}
+
+/** The request after a step, and the register entries the step changed. */
+export interface StepResult {
+  request: LocationCodeRequest;
+  codes: RegisteredCode[];
+}
 
 /**
- * Where requests and registered codes are kept: in the browser
- * (browserStore.ts), or in Tiamat (tiamatStore.ts) when bootstrap.json sets
- * `locationCodesApiUrl`. activeStore.ts picks one.
+ * Where requests and registered codes are kept, and who takes the workflow
+ * steps: this browser (browserStore.ts), or Tiamat (tiamatStore.ts) when
+ * bootstrap.json sets `locationCodesApiUrl`. activeStore.ts picks one. Both
+ * apply the same rules (workflow/); with Tiamat, its answer is the one that
+ * counts.
  */
 export interface LocationCodeStore {
   loadRequests(): Promise<LocationCodeRequest[]>;
-  /** Creates or replaces the request with the same id. */
-  saveRequest(request: LocationCodeRequest): Promise<void>;
-  /** A step that changes the register too: both are saved, or neither. */
-  saveRequestWithCodes(
-    request: LocationCodeRequest,
-    codes: RegisteredCode[],
-  ): Promise<void>;
   loadCodes(): Promise<RegisteredCode[]>;
-  /** Creates or replaces each code with the same key. */
-  saveCodes(codes: RegisteredCode[]): Promise<void>;
-  /** Next number for request references in `year`, starting at 1. */
-  nextReferenceSequence(year: number): Promise<number>;
+  /** Procedure step 2: records a new request and returns it. */
+  submitRequest(data: RequestData, actor: Actor): Promise<LocationCodeRequest>;
+  /** Takes one step, or refuses it with an Error whose message is a text key or the reasons. */
+  takeStep(step: WorkflowStep): Promise<StepResult>;
   /** Everything, for the backup file. */
   exportSnapshot(): Promise<LocationCodeSnapshot>;
   /** Loads a backup file. */

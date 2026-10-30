@@ -158,15 +158,29 @@ Known limits of this first version:
   `"locationCodesApiUrl": "https://<tiamat>/era/v1/location-codes"` in
   `bootstrap.json`, they live in Tiamat instead (`store/tiamatStore.ts`;
   backend: dagosan/tiamatLCs, branch `location-codes`,
-  `tiamat-core/src/ext/resources/docs/era-location-codes.md`). Tiamat then
-  re-checks every code itself (form, KG position, not already in the KG,
-  parent in force), refuses a save made from an outdated copy ("someone
-  else changed this meanwhile"), and saves a publication's codes and
-  request together. The ⋮ menu shows where the data is; restoring a
-  browser backup into Tiamat is how existing requests move there (entries
-  already there are skipped; a backup that disagrees is refused whole).
+  `tiamat-core/src/ext/resources/docs/era-location-codes.md`). The ⋮ menu
+  shows where the data is; restoring a browser backup into Tiamat is how
+  existing requests move there (entries already there are skipped; a
+  backup that disagrees is refused whole).
+- **Who takes the steps (since 2026-10-30).** The page never saves a request
+  it changed itself: it asks the store to _submit_ a request or _take a
+  step_ (`LocationCodeStore.submitRequest` / `takeStep`), sending the
+  action, the actor, the payload and how many events the copy on screen
+  has. With Tiamat, Tiamat decides: whether the step can be taken from the
+  request's status, by that role, by that person (submitter, four eyes),
+  and what must come first; then it works out the step's changes itself
+  (status, dates, reference, decision, register entries) and re-checks
+  every code against the KG. Its refusals come back as the same
+  `rinf_lc_blocked_…` text keys the page uses. Without Tiamat, the browser
+  store applies the same rules (`store/browserWorkflow.ts`), so both modes
+  refuse the same steps. The page still shows only the steps the actor
+  can take (`workflow/availableActions.ts`); **a rule changed here must be
+  changed in Tiamat's `workflow/` too.** The results of the technical
+  checks and the value to assign are still worked out in the browser
+  (they need its KG lookups) and sent as the step's payload.
 - **Roles are picked by hand** (the "Acting as" switch and a name), not
-  taken from the login.
+  taken from the login. Tiamat applies its rules to the actor the page
+  names; until there is a login it cannot check that this is who is acting.
 - **The page depends on the role** (`page/RoleViews.tsx`). A requester gets
   New request (the form, also the tab's landing page), My requests
   (`/location-codes/mine`, only their own) and Code register, with no
