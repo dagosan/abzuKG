@@ -1,5 +1,6 @@
 <!-- Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
-     Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside. -->
+     Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside;
+     the app's port is a setting (ABZUKG_PORT). -->
 
 # Running the Location Code Manager in Docker (e.g. on a NAS)
 
@@ -10,7 +11,7 @@ Three containers, all started by one `docker compose`:
 
 | Container | What it is |
 | --- | --- |
-| `abzukg` | The app (static files and `bootstrap.json`) in nginx, port 8090. The browser fetches RINF data straight from ERA's SPARQL endpoint. Requests to `/era/…` are passed on to Tiamat, so the browser talks to one address only |
+| `abzukg` | The app (static files and `bootstrap.json`) in nginx, port 8090 (or `ABZUKG_PORT`). The browser fetches RINF data straight from ERA's SPARQL endpoint. Requests to `/era/…` are passed on to Tiamat, so the browser talks to one address only |
 | `abzukg-tiamat` | The location code register: Tiamat from dagosan/tiamatLCs (`master`), built from source with its `Dockerfile.era`, profile `era-location-codes`. No port of its own on the NAS |
 | `abzukg-tiamat-db` | PostgreSQL 17 with PostGIS for Tiamat. Data in the Docker volume `abzukg-tiamat-db` |
 
@@ -21,7 +22,7 @@ Three containers, all started by one `docker compose`:
 | `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; `/era/` goes to Tiamat; caching |
 | `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes` |
 | `deploy/update.sh` | Installs or updates both repositories from GitHub and rebuilds the containers |
-| `/share/Container/abzukg.env` | Made by `update.sh` on first run: the database password. Keep it; the database only accepts the password it was created with |
+| `/share/Container/abzukg.env` | Made by `update.sh` on first run: the database password, and optionally `ABZUKG_PORT`. Keep it; the database only accepts the password it was created with |
 
 ## Install on a QNAP NAS (Container Station)
 
@@ -48,8 +49,14 @@ Three containers, all started by one `docker compose`:
    is not shown once Tiamat is configured) and restore it afterwards into
    Tiamat.
 
-If port 8090 is taken, change the left number in `docker-compose.yml`
-(`"8091:80"`).
+If port 8090 is taken by another app, choose another port
+in the password file and run `update.sh` again:
+
+```sh
+echo ABZUKG_PORT=8095 >> /share/Container/abzukg.env
+```
+
+Every `:8090` below is then that port.
 
 ## Update to the latest commit
 

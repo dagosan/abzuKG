@@ -1,5 +1,6 @@
 # Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
-# Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside.
+# Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside;
+# the app's port is a setting (ABZUKG_PORT).
 #
 # On the NAS this is run by deploy/update.sh (see deploy/README.md), which puts
 # the Tiamat source next to this folder and keeps the database password in
@@ -11,7 +12,8 @@ services:
     image: abzukg:latest
     container_name: abzukg
     ports:
-      - "8090:80"
+      # The port on the NAS: ABZUKG_PORT in ../abzukg.env, else 8090.
+      - "${ABZUKG_PORT:-8090}:80"
     depends_on:
       - tiamat
     restart: unless-stopped

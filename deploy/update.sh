@@ -1,7 +1,7 @@
 #!/bin/sh
 # Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
 # Modified 2026-10-30: also installs the location code register (Tiamat + PostGIS);
-# both repositories from master.
+# both repositories from master; the app's port from ABZUKG_PORT in abzukg.env.
 #
 # Installs or updates the Location Code Manager (abzuKG) and its location code
 # register (Tiamat, dagosan/tiamatLCs) on the NAS from GitHub, and rebuilds
@@ -51,6 +51,10 @@ if [ ! -f "$ENV_FILE" ]; then
   echo "Created $ENV_FILE with a new database password."
 fi
 
+# The app's port on the NAS (ABZUKG_PORT in the same file, default 8090).
+PORT=$(sed -n 's/^ABZUKG_PORT=//p' "$ENV_FILE")
+PORT="${PORT:-8090}"
+
 SHA=$(download dagosan/abzuKG "$BRANCH" "$APP")
 TIAMAT_SHA=$(download dagosan/tiamatLCs "$TIAMAT_BRANCH" "$TIAMAT_DIR")
 
@@ -71,7 +75,7 @@ docker compose --env-file "$ENV_FILE" up -d --build
 # Tiamat needs a minute or two to start (and to create its tables the first time).
 echo "Waiting for the location code register…"
 tries=0
-until wget -qO /dev/null "http://localhost:8090/era/v1/location-codes/codes"; do
+until wget -qO /dev/null "http://localhost:$PORT/era/v1/location-codes/codes"; do
   tries=$((tries + 1))
   if [ "$tries" -ge 60 ]; then
     echo "The register did not answer within 5 minutes. Its log:" >&2
@@ -81,5 +85,5 @@ until wget -qO /dev/null "http://localhost:8090/era/v1/location-codes/codes"; do
   sleep 5
 done
 
-echo "The Location Code Manager serves $BRANCH at $SHA on port 8090,"
+echo "The Location Code Manager serves $BRANCH at $SHA on port $PORT,"
 echo "with the register from tiamatLCs $TIAMAT_BRANCH at $TIAMAT_SHA (see /version.txt)."
