@@ -1,3 +1,14 @@
+<!-- Modified for the ERA Location Code Manager, 2026-10-30: added this first section. -->
+
+# Location Code Manager
+
+ERA's Location Code Manager, built on this fork of Entur's Abzu (dagosan/abzuKG). Its
+own features — RINF data on the map, RINF reports and the location code
+workflow — live in `src/rinf/` (see `src/rinf/README.md`). To run it on a
+server or NAS, see `deploy/README.md`.
+
+The rest of this file is Abzu's own README.
+
 # Abzu [![Build and deploy](https://github.com/entur/abzu/actions/workflows/build.yml/badge.svg)](https://github.com/entur/abzu/actions/workflows/build.yml)
 
 Stop place register frontend.

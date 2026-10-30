@@ -1,7 +1,7 @@
 {
   "_empty": " ",
   "_report_page": "Rapports",
-  "_title": "Référentiel de points d'arrêt",
+  "_title": "Location Code Manager",
   "_title_new_stop": "Nouveau point d'arrêt",
   "accept_changes": "J'ai compris",
   "accept_changes_info": "Vos modifications seront supprimées",
@@ -71,7 +71,7 @@
   "bike_parking_hint": "Est-ce que ce point possède un rack à vélos ?",
   "bike_parking_no": "Aucun rack à vélo disponible",
   "browser_explanation": "Vous utilisez actuellement un navigateur qui pourrait ne pas être entièrement compatible.",
-  "browser_recommendation": "Vous devriez changer de navigateur ou le mettre à jour pour utiliser toutes les fonctionnalités du référentiel de points d'arrêts",
+  "browser_recommendation": "Vous devriez changer de navigateur ou le mettre à jour pour utiliser toutes les fonctionnalités du Location Code Manager",
   "browser_supported_browsers": "Les navigateurs supportés sont :",
   "browser_unsupported_title": "Navigateur non supporté",
   "continue_anyway": "Continuer quand même",
