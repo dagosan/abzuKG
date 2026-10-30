@@ -1,6 +1,9 @@
 <!-- Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2. -->
 
-# Running abzuKG in Docker (e.g. on a NAS)
+# Running the Location Code Manager in Docker (e.g. on a NAS)
+
+The app folder, image and container on the server are called `abzukg`, after
+the repository; renaming them would leave an old container holding the port.
 
 The app is a set of static files plus a runtime config, `bootstrap.json`. The
 browser fetches RINF data straight from ERA's SPARQL endpoint, so the server

@@ -1,7 +1,7 @@
 {
   "_empty": " ",
   "_report_page": "Raportit",
-  "_title": "Pysäkkirekisteri",
+  "_title": "Location Code Manager",
   "_title_new_stop": "Uusi pysäkki",
   "accept_changes": "Ymmärrän",
   "accept_changes_info": "Lisämuutoksesi hylätään",
@@ -71,7 +71,7 @@
   "bike_parking_hint": "Onko pysäkillä pyörätelineitä?",
   "bike_parking_no": "Ei pyörätelinettä saatavilla",
   "browser_explanation": "Käytät selainta, jota ei välttämättä tueta täysin.",
-  "browser_recommendation": "Suosittelemme päivittämään tai vaihtamaan selaimen saadaksesi kaikki toiminnot käyttöön Pysäkkirekisterissä.",
+  "browser_recommendation": "Suosittelemme päivittämään tai vaihtamaan selaimen saadaksesi kaikki Location Code Managerin toiminnot käyttöön.",
   "browser_supported_browsers": "Tuetut selaimet ovat:",
   "browser_unsupported_title": "Selainta ei tueta",
   "continue_anyway": "Jatka silti",

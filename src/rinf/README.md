@@ -1,8 +1,8 @@
 # RINF module
 
-Everything under `src/rinf/` was added for ERA's RINF frontend and is not part
+Everything under `src/rinf/` was added for ERA's Location Code Manager and is not part
 of upstream Abzu. It reads RINF data straight from ERA's SPARQL endpoint and
-draws it on Abzu's modern (MapLibre) map. It is read-only.
+draws it on Abzu's modern (MapLibre) map; the RINF data itself is read-only.
 
 ## What it does
 

@@ -1,7 +1,7 @@
 {
   "_empty": " ",
   "_report_page": "Reports",
-  "_title": "Stop Place Registry",
+  "_title": "Location Code Manager",
   "_title_new_stop": "New stop place",
   "accept_changes": "I understand",
   "accept_changes_info": "Your additional changes will be discarded",
@@ -71,7 +71,7 @@
   "bike_parking_hint": "Does this stop have bike racks?",
   "bike_parking_no": "No bike rack available",
   "browser_explanation": "You are currently using a browser that might not be fully supported.",
-  "browser_recommendation": "It is recommended that you upgrade or change your browser to make use of all functionality in Stop Place Register",
+  "browser_recommendation": "It is recommended that you upgrade or change your browser to make use of all functionality in the Location Code Manager",
   "browser_supported_browsers": "Supported browsers are:",
   "browser_unsupported_title": "Unsupported browser",
   "continue_anyway": "Continue anyway",
