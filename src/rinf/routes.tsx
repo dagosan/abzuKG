@@ -20,7 +20,6 @@ import {
   DETAILS_KIND_NAMES,
   DETAILS_KINDS,
 } from "./detailsKinds";
-import { ToolOnly } from "./config/ToolOnly";
 import { DetailsPage } from "./pages/DetailsPage";
 import { LegacySearchRedirect } from "./reports/LegacySearchRedirect";
 import {
@@ -65,30 +64,18 @@ export const rinfRoutes = (basePath: string) => [
   <Route
     key={RINF_REPORTS_ROUTE}
     path={`${basePath}${RINF_REPORTS_ROUTE}`}
-    element={
-      <ToolOnly feature="rinfReports" redirectTo="/">
-        <RinfReportsPage />
-      </ToolOnly>
-    }
+    element={<RinfReportsPage />}
   />,
   <Route
     key={LEGACY_PARAMETER_SEARCH_ROUTE}
     path={`${basePath}${LEGACY_PARAMETER_SEARCH_ROUTE}`}
-    element={
-      <ToolOnly feature="rinfReports" redirectTo="/">
-        <LegacySearchRedirect />
-      </ToolOnly>
-    }
+    element={<LegacySearchRedirect />}
   />,
   ...LOCATION_CODES_SUBROUTES.map(([subpath, mode]) => (
     <Route
       key={`${LOCATION_CODES_ROUTE}${subpath}`}
       path={`${basePath}${LOCATION_CODES_ROUTE}${subpath}`}
-      element={
-        <ToolOnly feature="locationCodes" redirectTo="/">
-          <LocationCodesPage mode={mode} />
-        </ToolOnly>
-      }
+      element={<LocationCodesPage mode={mode} />}
     />
   )),
 ];

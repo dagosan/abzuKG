@@ -1,6 +1,5 @@
 {
   "uiMode": "modern",
-  "rinfTool": "location-code-manager",
   "themeConfigs": ["theme/era-theme.json"],
   "rinfSparqlEndpoint": "https://graph.data.era.europa.eu/repositories/rinf-plus",
   "locationCodesApiUrl": "/era/v1/location-codes",

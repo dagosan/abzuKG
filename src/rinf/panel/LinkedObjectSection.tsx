@@ -15,7 +15,6 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: "use this" button while picking an asset. */
 
 import { Box, Typography } from "@mui/material";
-import { ToolOnly } from "../config/ToolOnly";
 import { UseAssetButton } from "../locationCodes/picking/UseAssetButton";
 import { ParameterList } from "./ParameterList";
 import type { DisplayNode } from "./visibleParameters";
@@ -49,9 +48,7 @@ export const LinkedObjectSection = ({
         >
           {title}
         </Typography>
-        <ToolOnly feature="locationCodes">
-          <UseAssetButton node={displayNode.node} />
-        </ToolOnly>
+        <UseAssetButton node={displayNode.node} />
       </Box>
       <ParameterList parameters={parameters} />
     </Box>

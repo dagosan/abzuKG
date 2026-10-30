@@ -95,7 +95,6 @@
   "position_check_failed": "Impossible de vérifier vos droits de modification pour cette position. Veuillez réessayer.",
   "report_search_all_body": "Aucun terme ni filtre n’est défini : tous les points d’arrêt seront récupérés. Cela peut prendre environ 30 secondes.",
   "report_search_all_title": "Rechercher dans tout le registre ?",
-  "rinf_tool_title_rinf_viewer": "RINF Viewer",
   "save_group_failed": "L'enregistrement du groupe a échoué. Veuillez réessayer.",
   "save_stop_place": "Enregistrer l'arrêt",
   "shelterEquipment": "Abri",

@@ -23,7 +23,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useIntl } from "react-intl";
-import { ToolOnly } from "../config/ToolOnly";
 import { UseAssetButton } from "../locationCodes/picking/UseAssetButton";
 import { LinkedObjectSection } from "./LinkedObjectSection";
 import { ParameterList } from "./ParameterList";
@@ -64,9 +63,7 @@ export const TrackAccordion = ({
         >
           {title}
         </Typography>
-        <ToolOnly feature="locationCodes">
-          <UseAssetButton node={displayNode.node} />
-        </ToolOnly>
+        <UseAssetButton node={displayNode.node} />
         <Chip
           size="small"
           label={formatMessage({ id: "rinf_parameter_count" }, { count })}

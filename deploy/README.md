@@ -96,15 +96,6 @@ before `sh`.
   internet access; if the KG doesn't answer, a step is refused with
   "knowledge graph unavailable" and nothing is saved.
 
-## Which tool
-
-`deploy/bootstrap.json` sets `"rinfTool": "location-code-manager"`: this
-deployment is the Location Code Manager, without the RINF reports. To run the
-RINF Viewer instead (map, search, RINF reports, no location codes), set
-`"rinfTool": "rinf-viewer"` in your own copy of the config (below). For both on
-the same NAS, run a second copy of the app on another port with the viewer's
-config; the RINF Viewer needs no Tiamat or database.
-
 ## Change the config without rebuilding
 
 Keep your own copy outside the app folder, so updates don't overwrite it:

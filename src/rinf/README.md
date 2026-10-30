@@ -4,21 +4,6 @@ Everything under `src/rinf/` was added for ERA's Location Code Manager and is no
 of upstream Abzu. It reads RINF data straight from ERA's SPARQL endpoint and
 draws it on Abzu's modern (MapLibre) map; the RINF data itself is read-only.
 
-## Two tools, one code base
-
-A deployment is one of two tools, chosen with `rinfTool` in `bootstrap.json`
-(decided 2026-10-30: one repository, two apps, rather than two forks):
-
-| `rinfTool`                | Name                  | Own pages                                                                                                            | Shared with the other tool               |
-| ------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `"rinf-viewer"`           | RINF Viewer           | RINF reports tab (search by parameter, Show on map)                                                                  | map layers, details panel, header search |
-| `"location-code-manager"` | Location Code Manager | Location codes tab (workflow, register), picking RINF elements on the map, "Request a location code" in the OP panel | map layers, details panel, header search |
-| unset                     | Location Code Manager | both (for development)                                                                                               |                                          |
-
-The other tool's tab and panel buttons are hidden and its addresses lead to
-the map (`config/rinfTool.ts`, `config/ToolOnly.tsx`). Two tools on one server
-are two deployments, each with its own `bootstrap.json`.
-
 ## What it does
 
 - **Map layers** (zoom 8 and closer, loaded for the visible area): operational
@@ -82,9 +67,7 @@ npm install
 npm start
 ```
 
-Without that file the page stays blank. Add `"rinfTool": "rinf-viewer"` or
-`"rinfTool": "location-code-manager"` to it to run one tool; without it you
-get both.
+Without that file the page stays blank.
 
 To run it on a server or NAS in Docker, see `deploy/README.md`.
 
@@ -331,10 +314,7 @@ Kept to one or two lines each, so upstream releases merge easily:
 - `src/components/modern/Header/ModernHeader.tsx` — wraps `<HeaderSearch />` in
   `<RinfHeaderSearch stopPlaceSearch={…} />`
 - `src/components/modern/Header/components/NavigationLine.tsx` — the
-  `<RinfReportsTab />` and `<LocationCodesTab />` tabs, shown by tool, and
-  choosing them
-- `src/components/modern/Header/ModernHeader.tsx` — the app's name in the
-  header and browser tab comes from `useRinfAppTitle()` (per tool)
+  `<RinfReportsTab />` and `<LocationCodesTab />` tabs, and choosing them
 - `src/components/modern/Header/hooks/useLastMapLocation.ts` — the RINF
   reports and location code pages are not map locations (like Reports);
   `fullPagePaths.ts` lists them
@@ -354,7 +334,7 @@ showed through the hidden map over the Reports footer:
   an inset shadow, not a 1 px border
 - `src/containers/modern/App.tsx` — map controls hidden with the map
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
-- `src/config/ConfigContext.ts` — `rinfSparqlEndpoint`, `locationCodesApiUrl` and `rinfTool` config fields
+- `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` and `locationCodesApiUrl` config fields
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds
   English placeholders, to keep upstream's rule that both files carry every key)
 
