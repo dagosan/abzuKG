@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports and location codes tabs; separator no longer adds to the strip's height. */
+/* Modified for the ERA RINF frontend, 2026-10-29: added the RINF reports and location codes tabs; separator no longer adds to the strip's height. 2026-10-30: only the tabs of this deployment's tool (rinfTool). */
 
 import { Map, Report } from "@mui/icons-material";
 import { alpha, Box, Tab, Tabs } from "@mui/material";
@@ -29,6 +29,7 @@ import {
   RINF_REPORTS_TAB,
   RinfReportsTab,
 } from "../../../../rinf/reports/RinfReportsTab";
+import { useRinfTool } from "../../../../rinf/config/rinfTool";
 import { useGoToLocationCodes } from "../../../../rinf/locationCodes/page/hooks/useGoToLocationCodes";
 import { isLocationCodesPath } from "../../../../rinf/locationCodes/page/locationCodesPath";
 import {
@@ -70,6 +71,7 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
   // than leaving the strip with nothing selected.
   const goToRinfReports = useGoToRinfReports();
   const goToLocationCodes = useGoToLocationCodes();
+  const { rinfReports, locationCodes } = useRinfTool();
   const activeTab =
     pathname === `/${AppRoutes.REPORTS}`
       ? REPORTS_TAB
@@ -149,8 +151,8 @@ export const NavigationLine: React.FC<NavigationLineProps> = ({
           iconPosition="start"
           label={formatMessage({ id: "report_site" })}
         />
-        <RinfReportsTab value={RINF_REPORTS_TAB} />
-        <LocationCodesTab value={LOCATION_CODES_TAB} />
+        {rinfReports && <RinfReportsTab value={RINF_REPORTS_TAB} />}
+        {locationCodes && <LocationCodesTab value={LOCATION_CODES_TAB} />}
       </Tabs>
       <NavigationUiModeSwitch />
     </Box>

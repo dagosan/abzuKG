@@ -19,6 +19,7 @@ import { RinfOperationalPointsLayer } from "./RinfOperationalPointsLayer";
 import { RinfSearchResultsLayer } from "./RinfSearchResultsLayer";
 import { RinfSectionsOfLineLayer } from "./RinfSectionsOfLineLayer";
 import { ReportOnMapChip } from "./ReportOnMapChip";
+import { ToolOnly } from "../config/ToolOnly";
 import { PickingBanner } from "../locationCodes/picking/PickingBanner";
 import { useAppSelector } from "../../store/hooks";
 
@@ -38,7 +39,9 @@ export const RinfMapLayers = () => {
       <RinfSearchResultsLayer />
       <RinfLoadingIndicator />
       {showReport && <ReportOnMapChip />}
-      <PickingBanner />
+      <ToolOnly feature="locationCodes">
+        <PickingBanner />
+      </ToolOnly>
     </>
   );
 };

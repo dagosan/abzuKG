@@ -1,5 +1,5 @@
 /* Modified for the ERA RINF frontend, 2026-10-28: added rinfSparqlEndpoint;
-   2026-10-29: added locationCodesApiUrl. */
+   2026-10-29: added locationCodesApiUrl; 2026-10-30: added rinfTool. */
 import { OidcClientSettings } from "oidc-client-ts";
 import React, { useContext } from "react";
 import { FeatureFlags } from "./FeatureFlags";
@@ -17,6 +17,12 @@ export interface Config {
    * and codes are kept in the browser.
    */
   locationCodesApiUrl?: string;
+  /**
+   * Which ERA tool this deployment is: "rinf-viewer" (map, search, RINF
+   * reports) or "location-code-manager" (map, search, location codes).
+   * Unset shows both.
+   */
+  rinfTool?: string;
   baatTokenProxyEndpoint?: string;
   sentryDSN?: string;
   tiamatEnv?: string;

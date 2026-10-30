@@ -33,6 +33,7 @@ import { DetailsKind, DETAILS_KINDS } from "../detailsKinds";
 import { DetailsContent } from "./DetailsContent";
 import { DetailsHeader } from "./DetailsHeader";
 import { ParameterFilter } from "./ParameterFilter";
+import { ToolOnly } from "../config/ToolOnly";
 import { RequestCodeLink } from "../locationCodes/page/RequestCodeLink";
 import { UseElementButton } from "../locationCodes/picking/UseElementButton";
 import {
@@ -104,10 +105,14 @@ export const DetailsPanel = ({
         onBack={onBack}
       />
       {status === "loaded" && picking && (
-        <UseElementButton kind={kind} canonicalId={canonicalId} name={name} />
+        <ToolOnly feature="locationCodes">
+          <UseElementButton kind={kind} canonicalId={canonicalId} name={name} />
+        </ToolOnly>
       )}
       {kind === "operationalPoint" && status === "loaded" && !picking && (
-        <RequestCodeLink canonicalId={canonicalId} name={name} />
+        <ToolOnly feature="locationCodes">
+          <RequestCodeLink canonicalId={canonicalId} name={name} />
+        </ToolOnly>
       )}
       <ParameterFilter value={filter} onChange={setFilter} />
       <Box sx={{ flex: 1, overflowY: "auto" }}>

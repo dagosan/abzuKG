@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence. */
 
-/* Modified for the ERA RINF frontend, 2026-10-29: header search can switch to RINF. */
+/* Modified for the ERA RINF frontend, 2026-10-29: header search can switch to RINF. 2026-10-30: the name follows the deployment's tool (rinfTool). */
 
 import { AppBar, Box, Toolbar, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -48,6 +48,7 @@ import {
 import { useHeaderSlotContent } from "./HeaderSlotContext";
 import { useLastMapLocation } from "./hooks/useLastMapLocation";
 import { useLastReportsLocation } from "./hooks/useLastReportsLocation";
+import { useRinfAppTitle } from "../../../rinf/config/useRinfAppTitle";
 import { RinfHeaderSearch } from "../../../rinf/search/RinfHeaderSearch";
 
 interface ModernHeaderProps {
@@ -108,16 +109,13 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({ config }) => {
     }
   };
 
-  const title = formatMessage({ id: "_title" });
+  const title = useRinfAppTitle();
   const logo = themeConfig?.assets?.logo || "/logo.png";
   const logoHeight = themeConfig?.assets?.logoHeight;
 
   return (
     <>
-      <Helmet
-        defaultTitle={formatMessage({ id: "_title" })}
-        titleTemplate={`${formatMessage({ id: "_title" })} - %s`}
-      />
+      <Helmet defaultTitle={title} titleTemplate={`${title} - %s`} />
 
       <AppBar
         position="static"
