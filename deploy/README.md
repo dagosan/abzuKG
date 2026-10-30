@@ -11,7 +11,7 @@ Three containers, all started by one `docker compose`:
 | Container | What it is |
 | --- | --- |
 | `abzukg` | The app (static files and `bootstrap.json`) in nginx, port 8090. The browser fetches RINF data straight from ERA's SPARQL endpoint. Requests to `/era/…` are passed on to Tiamat, so the browser talks to one address only |
-| `abzukg-tiamat` | The location code register: Tiamat from dagosan/tiamatLCs (branch `location-codes`), built from source with its `Dockerfile.era`, profile `era-location-codes`. No port of its own on the NAS |
+| `abzukg-tiamat` | The location code register: Tiamat from dagosan/tiamatLCs (`master`), built from source with its `Dockerfile.era`, profile `era-location-codes`. No port of its own on the NAS |
 | `abzukg-tiamat-db` | PostgreSQL 17 with PostGIS for Tiamat. Data in the Docker volume `abzukg-tiamat-db` |
 
 | File | Purpose |
@@ -19,7 +19,7 @@ Three containers, all started by one `docker compose`:
 | `Dockerfile` (repo root) | Builds the app with Node 22, then copies it into nginx |
 | `docker-compose.yml` (repo root) | The three containers; restart with the NAS |
 | `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; `/era/` goes to Tiamat; caching |
-| `deploy/bootstrap.json` | Default config: modern UI, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes` |
+| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes` |
 | `deploy/update.sh` | Installs or updates both repositories from GitHub and rebuilds the containers |
 | `/share/Container/abzukg.env` | Made by `update.sh` on first run: the database password. Keep it; the database only accepts the password it was created with |
 
@@ -30,12 +30,11 @@ Three containers, all started by one `docker compose`:
 2. Download and start it (the repositories are public, so no git is needed):
 
    ```sh
-   wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/tiamat-location-codes/deploy/update.sh | sh
+   wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/update.sh | sh
    ```
 
-   The script downloads the latest commits of abzuKG `tiamat-location-codes`
-   into `/share/Container/abzukg` and tiamatLCs `location-codes` into
-   `/share/Container/tiamatlcs`, creates the database password the first time,
+   The script downloads the latest commits of `master` of abzuKG into
+   `/share/Container/abzukg` and of tiamatLCs into `/share/Container/tiamatlcs`, creates the database password the first time,
    and runs `docker compose up -d --build`. The first build takes 10–20
    minutes (Maven downloads Tiamat's libraries, npm the app's). It then waits
    until the register answers, or prints Tiamat's log if it doesn't within 5
@@ -57,7 +56,7 @@ If port 8090 is taken, change the left number in `docker-compose.yml`
 Run the same command again:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/tiamat-location-codes/deploy/update.sh | sh
+wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/update.sh | sh
 ```
 
 It replaces both source folders with the latest commits and rebuilds; the
@@ -72,8 +71,7 @@ the latest commits on GitHub.
 
 To try other branches, add their names: `… | sh -s <abzuKG branch> <tiamatLCs
 branch>`. For a parent folder other than `/share/Container`, set `ABZUKG_DIR`
-before `sh`. Once the two branches are merged into `master`, the defaults at
-the top of `update.sh` become `master`.
+before `sh`.
 
 ## The location code register
 
@@ -120,8 +118,10 @@ your own devices reach it.
 - "Log in" and the "Stop places" search mode need a Tiamat backend and an OIDC
   login, which this config doesn't set up. The RINF features don't need them.
 - If you keep your own `bootstrap.json` (above), add
-  `"locationCodesApiUrl": "/era/v1/location-codes"` to it; without that line
-  the app keeps location codes in each visitor's browser instead of Tiamat.
+  `"locationCodesApiUrl": "/era/v1/location-codes"` and
+  `"themeConfigs": ["theme/era-theme.json"]` to it; without them the app keeps
+  location codes in each visitor's browser instead of Tiamat, and shows
+  Abzu's default look.
 - Roles in the register are picked with the "Acting as" switch, not from a
   login; Tiamat applies its rules to the name and role the page sends.
 - Map tiles come from openstreetmap.org; for heavier use, set a tile server of

@@ -1,21 +1,21 @@
 #!/bin/sh
 # Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
-# Modified 2026-10-30: also installs the location code register (Tiamat + PostGIS).
+# Modified 2026-10-30: also installs the location code register (Tiamat + PostGIS);
+# both repositories from master.
 #
 # Installs or updates the Location Code Manager (abzuKG) and its location code
 # register (Tiamat, dagosan/tiamatLCs) on the NAS from GitHub, and rebuilds
 # the containers. The register's database is a Docker volume: updates keep it.
 #
-#   wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/tiamat-location-codes/deploy/update.sh | sh
+#   wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/update.sh | sh
 #
 # Optional: the abzuKG branch as first argument and the Tiamat branch as second
-# (defaults below), and ABZUKG_DIR for the parent folder (default
+# (default master for both), and ABZUKG_DIR for the parent folder (default
 # /share/Container, as on QNAP).
 set -eu
 
-# The branches that hold the register; change to master once they're merged.
-BRANCH="${1:-tiamat-location-codes}"
-TIAMAT_BRANCH="${2:-location-codes}"
+BRANCH="${1:-master}"
+TIAMAT_BRANCH="${2:-master}"
 PARENT="${ABZUKG_DIR:-/share/Container}"
 APP="abzukg"
 TIAMAT_DIR="tiamatlcs"

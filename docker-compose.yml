@@ -20,7 +20,7 @@ services:
     # volumes:
     #   - ../abzukg-bootstrap.json:/usr/share/nginx/html/bootstrap.json:ro
 
-  # The location code register (dagosan/tiamatLCs, branch location-codes).
+  # The location code register (dagosan/tiamatLCs, master).
   # No port on the NAS: only the app's web server reaches it.
   tiamat:
     build:

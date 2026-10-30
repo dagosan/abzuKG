@@ -190,7 +190,7 @@ Known limits of this first version:
   storage), and the ⋮ menu downloads and restores a JSON backup. With
   `"locationCodesApiUrl": "https://<tiamat>/era/v1/location-codes"` in
   `bootstrap.json`, they live in Tiamat instead (`store/tiamatStore.ts`;
-  backend: dagosan/tiamatLCs, branch `location-codes`,
+  backend: dagosan/tiamatLCs, `master`,
   `tiamat-core/src/ext/resources/docs/era-location-codes.md`). The ⋮ menu
   shows where the data is; restoring a browser backup into Tiamat is how
   existing requests move there (entries already there are skipped; a
