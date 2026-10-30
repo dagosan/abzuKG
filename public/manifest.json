@@ -1,6 +1,6 @@
 {
-    "short_name": "Abzu",
-    "name": "National Stop Registry",
+    "short_name": "LC Manager",
+    "name": "Location Code Manager",
     "icons": [
         {
             "src": "favicon.ico",

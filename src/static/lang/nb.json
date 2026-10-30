@@ -1,7 +1,7 @@
 {
   "_empty": " ",
   "_report_page": "Rapporter",
-  "_title": "Stoppestedsregister",
+  "_title": "Location Code Manager",
   "_title_new_stop": "Nytt stoppested",
   "accept_changes": "Jeg forstår",
   "accept_changes_info": "Dine øvrige endringer vil bli forkastet",
@@ -71,7 +71,7 @@
   "bike_parking_hint": "Har dette stoppet sykkelstativer?",
   "bike_parking_no": "Ingen sykkelparkering",
   "browser_explanation": "Du bruker en nettleser som muligens ikke er støttet.",
-  "browser_recommendation": "Det er anbefalt du oppgraderer din nettleser eller bytter nettleser for å benytte deg av all funksjonalitet i Stoppestedsregisteret",
+  "browser_recommendation": "Det er anbefalt du oppgraderer din nettleser eller bytter nettleser for å benytte deg av all funksjonalitet i Location Code Manager",
   "browser_supported_browsers": "Følgende nettlesere er støttet:",
   "browser_unsupported_title": "Din nettleser er ikke støttet",
   "continue_anyway": "Fortsett likevel",

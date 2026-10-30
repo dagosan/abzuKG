@@ -1,7 +1,7 @@
 {
   "name": "abzu",
   "version": "1.666.0",
-  "description": "Nasjonalt stoppestedregister",
+  "description": "Location Code Manager (ERA), built on Entur's Abzu",
   "main": "index.js",
   "scripts": {
     "start": "vite",
