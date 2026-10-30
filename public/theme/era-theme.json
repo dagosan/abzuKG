@@ -1,0 +1,227 @@
+{
+  "name": "ERA Theme",
+  "version": "1.0.0",
+  "description": "European Union Agency for Railways theme for the RINF frontend. Colours, radius and type follow the ERA website (era.europa.eu, OpenEuropa Bootstrap theme): primary #004494, EU yellow #FFED00 for focus, system font stack. Added 2026-10-30.",
+  "author": "ERA",
+  "environment": {
+    "development": {
+      "color": "#09854C",
+      "showBadge": true,
+      "label": "DEV"
+    },
+    "test": {
+      "color": "#807700",
+      "showBadge": true,
+      "label": "TEST"
+    },
+    "prod": {
+      "color": "#004494",
+      "showBadge": false,
+      "label": "PROD"
+    }
+  },
+  "assets": {
+    "logo": "/era-logo.png",
+    "logoHeight": {
+      "xs": 32,
+      "sm": 40,
+      "md": 48
+    },
+    "favicon": "/era-favicon.ico"
+  },
+  "palette": {
+    "mode": "light",
+    "primary": {
+      "main": "#004494",
+      "dark": "#003A7E",
+      "light": "#4073AF",
+      "contrastText": "#FFFFFF"
+    },
+    "secondary": {
+      "main": "#323334",
+      "dark": "#1F2021",
+      "light": "#787878",
+      "contrastText": "#FFFFFF"
+    },
+    "multimodal": {
+      "main": "#8DC63F",
+      "contrastText": "#000000"
+    },
+    "error": {
+      "main": "#A51F2C",
+      "dark": "#7C1721",
+      "light": "#D28F96",
+      "contrastText": "#FFFFFF"
+    },
+    "warning": {
+      "main": "#FFED00",
+      "dark": "#CCBE00",
+      "light": "#FFF680",
+      "contrastText": "#000000"
+    },
+    "info": {
+      "main": "#5DA9DD",
+      "dark": "#467FA6",
+      "light": "#AED4EE",
+      "contrastText": "#000000"
+    },
+    "success": {
+      "main": "#09854C",
+      "dark": "#076439",
+      "light": "#84C2A6",
+      "contrastText": "#FFFFFF"
+    },
+    "background": {
+      "default": "#F5F5F5",
+      "paper": "#FFFFFF"
+    },
+    "text": {
+      "primary": "#212529",
+      "secondary": "#495057",
+      "disabled": "#ADB5BD"
+    },
+    "divider": "#DEE2E6"
+  },
+  "typography": {
+    "fontFamily": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+    "monospace": "SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace",
+    "h1": {
+      "fontWeight": 500
+    },
+    "h2": {
+      "fontWeight": 500
+    },
+    "h3": {
+      "fontWeight": 500
+    },
+    "h4": {
+      "fontWeight": 500
+    },
+    "h5": {
+      "fontWeight": 500
+    },
+    "h6": {
+      "fontWeight": 500
+    },
+    "button": {
+      "textTransform": "none",
+      "fontWeight": 500
+    }
+  },
+  "shape": {
+    "borderRadius": 6
+  },
+  "components": {
+    "MuiAppBar": {
+      "defaultProps": {
+        "elevation": 2
+      },
+      "styleOverrides": {
+        "root": {
+          "& .MuiTabs-root .MuiTab-root.Mui-selected": {
+            "backgroundColor": "#FFFFFF",
+            "color": "#004494"
+          }
+        }
+      }
+    },
+    "MuiButton": {
+      "defaultProps": {
+        "disableElevation": true
+      },
+      "styleOverrides": {
+        "root": {
+          "textTransform": "none",
+          "borderRadius": 6,
+          "fontWeight": 500
+        }
+      },
+      "variants": [
+        {
+          "props": {
+            "variant": "contained",
+            "color": "primary"
+          },
+          "style": {
+            "&.Mui-disabled": {
+              "backgroundColor": "#004494",
+              "color": "#FFFFFF",
+              "opacity": 0.45
+            }
+          }
+        }
+      ]
+    },
+    "MuiCard": {
+      "styleOverrides": {
+        "root": {
+          "borderRadius": 6
+        }
+      }
+    },
+    "MuiPaper": {
+      "styleOverrides": {
+        "root": {
+          "backgroundImage": "none"
+        }
+      }
+    },
+    "MuiLink": {
+      "defaultProps": {
+        "underline": "hover"
+      }
+    },
+    "MuiTextField": {
+      "defaultProps": {
+        "variant": "outlined"
+      }
+    },
+    "MuiAlert": {
+      "variants": [
+        {
+          "props": {
+            "variant": "standard",
+            "severity": "success"
+          },
+          "style": {
+            "backgroundColor": "#E6F3ED",
+            "color": "#054326"
+          }
+        },
+        {
+          "props": {
+            "variant": "standard",
+            "severity": "warning"
+          },
+          "style": {
+            "backgroundColor": "#FFFDE6",
+            "color": "#4D4700",
+            "& .MuiAlert-icon": {
+              "color": "#807700"
+            }
+          }
+        },
+        {
+          "props": {
+            "variant": "standard",
+            "severity": "error"
+          },
+          "style": {
+            "backgroundColor": "#F6E9EA",
+            "color": "#531016"
+          }
+        },
+        {
+          "props": {
+            "variant": "standard",
+            "severity": "info"
+          },
+          "style": {
+            "backgroundColor": "#EFF6FC",
+            "color": "#2F556F"
+          }
+        }
+      ]
+    }
+  }
+}

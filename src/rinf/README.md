@@ -71,6 +71,39 @@ Without that file the page stays blank.
 
 To run it on a server or NAS in Docker, see `deploy/README.md`.
 
+## Look and feel (ERA theme)
+
+The ERA look is a theme file, not code: `public/theme/era-theme.json`, picked
+by `"themeConfigs": ["theme/era-theme.json"]` in `bootstrap.json` (see
+`THEME_CONFIG_GUIDE.md`). A copy of `bootstrap.json` made before 2026-10-30
+lacks that line and keeps MUI's default blue look; add it.
+
+Values are taken from the ERA website (era.europa.eu, which uses the
+OpenEuropa Bootstrap theme), checked 2026-10-30:
+
+| Token                  | Value                             | ERA source / use here                              |
+| ---------------------- | --------------------------------- | -------------------------------------------------- |
+| primary                | `#004494`                         | ERA blue (logo, navigation bar); header, SoL lines |
+| primary.dark           | `#003A7E`                         | ERA button hover                                   |
+| secondary              | `#323334`                         | ERA "dark"; operational point dots                 |
+| warning                | `#FFED00`                         | EU yellow; focus ring on the map, unsaved markers  |
+| info / success / error | `#5DA9DD` / `#09854C` / `#A51F2C` | ERA Bootstrap colours                              |
+| text, divider          | `#212529`, `#495057`, `#DEE2E6`   | ERA body text, muted text, borders                 |
+| background             | `#F5F5F5` / `#FFFFFF`             | ERA light grey band / cards                        |
+| font                   | system font stack                 | same stack as the ERA site; no font files to host  |
+| radius                 | 6 px                              | ERA 0.375 rem                                      |
+
+The selected navigation tab is white with blue text, like the active item in
+the ERA site's menu; disabled primary buttons fade to 45 % (Bootstrap's way),
+so they stay visible on the blue report footers.
+
+Assets: `public/era-logo.png` is the ERA logo from the website on a white
+rounded plate (the logo itself is unchanged; the plate keeps it on white as on
+era.europa.eu, since the header is blue), `public/era-favicon.ico` is the
+website's favicon. **These two files are ERA's logo and emblem, not EUPL
+code**: they may not be reused outside ERA products, and must be left out if
+this fork is offered upstream.
+
 ## Data source
 
 - Endpoint: `https://graph.data.era.europa.eu/repositories/rinf-plus`
