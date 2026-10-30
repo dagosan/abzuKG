@@ -1,7 +1,7 @@
 {
   "name": "ERA Theme",
   "version": "1.0.0",
-  "description": "European Union Agency for Railways theme for the RINF frontend. Colours, radius and type follow the ERA website (era.europa.eu, OpenEuropa Bootstrap theme): primary #004494, EU yellow #FFED00 for focus, system font stack. Added 2026-10-30.",
+  "description": "European Union Agency for Railways theme for the Location Code Manager. Colours, radius and type follow the ERA website (era.europa.eu, OpenEuropa Bootstrap theme): primary #004494, EU yellow #FFED00 for focus, system font stack. Added 2026-10-30.",
   "author": "ERA",
   "environment": {
     "development": {
