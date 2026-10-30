@@ -1,6 +1,7 @@
 {
   "uiMode": "modern",
   "rinfSparqlEndpoint": "https://graph.data.era.europa.eu/repositories/rinf-plus",
+  "locationCodesApiUrl": "/era/v1/location-codes",
   "tiamatBaseUrl": "https://api.dev.entur.io/stop-places/v1/graphql",
   "tiamatEnv": "development",
   "netexPrefix": "NSR",

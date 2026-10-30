@@ -1,14 +1,60 @@
 # Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
-# On the NAS:  docker compose up -d --build   (see deploy/README.md)
+# Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside.
+#
+# On the NAS this is run by deploy/update.sh (see deploy/README.md), which puts
+# the Tiamat source next to this folder and keeps the database password in
+# ../abzukg.env.
 services:
+  # The Location Code Manager: static files, plus /era/ passed on to Tiamat.
   abzukg:
     build: .
     image: abzukg:latest
     container_name: abzukg
     ports:
       - "8090:80"
+    depends_on:
+      - tiamat
     restart: unless-stopped
     # To change settings without rebuilding, copy deploy/bootstrap.json next to
     # the app folder (see deploy/README.md), then uncomment these two lines:
     # volumes:
     #   - ../abzukg-bootstrap.json:/usr/share/nginx/html/bootstrap.json:ro
+
+  # The location code register (dagosan/tiamatLCs, branch location-codes).
+  # No port on the NAS: only the app's web server reaches it.
+  tiamat:
+    build:
+      context: ${TIAMAT_SRC:-../tiamatlcs}
+      dockerfile: Dockerfile.era
+    image: tiamat-era:latest
+    container_name: abzukg-tiamat
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tiamat-db:5432/tiamat
+      SPRING_DATASOURCE_USERNAME: tiamat
+      SPRING_DATASOURCE_PASSWORD: ${TIAMAT_DB_PASSWORD:?set in ../abzukg.env, see deploy/README.md}
+    depends_on:
+      tiamat-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # The register's database. Its data stays in the volume across updates.
+  tiamat-db:
+    image: postgis/postgis:17-3.5
+    container_name: abzukg-tiamat-db
+    environment:
+      POSTGRES_DB: tiamat
+      POSTGRES_USER: tiamat
+      POSTGRES_PASSWORD: ${TIAMAT_DB_PASSWORD:?set in ../abzukg.env, see deploy/README.md}
+    volumes:
+      - tiamat-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tiamat -d tiamat"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  tiamat-db:
+    # A fixed name, so the data survives a rename of the app folder.
+    name: abzukg-tiamat-db
