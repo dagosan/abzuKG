@@ -13,10 +13,11 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-10-30: Tiamat takes the workflow steps; this store only asks for them. */
+Modified 2026-10-30: Tiamat takes the workflow steps; this store only asks for them.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import type { RegisteredCode } from "../model/RegisteredCode";
+import type { CodeVersion } from "../model/CodeVersion";
 import type {
   LocationCodeSnapshot,
   LocationCodeStore,
@@ -115,7 +116,7 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
 
   return {
     loadRequests: () => read<LocationCodeRequest[]>("/requests"),
-    loadCodes: () => read<RegisteredCode[]>("/codes"),
+    loadCodes: () => read<CodeVersion[]>("/codes"),
     submitRequest: (data, actor) =>
       read<LocationCodeRequest>("/requests", "POST", { actor, data }),
     takeStep: ({ requestId, action, actor, payload, expectedEventCount }) =>

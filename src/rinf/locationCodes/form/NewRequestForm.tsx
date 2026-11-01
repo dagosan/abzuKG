@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import {
   Alert,
@@ -24,6 +25,7 @@ import {
 } from "@mui/material";
 import { useIntl } from "react-intl";
 import { ChangeFields } from "./ChangeFields";
+import { CrdAttributeFields } from "./CrdAttributeFields";
 import { FormSection, useFieldError } from "./FormSection";
 import { LocationElementField } from "./LocationElementField";
 import { useRequestForm } from "./hooks/useRequestForm";
@@ -91,6 +93,9 @@ export const NewRequestForm = () => {
               )}
             />
           </FormSection>
+          {data.codeType === "primary" && data.operation !== "deactivation" && (
+            <CrdAttributeFields form={form} />
+          )}
         </Stack>
         <Stack spacing={2}>
           <RequesterFields form={form} />

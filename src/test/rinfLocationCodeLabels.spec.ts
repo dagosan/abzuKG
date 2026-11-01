@@ -12,10 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-11-01. */
+Added for the ERA RINF frontend, 2026-11-01.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { describe, expect, it } from "vitest";
-import type { RegisteredCode } from "../rinf/locationCodes/model/RegisteredCode";
+import type { CodeVersion } from "../rinf/locationCodes/model/CodeVersion";
+import { aCodeVersion } from "../rinf/locationCodes/testing/codeVersionFixture";
 import { buildCodeLabels } from "../rinf/map/locationCodes/buildCodeLabels";
 import { buildCodeLabelAnchors } from "../rinf/map/locationCodes/codeLabelAnchors";
 import type { OperationalPoint } from "../rinf/models/OperationalPoint";
@@ -52,21 +54,8 @@ const sol = (
   locationCodes,
 });
 
-const registered = (overrides: Partial<RegisteredCode>): RegisteredCode => ({
-  key: "BE00001",
-  codeType: "primary",
-  code: "BE00001",
-  parentPrimaryCode: null,
-  country: "BE",
-  name: "Test",
-  imOrganisationCode: "0088",
-  subsidiaryTypeCode: "",
-  rinfLink: null,
-  validFrom: "2026-10-30",
-  closedFrom: null,
-  history: [],
-  ...overrides,
-});
+const registered = (overrides: Partial<CodeVersion>): CodeVersion =>
+  aCodeVersion({ startValidity: "2026-10-30", ...overrides });
 
 const opLink = (canonicalId: string) => ({
   kind: "operationalPoint" as const,
@@ -76,7 +65,7 @@ const opLink = (canonicalId: string) => ({
 
 const labelsFor = (
   points: OperationalPoint[],
-  register: RegisteredCode[],
+  register: CodeVersion[],
   lines: SectionOfLineSummary[] = [],
 ) => buildCodeLabels(buildCodeLabelAnchors(points, lines), register);
 

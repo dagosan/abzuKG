@@ -28,6 +28,7 @@ draws it on Abzu's modern (MapLibre) map; the RINF data itself is read-only.
   so register SLCs always show as "register only". Clicking a label opens the
   element's panel. Above 400 labels in view (a dense node) none are drawn until
   you zoom in further.
+
 - **Details panel**: click an OP or a SoL, or open its link
   (`/operational-point/BELGB`, `/section-of-line/1440_BELGB_BECAD`), for every
   parameter of the element, its parts (tracks, sidings) and the objects each
@@ -198,6 +199,28 @@ Rules enforced:
   never a rejection (procedure 6.7).
 - **Closing a PLC** with active SLCs (register or KG) is refused unless the
   request closes them in the same operation.
+- **Register data model = CRD's location table (since 2026-11-02).** One
+  row per _version_ of a code (`model/CodeVersion.ts`), with CRD's 22
+  columns in camelCase (`Country_ISO_code` → `countryIsoCode`, …,
+  `Mod_Date` → `modDate`; `Active_Flag` is worked out from the dates), plus
+  what the workflow needs: version number, SLC fields, RINF element, and
+  the request that opened and the one that ended the version. A new code
+  gets version 1, valid from publication. An amendment ends the current
+  version the day before its effective date and opens the next one, so a
+  change of name, IM or use is a new version as in CRD; a deactivation ends
+  it (`End_Validity` is the last valid day, as in CRD). A change must take
+  effect after the current version starts. Passenger and freight use dates
+  follow from the flags: a use starts with the version that switches it on
+  and ends with a closure. A PLC request gives the CRD columns on the form
+  (section "Location data (CRD)"): the four flags (required for a new
+  code), position (filled in from RINF: an OP's coordinates, a section of
+  line's midpoint), NUTS code, free text, and the ASCII name (made from
+  the name when left blank). The register page lists every version and
+  downloads the PLCs in CRD's exact CSV format (`register/crdExport.ts`,
+  checked against a row of the CRD export). Entries saved before (one per
+  code) are turned into version 1 when read or restored
+  (`model/legacyCodes.ts`); Tiamat converts its table the same way
+  (migration V2).
 - **Deadlines** (section 11, still "proposed"): working days from T0,
   Monday to Friday, minus the time a request for information ran. Agency
   holidays go in `AGENCY_HOLIDAYS` (`workflow/workingDays.ts`), empty for now.
@@ -264,7 +287,7 @@ Known limits of this first version:
 
 | Folder (under `locationCodes/`)               | What it does                                                                                                          |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `model/`                                      | Request, register entry, code types, TD 103 Table 6, Art. 3(9) categories, Annex A and B, code format                 |
+| `model/`                                      | Request, code versions (CRD columns), code types, TD 103 Table 6, Art. 3(9) categories, Annex A and B, code format    |
 | `workflow/`                                   | Who may take which step (`availableActions`), the steps themselves (`applyAction`), four eyes, deadlines, publication |
 | `checks/`                                     | Admissibility, the KG queries, and the technical checks                                                               |
 | `store/`                                      | The storage contract, the browser and Tiamat implementations, and which one is used                                   |

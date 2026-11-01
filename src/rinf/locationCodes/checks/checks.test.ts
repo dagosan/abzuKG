@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { describe, expect, it } from "vitest";
 import {
@@ -20,7 +21,7 @@ import {
   lowestFreeSubsidiaryCode,
   parsePrimaryCode,
 } from "../model/codeFormat";
-import type { RequestData } from "../model/LocationCodeRequest";
+import { emptyCrdAttributes, RequestData } from "../model/LocationCodeRequest";
 import type { Actor } from "../model/roles";
 import { createRequest, emptyRequestData } from "../workflow/createRequest";
 import { admissibilityErrors } from "./admissibility";
@@ -35,6 +36,13 @@ const completeData = (overrides: Partial<RequestData> = {}): RequestData => ({
   country: "BE",
   locationName: "Gembloux Nord",
   imOrganisationCode: "0088",
+  crd: {
+    ...emptyCrdAttributes(),
+    passengerPossibleFlag: true,
+    freightPossibleFlag: false,
+    containerHandlingFlag: false,
+    handoverPointFlag: false,
+  },
   rinfLink: {
     kind: "operationalPoint",
     canonicalId: "BEXYZ",

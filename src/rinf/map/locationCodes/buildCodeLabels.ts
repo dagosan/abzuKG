@@ -12,9 +12,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-11-01. */
+Added for the ERA RINF frontend, 2026-11-01.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
-import type { RegisteredCode } from "../../locationCodes/model/RegisteredCode";
+import type { CodeVersion } from "../../locationCodes/model/CodeVersion";
 import { elementOfLink } from "../../locationCodes/model/rinfLink";
 import { anchorKey, CodeLabelAnchor } from "./codeLabelAnchors";
 import type { CodeLabel, CodeLabelChip } from "./codeLabelTypes";
@@ -30,7 +31,7 @@ const anchorsCarrying = (
 
 /** Visible element the register links `code` to; null when none is linked. */
 const linkedAnchor = (
-  code: RegisteredCode,
+  code: CodeVersion,
   anchors: Map<string, CodeLabelAnchor>,
 ): string[] | null => {
   const element = code.rinfLink ? elementOfLink(code.rinfLink) : null;
@@ -45,8 +46,8 @@ const linkedAnchor = (
  * with no link goes on the elements that carry it in RINF.
  */
 const placesOf = (
-  code: RegisteredCode,
-  register: RegisteredCode[],
+  code: CodeVersion,
+  register: CodeVersion[],
   anchors: Map<string, CodeLabelAnchor>,
 ): string[] => {
   const linked = linkedAnchor(code, anchors);
@@ -61,7 +62,7 @@ const placesOf = (
 };
 
 const registerChip = (
-  code: RegisteredCode,
+  code: CodeVersion,
   anchor: CodeLabelAnchor,
 ): CodeLabelChip => ({
   text: code.key,
@@ -82,7 +83,7 @@ const byCode = (first: CodeLabelChip, second: CodeLabelChip): number =>
  */
 export const buildCodeLabels = (
   anchors: Map<string, CodeLabelAnchor>,
-  register: RegisteredCode[],
+  register: CodeVersion[],
 ): CodeLabel[] => {
   const registerChips = new Map<string, CodeLabelChip[]>();
   register.forEach((code) =>

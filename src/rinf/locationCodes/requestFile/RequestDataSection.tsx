@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { Link } from "@mui/material";
 import { useIntl } from "react-intl";
@@ -25,6 +26,7 @@ import type {
 } from "../model/LocationCodeRequest";
 import { rinfLinkPath, rinfLinkText } from "../model/rinfLink";
 import { findSubsidiaryType } from "../model/subsidiaryTypes";
+import { crdFacts } from "./crdFacts";
 import { FactList, RequestFileSection } from "./RequestFileSection";
 
 interface RinfLinkTextProps {
@@ -69,6 +71,7 @@ export const RequestDataSection = ({ request }: RequestDataSectionProps) => {
           ["rinf_lc_field_target", data.targetCode],
           ["rinf_lc_field_name", data.locationName],
           ["rinf_lc_field_im", data.imOrganisationCode],
+          ...crdFacts(data, formatMessage),
           [
             "rinf_lc_field_rinf",
             data.rinfLink && <RinfLinkText key="link" link={data.rinfLink} />,

@@ -13,8 +13,10 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
-Modified 2026-10-30: takes the workflow steps itself (browserWorkflow.ts). */
+Modified 2026-10-30: takes the workflow steps itself (browserWorkflow.ts).
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
+import { upgradeCodes } from "../model/legacyCodes";
 import { createRequest } from "../workflow/createRequest";
 import { takeStepInBrowser } from "./browserWorkflow";
 import type {
@@ -31,6 +33,15 @@ const emptySnapshot = (): LocationCodeSnapshot => ({
   sequences: {},
 });
 
+/** A stored or restored snapshot, entries saved before versions upgraded. */
+export const upgradeSnapshot = (
+  stored: Partial<LocationCodeSnapshot>,
+): LocationCodeSnapshot => ({
+  ...emptySnapshot(),
+  ...stored,
+  codes: upgradeCodes(stored.codes ?? []),
+});
+
 /**
  * Browser storage can be missing, full or blocked (private windows, cleared
  * site data); the store then keeps working in memory for the session.
@@ -40,7 +51,7 @@ let memoryCopy: LocationCodeSnapshot | null = null;
 export const readSnapshot = (): LocationCodeSnapshot => {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) return { ...emptySnapshot(), ...JSON.parse(stored) };
+    if (stored) return upgradeSnapshot(JSON.parse(stored));
   } catch {
     // Fall back to the in-memory copy below.
   }
@@ -78,5 +89,5 @@ export const browserStore: LocationCodeStore = {
   },
   exportSnapshot: async () => readSnapshot(),
   /** Replaces what this browser holds. */
-  importSnapshot: async (snapshot) => writeSnapshot(snapshot),
+  importSnapshot: async (snapshot) => writeSnapshot(upgradeSnapshot(snapshot)),
 };

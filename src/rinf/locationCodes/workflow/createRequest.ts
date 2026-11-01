@@ -12,9 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
-import type {
+import {
+  emptyCrdAttributes,
   LocationCodeRequest,
   RequestData,
 } from "../model/LocationCodeRequest";
@@ -33,6 +35,7 @@ export const emptyRequestData = (): RequestData => ({
   targetCode: "",
   locationName: "",
   imOrganisationCode: "",
+  crd: emptyCrdAttributes(),
   rinfLink: null,
   parentPrimaryCode: "",
   subsidiaryTypeCode: "",

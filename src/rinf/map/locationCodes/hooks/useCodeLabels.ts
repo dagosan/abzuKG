@@ -12,12 +12,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-11-01. */
+Added for the ERA RINF frontend, 2026-11-01.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { todayIsoDate } from "../../../api/queryParts";
-import { isActiveOn } from "../../../locationCodes/model/RegisteredCode";
+import { isActiveOn } from "../../../locationCodes/model/codeVersions";
 import { loadLocationCodes } from "../../../locationCodes/state/locationCodesThunks";
 import { buildCodeLabelAnchors } from "../codeLabelAnchors";
 import { buildCodeLabels } from "../buildCodeLabels";

@@ -12,12 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { isCreation } from "../model/codeTypes";
 import { normalisePrimaryCode } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import type { RegisteredCode } from "../model/RegisteredCode";
+import type { CodeVersion } from "../model/CodeVersion";
+import { currentVersions } from "../model/codeVersions";
 import { elementOfLink } from "../model/rinfLink";
 import type { CheckContext } from "./checkContext";
 import {
@@ -40,13 +42,14 @@ const primaryCodeConcerned = ({ data }: LocationCodeRequest): string | null => {
 
 /**
  * Asks the Knowledge Graph what the checks need, in parallel (about 1–2 s),
- * and adds what this workflow has recorded itself.
+ * and adds what this workflow has recorded itself (all versions of each
+ * code in `register`; the checks look at the latest).
  */
 export const gatherCheckContext = async (
   endpoint: string,
   request: LocationCodeRequest,
   requests: LocationCodeRequest[],
-  register: RegisteredCode[],
+  register: CodeVersion[],
   today: string,
 ): Promise<CheckContext> => {
   const { data } = request;
@@ -84,7 +87,7 @@ export const gatherCheckContext = async (
     kgPrimaryCode,
     kgSubsidiaryCodes,
     rinfElement,
-    register,
+    register: currentVersions(register),
     otherOpenRequests: requests.filter(
       (other) =>
         other.id !== request.id && !NOT_COMPETING.includes(other.status),

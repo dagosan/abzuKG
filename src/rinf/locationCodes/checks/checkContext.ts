@@ -12,14 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import type { CheckResult } from "../model/checklist";
 import type {
   LocationCodeRequest,
   RinfLink,
 } from "../model/LocationCodeRequest";
-import { isActiveOn, RegisteredCode } from "../model/RegisteredCode";
+import type { CodeVersion } from "../model/CodeVersion";
+import { isOpenOn } from "../model/codeVersions";
 import type { KgElement, KgPrimaryLocation } from "./kgLookups";
 
 /** What the technical checks need to know, gathered before they run. */
@@ -35,8 +37,8 @@ export interface CheckContext {
   kgSubsidiaryCodes: string[];
   /** PLC: the RINF element the request positions the code on. */
   rinfElement: KgElement | null;
-  /** Codes recorded by this workflow. */
-  register: RegisteredCode[];
+  /** Codes recorded by this workflow: the latest version of each. */
+  register: CodeVersion[];
   /** Other requests still being handled. */
   otherOpenRequests: LocationCodeRequest[];
 }
@@ -50,20 +52,20 @@ export const sameLink = (
   first?.canonicalId === second?.canonicalId;
 
 /** Primary codes in the register, active or not: codes are never reused. */
-export const registeredPrimaryCodes = (register: RegisteredCode[]) =>
+export const registeredPrimaryCodes = (register: CodeVersion[]) =>
   register.filter((code) => code.codeType === "primary");
 
 /** Active subsidiary codes in the register under `parent`. */
 export const activeSubsidiariesOf = (
-  register: RegisteredCode[],
+  register: CodeVersion[],
   parent: string,
   today: string,
-): RegisteredCode[] =>
+): CodeVersion[] =>
   register.filter(
     (code) =>
       code.codeType === "subsidiary" &&
       code.parentPrimaryCode === parent &&
-      isActiveOn(code, today),
+      isOpenOn(code, today),
   );
 
 /** Every subsidiary code value under `parent`, register and KG, any state. */
@@ -81,9 +83,29 @@ export const subsidiaryValuesOf = (
 ];
 
 export const findRegistered = (
-  register: RegisteredCode[],
+  register: CodeVersion[],
   key: string,
-): RegisteredCode | null => register.find((code) => code.key === key) ?? null;
+): CodeVersion | null => register.find((code) => code.key === key) ?? null;
+
+/**
+ * Why a change cannot apply to the code's latest version: it already ends
+ * (a closure or amendment is published), or the change would take effect
+ * before the version starts (CRD versions do not overlap). Null when it can.
+ */
+export const changeConflict = (
+  version: CodeVersion,
+  effectiveDate: string,
+): { detailId: string; date: string } | null => {
+  if (version.endedBy !== null)
+    return {
+      detailId: "rinf_lc_detail_target_ending",
+      date: version.endValidity ?? "",
+    };
+  const start = version.startValidity;
+  if (start !== null && effectiveDate !== "" && effectiveDate <= start)
+    return { detailId: "rinf_lc_detail_effective_too_early", date: start };
+  return null;
+};
 
 /** One line of the checklist. */
 export const checkResult = (

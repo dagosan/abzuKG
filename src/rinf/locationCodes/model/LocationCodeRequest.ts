@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import type { DetailsKind } from "../../detailsKinds";
 import type { CheckResult, ChecklistItemId } from "./checklist";
@@ -69,6 +70,53 @@ export interface Requester {
   email: string;
 }
 
+/**
+ * CRD columns a PLC request gives besides the name and IM. The validity
+ * dates (also those of freight and passenger use) follow from the decision.
+ * Added 2026-11-02.
+ */
+export interface CrdAttributes {
+  /** Location_Name_ASCII; blank: made from the name. */
+  locationNameAscii: string;
+  nutsCode: string;
+  /** Decimal degrees as typed, e.g. "50.56013". */
+  latitude: string;
+  longitude: string;
+  freeText: string;
+  /** Yes or no; null: not chosen yet (amendment: unchanged). */
+  containerHandlingFlag: boolean | null;
+  handoverPointFlag: boolean | null;
+  freightPossibleFlag: boolean | null;
+  passengerPossibleFlag: boolean | null;
+}
+
+export const CRD_FLAGS = [
+  "passengerPossibleFlag",
+  "freightPossibleFlag",
+  "containerHandlingFlag",
+  "handoverPointFlag",
+] as const;
+
+export type CrdFlag = (typeof CRD_FLAGS)[number];
+
+export const emptyCrdAttributes = (): CrdAttributes => ({
+  locationNameAscii: "",
+  nutsCode: "",
+  latitude: "",
+  longitude: "",
+  freeText: "",
+  containerHandlingFlag: null,
+  handoverPointFlag: null,
+  freightPossibleFlag: null,
+  passengerPossibleFlag: null,
+});
+
+/** The request's CRD columns; requests made before 2026-11-02 have none. */
+export const crdOf = (data: RequestData): CrdAttributes => ({
+  ...emptyCrdAttributes(),
+  ...data.crd,
+});
+
 /** What the requester submits (TD 105 data elements, as far as used here). */
 export interface RequestData {
   operation: RequestOperation;
@@ -82,6 +130,8 @@ export interface RequestData {
   locationName: string;
   /** PLC: organisation code of the IM of the operating site (procedure 9). */
   imOrganisationCode: string;
+  /** PLC: the CRD columns of the location. Amendment: blank or null = unchanged. */
+  crd: CrdAttributes;
   /** PLC: the OP or section of line it is positioned on. SLC: optionally
    *  the OP, section of line or asset (track, platform edge, …) it is. */
   rinfLink: RinfLink | null;

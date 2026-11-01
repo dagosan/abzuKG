@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 /** Semicolons, as Abzu's own reports use, so Excel in most of Europe splits columns. */
 const DELIMITER = ";";
@@ -35,9 +36,17 @@ export const toCsv = (header: string[], rows: string[][]): string =>
     .map((row) => row.map(escapeCell).join(DELIMITER))
     .join(LINE_BREAK);
 
-/** Saves `content` as a .csv file through the browser's download. */
-export const downloadCsv = (filename: string, content: string): void => {
-  const blob = new Blob([BYTE_ORDER_MARK + content], {
+/**
+ * Saves `content` as a .csv file through the browser's download. A file in
+ * another system's exact format (CRD's) goes without the byte order mark.
+ */
+export const downloadCsv = (
+  filename: string,
+  content: string,
+  withByteOrderMark = true,
+): void => {
+  const prefix = withByteOrderMark ? BYTE_ORDER_MARK : "";
+  const blob = new Blob([prefix + content], {
     type: "text/csv;charset=utf-8;",
   });
   const url = URL.createObjectURL(blob);

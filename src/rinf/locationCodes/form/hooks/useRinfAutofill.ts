@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import {
   Dispatch,
@@ -27,6 +28,7 @@ import { todayIsoDate } from "../../../api/queryParts";
 import { useRinfSparqlEndpoint } from "../../../config/rinfEndpoint";
 import type { RequestField } from "../../checks/admissibility";
 import { fetchElement } from "../../checks/kgLookups";
+import { fetchElementPosition } from "../../checks/kgPosition";
 import type { RequestData, RinfLink } from "../../model/LocationCodeRequest";
 import { elementOfLink } from "../../model/rinfLink";
 import { autofillFromRinf, CodeChoiceField, RinfNotice } from "../rinfAutofill";
@@ -46,7 +48,8 @@ export interface RinfAutofillState {
 
 /**
  * Looks the chosen element up in RINF (~0.6 s; for an asset, the OP or
- * section of line it belongs to) and fills in what RINF says about it.
+ * section of line it belongs to) and fills in what RINF says about it,
+ * with its position for a PLC.
  */
 export const useRinfAutofill = (
   dataRef: MutableRefObject<RequestData>,
@@ -71,15 +74,27 @@ export const useRinfAutofill = (
       const controller = new AbortController();
       controllerRef.current = controller;
       setLoading(true);
-      fetchElement(
-        endpoint,
-        element.kind,
-        element.canonicalId,
-        todayIsoDate(),
-        controller.signal,
-      )
-        .then((found) => {
-          const fill = autofillFromRinf(dataRef.current, link, found);
+      const wantsPosition = dataRef.current.codeType === "primary";
+      Promise.all([
+        fetchElement(
+          endpoint,
+          element.kind,
+          element.canonicalId,
+          todayIsoDate(),
+          controller.signal,
+        ),
+        // CRD's Latitude and Longitude; a failure here only leaves them blank.
+        wantsPosition
+          ? fetchElementPosition(
+              endpoint,
+              element.kind,
+              element.canonicalId,
+              controller.signal,
+            ).catch(() => null)
+          : null,
+      ])
+        .then(([found, position]) => {
+          const fill = autofillFromRinf(dataRef.current, link, found, position);
           setData((current) => ({ ...current, ...fill.changes }));
           setFromRinf(fill.filled);
           setNotice(fill.notice);

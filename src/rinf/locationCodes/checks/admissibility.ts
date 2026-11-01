@@ -12,15 +12,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { isCreation } from "../model/codeTypes";
 import { isValidSubsidiaryCode, parsePrimaryCode } from "../model/codeFormat";
 import { isCountryPrefix } from "../model/countries";
 import { isOfficialEuLanguage } from "../model/languages";
-import type { RequestData } from "../model/LocationCodeRequest";
+import type { CrdFlag, RequestData } from "../model/LocationCodeRequest";
 import { isStakeholderCategory } from "../model/stakeholderCategories";
 import { findSubsidiaryType } from "../model/subsidiaryTypes";
+import { amendsSomething, crdErrors } from "./crdAdmissibility";
 
 /** Form fields that can be in error. */
 export type RequestField =
@@ -40,7 +42,13 @@ export type RequestField =
   | "parentPrimaryCode"
   | "subsidiaryTypeCode"
   | "effectiveDate"
-  | "justification";
+  | "justification"
+  | "locationNameAscii"
+  | "nutsCode"
+  | "latitude"
+  | "longitude"
+  | "freeText"
+  | CrdFlag;
 
 /** Text key of each field's error. */
 export type AdmissibilityErrors = Partial<Record<RequestField, string>>;
@@ -129,9 +137,9 @@ const changeErrors = (data: RequestData): AdmissibilityErrors => {
     ...(data.operation === "deactivation" &&
       isBlank(data.justification) && { justification: REQUIRED }),
     ...(data.operation === "amendment" &&
-      isBlank(data.locationName) &&
-      isBlank(data.imOrganisationCode) &&
-      !data.rinfLink && { locationName: "rinf_lc_error_nothing_to_amend" }),
+      !amendsSomething(data) && {
+        locationName: "rinf_lc_error_nothing_to_amend",
+      }),
   };
 };
 
@@ -146,6 +154,7 @@ export const admissibilityErrors = (
   ...(data.codeType === "primary"
     ? primaryErrors(data)
     : subsidiaryErrors(data)),
+  ...crdErrors(data),
   ...changeErrors(data),
 });
 

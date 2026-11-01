@@ -12,11 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
+import { upgradeCodes } from "../model/legacyCodes";
 import type { LocationCodeSnapshot } from "./LocationCodeStore";
 
-/** The content of a backup file, or null when it is not one. */
+/** The content of a backup file, or null when it is not one; codes saved
+ *  before 2026-11-02 become versions. */
 export const parseBackup = (text: string): LocationCodeSnapshot | null => {
   try {
     const parsed = JSON.parse(text);
@@ -24,7 +27,7 @@ export const parseBackup = (text: string): LocationCodeSnapshot | null => {
       return null;
     return {
       requests: parsed.requests,
-      codes: parsed.codes,
+      codes: upgradeCodes(parsed.codes),
       sequences: parsed.sequences ?? {},
     };
   } catch {

@@ -12,18 +12,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import type { CheckResult } from "../model/checklist";
 import { isCreation } from "../model/codeTypes";
 import { normalisePrimaryCode, subsidiaryKey } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import { isActiveOn } from "../model/RegisteredCode";
+import { isOpenOn } from "../model/codeVersions";
 import { elementOfLink } from "../model/rinfLink";
 import { findSubsidiaryType } from "../model/subsidiaryTypes";
 import { assignableCode } from "./assignableCode";
 import {
   activeSubsidiariesOf,
+  changeConflict,
   checkResult as result,
   CheckContext,
   findRegistered,
@@ -50,7 +52,7 @@ export const subsidiaryDuplicateCheck = (
   ).find(
     (code) =>
       code.subsidiaryTypeCode === data.subsidiaryTypeCode &&
-      sameName(code.name, data.locationName),
+      sameName(code.locationName, data.locationName),
   );
   return twin
     ? result("noDuplicate", "warning", "rinf_lc_detail_possible_twin", {
@@ -71,7 +73,7 @@ export const parentCheck = (
   )
     return result("parentPrimaryCode", "fail", "rinf_lc_detail_type_unknown");
   const registered = findRegistered(context.register, parent);
-  if (registered && !isActiveOn(registered, context.today))
+  if (registered && !isOpenOn(registered, context.today))
     return result("parentPrimaryCode", "fail", "rinf_lc_detail_parent_closed", {
       code: parent,
     });
@@ -103,9 +105,16 @@ export const subsidiaryValueCheck = (
       context.register,
       subsidiaryKey(parent, target),
     );
-    if (registered && !isActiveOn(registered, context.today))
+    if (registered && !isOpenOn(registered, context.today))
       return result("codeValueFree", "fail", "rinf_lc_detail_target_closed", {
         code: target,
+      });
+    const conflict =
+      registered && changeConflict(registered, data.effectiveDate);
+    if (conflict)
+      return result("codeValueFree", "fail", conflict.detailId, {
+        code: target,
+        date: conflict.date,
       });
     return used.includes(target)
       ? result("codeValueFree", "pass", "rinf_lc_detail_target_found", {

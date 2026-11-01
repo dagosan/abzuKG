@@ -12,13 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { ERA_NAMESPACE } from "../../api/queryParts";
 import type { RequestField } from "../checks/admissibility";
 import type { KgElement } from "../checks/kgLookups";
+import type { KgPosition } from "../checks/kgPosition";
 import { isCreation } from "../model/codeTypes";
-import type { RequestData, RinfLink } from "../model/LocationCodeRequest";
+import { crdOf, RequestData, RinfLink } from "../model/LocationCodeRequest";
 
 /** TD 103 Table 6 type of each asset class. A siding may be a public loading
  *  place (06) or a private siding (07): the requester chooses. */
@@ -79,6 +81,7 @@ export const autofillFromRinf = (
   data: RequestData,
   link: RinfLink,
   element: KgElement,
+  position: KgPosition | null = null,
 ): RinfAutofill => {
   const { declarations, codes } = element;
   const single = declarations.length === 1 ? declarations[0] : null;
@@ -94,11 +97,15 @@ export const autofillFromRinf = (
           country,
           imCode: single?.imCode ?? null,
           code,
+          position,
         })
       : subsidiaryChanges(data, link, code);
-  const filled = (Object.keys(changes) as string[]).filter(
-    (key) => key !== "rinfLink",
-  ) as RequestField[];
+  const filled = [
+    ...Object.keys(changes).filter(
+      (key) => key !== "rinfLink" && key !== "crd",
+    ),
+    ...(changes.crd && position ? ["latitude", "longitude"] : []),
+  ] as RequestField[];
   const choices = codes.map((each) => ({
     code: each,
     name: element.codeNames[each] ?? "",
@@ -120,15 +127,23 @@ interface PrimaryFacts {
   country: string | null;
   imCode: string | null;
   code: string | null;
+  position: KgPosition | null;
 }
 
 const primaryChanges = (
   data: RequestData,
-  { name, country, imCode, code }: PrimaryFacts,
+  { name, country, imCode, code, position }: PrimaryFacts,
 ): Partial<RequestData> => {
   if (!isCreation(data.operation)) return code ? { targetCode: code } : {};
   return {
     locationName: name,
+    ...(position && {
+      crd: {
+        ...crdOf(data),
+        latitude: String(position.latitude),
+        longitude: String(position.longitude),
+      },
+    }),
     ...(country && { country }),
     ...(imCode && { imOrganisationCode: imCode }),
     ...(data.operation === "existingCode" && code && { proposedCode: code }),

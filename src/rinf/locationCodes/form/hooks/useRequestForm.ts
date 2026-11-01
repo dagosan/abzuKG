@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -22,7 +23,9 @@ import {
   AdmissibilityErrors,
 } from "../../checks/admissibility";
 import { isCountryPrefix } from "../../model/countries";
-import type {
+import {
+  CrdAttributes,
+  crdOf,
   RequestData,
   Requester,
   RinfLink,
@@ -51,6 +54,8 @@ export interface RequestForm extends Omit<
   chooseRinfElement: (link: RinfLink | null) => void;
   data: RequestData;
   update: (changes: Partial<RequestData>) => void;
+  /** Changes CRD columns of the request (its `crd` part). */
+  updateCrd: (changes: Partial<CrdAttributes>) => void;
   updateRequester: (changes: Partial<Requester>) => void;
   /** Errors to show: none until the first attempt to submit. */
   errors: AdmissibilityErrors;
@@ -127,6 +132,16 @@ export const useRequestForm = (): RequestForm => {
     },
     [forgetFromRinf],
   );
+  const updateCrd = useCallback(
+    (changes: Partial<CrdAttributes>) => {
+      setData((current) => ({
+        ...current,
+        crd: { ...crdOf(current), ...changes },
+      }));
+      forgetFromRinf(Object.keys(changes));
+    },
+    [forgetFromRinf],
+  );
   const updateRequester = useCallback(
     (changes: Partial<Requester>) =>
       setData((current) => ({
@@ -159,6 +174,7 @@ export const useRequestForm = (): RequestForm => {
   return {
     data,
     update,
+    updateCrd,
     updateRequester,
     errors: attempted ? allErrors : {},
     submitting,

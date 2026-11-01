@@ -13,14 +13,15 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-10-30: the store submits and takes steps instead of saving documents. */
+Modified 2026-10-30: the store submits and takes steps instead of saving documents.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   LocationCodeRequest,
   RequestData,
 } from "../model/LocationCodeRequest";
-import type { RegisteredCode } from "../model/RegisteredCode";
+import type { CodeVersion } from "../model/CodeVersion";
 import type { Actor } from "../model/roles";
 import { parseBackup } from "./backupFile";
 import type { WorkflowStep } from "./LocationCodeStore";
@@ -33,7 +34,7 @@ import { createTiamatStore } from "./tiamatStore";
 
 const BASE = "https://tiamat.test/era/v1/location-codes/";
 const request = { id: "r 1", events: [] } as unknown as LocationCodeRequest;
-const code = { key: "SE00001" } as unknown as RegisteredCode;
+const code = { key: "SE00001" } as unknown as CodeVersion;
 const data = { country: "SE" } as unknown as RequestData;
 const anna: Actor = { name: "Anna", role: "requester" };
 const carl: Actor = { name: "Carl", role: "codeAdministrator" };

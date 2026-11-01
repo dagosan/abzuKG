@@ -12,13 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-30. */
+Added for the ERA RINF frontend, 2026-10-30.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { todayIsoDate } from "../../api/queryParts";
 import { fetchSubsidiaryCodes } from "../checks/kgLookups";
 import { normalisePrimaryCode } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import type { RegisteredCode } from "../model/RegisteredCode";
+import type { CodeVersion } from "../model/CodeVersion";
+import { mergeVersions } from "../model/codeVersions";
 import { ACTION_ROLES } from "../workflow/actions";
 import { applyAction } from "../workflow/applyAction";
 import { availableActions, canBeTakenFrom } from "../workflow/availableActions";
@@ -94,7 +96,7 @@ export const takeStepInBrowser = async (
       }
     : step.payload;
   const updated = applyAction(request, step.action, step.actor, payload, now);
-  const codes: RegisteredCode[] =
+  const codes: CodeVersion[] =
     step.action === "publish"
       ? registerChanges(
           updated,
@@ -103,17 +105,13 @@ export const takeStepInBrowser = async (
           now,
         )
       : [];
-  const changedKeys = new Set(codes.map((code) => code.key));
   return {
     result: { request: updated, codes },
     snapshot: {
       requests: snapshot.requests.map((candidate) =>
         candidate.id === updated.id ? updated : candidate,
       ),
-      codes: [
-        ...snapshot.codes.filter((code) => !changedKeys.has(code.key)),
-        ...codes,
-      ],
+      codes: mergeVersions(snapshot.codes, codes),
       sequences: isRegistration
         ? {
             ...snapshot.sequences,

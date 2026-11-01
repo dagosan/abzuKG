@@ -12,13 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import type { CheckResult } from "../model/checklist";
 import { normalisePrimaryCode } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import { isActiveOn } from "../model/RegisteredCode";
+import { isOpenOn } from "../model/codeVersions";
 import {
+  changeConflict,
   checkResult as result,
   CheckContext,
   findRegistered,
@@ -62,13 +64,19 @@ export const primaryTargetCheck = (
 ): CheckResult => {
   const target = normalisePrimaryCode(data.targetCode);
   const registered = findRegistered(context.register, target);
-  if (registered && !isActiveOn(registered, context.today))
+  if (registered && !isOpenOn(registered, context.today))
     return result("codeValueFree", "fail", "rinf_lc_detail_target_closed", {
       code: target,
     });
   if (!registered && !context.kgPrimaryCode)
     return result("codeValueFree", "fail", "rinf_lc_detail_target_unknown", {
       code: target,
+    });
+  const conflict = registered && changeConflict(registered, data.effectiveDate);
+  if (conflict)
+    return result("codeValueFree", "fail", conflict.detailId, {
+      code: target,
+      date: conflict.date,
     });
   return result("codeValueFree", "pass", "rinf_lc_detail_target_found", {
     code: target,

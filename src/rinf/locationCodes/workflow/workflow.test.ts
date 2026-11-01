@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { describe, expect, it } from "vitest";
 import type {
@@ -24,6 +25,7 @@ import { applyAction } from "./applyAction";
 import { availableActions } from "./availableActions";
 import { createRequest, emptyRequestData } from "./createRequest";
 import { currentDeadline, elapsedSinceRegistration } from "./deadlines";
+import { aCodeVersion } from "../testing/codeVersionFixture";
 import { registerChanges } from "./publication";
 import { addWorkingDays, workingDaysBetween } from "./workingDays";
 
@@ -125,8 +127,12 @@ describe("a PLC request through every step", () => {
     expect(codes).toHaveLength(1);
     expect(codes[0]).toMatchObject({
       key: "BE00001",
-      validFrom: "2026-10-05",
-      closedFrom: null,
+      version: 1,
+      startValidity: "2026-10-05",
+      endValidity: null,
+      locationName: "Gembloux Nord",
+      responsibleImCode: "0088",
+      openedBy: { change: "assigned" },
     });
   });
 
@@ -218,34 +224,16 @@ describe("closing a PLC", () => {
       "2026-10-02T09:00:00Z",
     );
     const register = [
-      {
-        key: "BE00001",
-        codeType: "primary" as const,
-        code: "BE00001",
-        parentPrimaryCode: null,
-        country: "BE",
-        name: "X",
-        imOrganisationCode: "0088",
-        subsidiaryTypeCode: "",
-        rinfLink: null,
-        validFrom: "2026-01-01",
-        closedFrom: null,
-        history: [],
-      },
-      {
+      aCodeVersion({ locationName: "X" }),
+      aCodeVersion({
         key: "BE00001/0000000001",
-        codeType: "subsidiary" as const,
+        codeType: "subsidiary",
         code: "0000000001",
         parentPrimaryCode: "BE00001",
-        country: "BE",
-        name: "Track 1",
-        imOrganisationCode: "",
+        locationName: "Track 1",
+        responsibleImCode: "",
         subsidiaryTypeCode: "01",
-        rinfLink: null,
-        validFrom: "2026-01-01",
-        closedFrom: null,
-        history: [],
-      },
+      }),
     ];
     const changes = registerChanges(
       request,
@@ -258,7 +246,10 @@ describe("closing a PLC", () => {
       "BE00001/0000000001",
       "BE00001/NO-S.1",
     ]);
-    expect(changes.every((code) => code.closedFrom === "2026-12-01")).toBe(
+    expect(changes.every((code) => code.endValidity === "2026-11-30")).toBe(
+      true,
+    );
+    expect(changes.every((code) => code.endedBy?.change === "closed")).toBe(
       true,
     );
   });

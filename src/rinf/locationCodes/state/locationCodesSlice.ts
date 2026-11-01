@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RinfLoadStatus } from "../../state/loadStatus";
@@ -21,7 +22,8 @@ import type {
   RequestData,
   RinfLink,
 } from "../model/LocationCodeRequest";
-import type { RegisteredCode } from "../model/RegisteredCode";
+import type { CodeVersion } from "../model/CodeVersion";
+import { mergeVersions } from "../model/codeVersions";
 import type { Actor } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
 import {
@@ -33,7 +35,7 @@ import {
 export interface LocationCodesState {
   loadStatus: RinfLoadStatus;
   requests: LocationCodeRequest[];
-  codes: RegisteredCode[];
+  codes: CodeVersion[];
   actor: Actor;
   /** An action or submission is under way. */
   working: boolean;
@@ -68,11 +70,6 @@ const replaceRequest = (
   requests: LocationCodeRequest[],
   request: LocationCodeRequest,
 ) => [...requests.filter((other) => other.id !== request.id), request];
-
-const replaceCodes = (codes: RegisteredCode[], changed: RegisteredCode[]) => {
-  const changedKeys = new Set(changed.map((code) => code.key));
-  return [...codes.filter((code) => !changedKeys.has(code.key)), ...changed];
-};
 
 const locationCodesSlice = createSlice({
   name: "rinfLocationCodes",
@@ -130,7 +127,7 @@ const locationCodesSlice = createSlice({
       .addCase(performLocationCodeAction.fulfilled, (state, action) => {
         state.working = false;
         state.requests = replaceRequest(state.requests, action.payload.request);
-        state.codes = replaceCodes(state.codes, action.payload.codes);
+        state.codes = mergeVersions(state.codes, action.payload.codes);
       })
       .addCase(performLocationCodeAction.rejected, (state, action) => {
         state.working = false;

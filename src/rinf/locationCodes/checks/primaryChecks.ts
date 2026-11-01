@@ -12,13 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import type { CheckResult } from "../model/checklist";
 import { isCreation } from "../model/codeTypes";
 import { normalisePrimaryCode } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
-import { isActiveOn } from "../model/RegisteredCode";
+import { isOpenOn } from "../model/codeVersions";
 import { assignableCode, usedPrimaryCodes } from "./assignableCode";
 import { existingCodeCheck, primaryTargetCheck } from "./primaryValueChecks";
 import {
@@ -58,10 +59,10 @@ export const primaryDuplicateCheck = (
     ...registeredPrimaryCodes(context.register)
       .filter(
         (code) =>
-          isActiveOn(code, context.today) &&
+          isOpenOn(code, context.today) &&
           sameLink(code.rinfLink, data.rinfLink),
       )
-      .map(({ code, name }) => ({ code, name })),
+      .map(({ code, locationName }) => ({ code, name: locationName })),
   ].filter(({ code }) => code !== ownCode);
   if (onElement.length === 0)
     return result("noDuplicate", "pass", "rinf_lc_detail_no_duplicate");

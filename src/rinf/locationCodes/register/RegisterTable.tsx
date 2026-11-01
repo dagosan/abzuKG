@@ -12,11 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-11-02.
+Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import {
   Box,
-  Chip,
+  Button,
+  FormControlLabel,
+  Stack,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -25,50 +29,53 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import DownloadOutlined from "@mui/icons-material/DownloadOutlined";
+import { useState } from "react";
 import { useIntl } from "react-intl";
 import { useAppSelector } from "../../../store/hooks";
 import { todayIsoDate } from "../../api/queryParts";
-import { CODE_TYPE_ABBREVIATIONS } from "../model/codeTypes";
-import { isActiveOn, RegisteredCode } from "../model/RegisteredCode";
-import { findSubsidiaryType } from "../model/subsidiaryTypes";
-import { RinfLinkText } from "../requestFile/RequestDataSection";
+import { downloadCsv } from "../../reports/csv";
+import { crdCsv } from "./crdExport";
+import { useRegisterRows } from "./hooks/useRegisterRows";
+import { RegisterRow } from "./RegisterRow";
 
 const FILTER_WIDTH = 320;
+const CRD_FILE_PREFIX = "location-codes-crd-";
 const COLUMN_IDS = [
   "code",
   "type",
+  "valid",
+  "status",
   "name",
   "im_or_type",
+  "use",
+  "nuts",
+  "position",
   "rinf",
-  "status",
-  "history",
+  "requests",
 ];
 
-const matches = (code: RegisteredCode, text: string) =>
-  [
-    code.key,
-    code.name,
-    code.imOrganisationCode,
-    code.rinfLink?.canonicalId ?? "",
-  ]
-    .join(" ")
-    .toLowerCase()
-    .includes(text.toLowerCase());
-
-/** The codes this workflow recorded and published, open or closed. */
+/**
+ * The codes this workflow recorded, one row per version as in CRD: a new
+ * name, IM or use starts a new version. Downloadable in CRD's CSV format.
+ */
 export const RegisterTable = () => {
   const { formatMessage } = useIntl();
-  const codes = useAppSelector((state) => state.rinf.locationCodes.codes);
+  const versions = useAppSelector((state) => state.rinf.locationCodes.codes);
   const [filter, setFilter] = useState("");
-  const today = todayIsoDate();
-  const rows = useMemo(
-    () =>
-      codes
-        .filter((code) => matches(code, filter))
-        .sort((first, second) => first.key.localeCompare(second.key)),
-    [codes, filter],
+  const [withEarlierVersions, setWithEarlierVersions] = useState(true);
+  const { rows, codeCount } = useRegisterRows(
+    versions,
+    filter,
+    withEarlierVersions,
   );
+  const today = todayIsoDate();
+  const downloadCrd = () =>
+    downloadCsv(
+      `${CRD_FILE_PREFIX}${today}.csv`,
+      crdCsv(versions, today),
+      false,
+    );
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
@@ -78,88 +85,63 @@ export const RegisterTable = () => {
       <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
         {formatMessage({ id: "rinf_lc_register_hint" })}
       </Typography>
-      <TextField
-        size="small"
-        label={formatMessage({ id: "rinf_lc_register_filter" })}
-        value={filter}
-        onChange={(event) => setFilter(event.target.value)}
-        sx={{ width: FILTER_WIDTH, mb: 2 }}
-      />
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 2, alignItems: { sm: "center" } }}
+      >
+        <TextField
+          size="small"
+          label={formatMessage({ id: "rinf_lc_register_filter" })}
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          sx={{ width: { xs: "100%", sm: FILTER_WIDTH } }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={withEarlierVersions}
+              onChange={(event) => setWithEarlierVersions(event.target.checked)}
+            />
+          }
+          label={formatMessage({ id: "rinf_lc_register_earlier_versions" })}
+        />
+        <Button
+          variant="outlined"
+          startIcon={<DownloadOutlined />}
+          onClick={downloadCrd}
+          disabled={codeCount === 0}
+        >
+          {formatMessage({ id: "rinf_lc_register_download_crd" })}
+        </Button>
+      </Stack>
       {rows.length === 0 ? (
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {formatMessage({ id: "rinf_lc_register_empty" })}
         </Typography>
       ) : (
-        <Table size="small" sx={{ bgcolor: "background.paper" }}>
-          <TableHead>
-            <TableRow>
-              {COLUMN_IDS.map((column) => (
-                <TableCell key={column}>
-                  {formatMessage({ id: `rinf_lc_register_column_${column}` })}
-                </TableCell>
+        <Box sx={{ overflowX: "auto" }}>
+          <Table size="small" sx={{ bgcolor: "background.paper" }}>
+            <TableHead>
+              <TableRow>
+                {COLUMN_IDS.map((column) => (
+                  <TableCell key={column}>
+                    {formatMessage({ id: `rinf_lc_register_column_${column}` })}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((version) => (
+                <RegisterRow
+                  key={`${version.key}#${version.version}`}
+                  version={version}
+                  today={today}
+                />
               ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((code) => {
-              const active = isActiveOn(code, today);
-              const type = findSubsidiaryType(code.subsidiaryTypeCode);
-              return (
-                <TableRow key={code.key}>
-                  <TableCell sx={{ fontFamily: "monospace" }}>
-                    {code.key}
-                  </TableCell>
-                  <TableCell>
-                    {CODE_TYPE_ABBREVIATIONS[code.codeType]}
-                  </TableCell>
-                  <TableCell>{code.name || "—"}</TableCell>
-                  <TableCell>
-                    {code.codeType === "primary"
-                      ? code.imOrganisationCode
-                      : type
-                        ? `${type.code} ${type.name}`
-                        : ""}
-                  </TableCell>
-                  <TableCell>
-                    <RinfLinkText link={code.rinfLink} />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      color={active ? "success" : "default"}
-                      variant={active ? "filled" : "outlined"}
-                      label={formatMessage(
-                        {
-                          id: active
-                            ? code.closedFrom
-                              ? "rinf_lc_code_closing"
-                              : "rinf_lc_code_active"
-                            : "rinf_lc_code_closed",
-                        },
-                        { date: code.closedFrom ?? "" },
-                      )}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {code.history.map((entry) => (
-                      <Typography
-                        key={entry.requestId + entry.change}
-                        variant="caption"
-                        sx={{ display: "block" }}
-                      >
-                        {formatMessage({
-                          id: `rinf_lc_change_${entry.change}`,
-                        })}{" "}
-                        · {entry.reference ?? entry.requestId} ·{" "}
-                        {entry.at.slice(0, 10)}
-                      </Typography>
-                    ))}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+        </Box>
       )}
     </Box>
   );
