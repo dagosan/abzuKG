@@ -85,10 +85,8 @@ Tell the install that address, without a final `/`, then run `update.sh`:
 echo LCM_PUBLIC_URL=https://ts464.taile5a20b.ts.net:8443 >> /share/Container/abzukg.env
 ```
 
-Until the login is on `master`, install it from its branch in both repositories:
-
 ```sh
-wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/location-codes-login/deploy/update.sh | sh -s location-codes-login location-codes-login
+wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/update.sh | sh
 ```
 
 `update.sh` adds Keycloak's passwords to `abzukg.env` (existing ones are
