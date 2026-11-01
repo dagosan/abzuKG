@@ -1,0 +1,67 @@
+{
+  "realm": "era",
+  "displayName": "Location Code Manager",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      { "name": "requester", "description": "Asks for location codes and follows their requests" },
+      { "name": "codeAdministrator", "description": "Registers, validates, publishes and closes requests; keeps the register's backups" },
+      { "name": "rinfCorrespondent", "description": "Harmonises the RINF position of a code" },
+      { "name": "externalCoordinationPoint", "description": "Co-decides on non-EU and legacy ranges" },
+      { "name": "validatingOfficer", "description": "Assigns or rejects" },
+      {
+        "name": "default-roles-era",
+        "description": "Given to every new account",
+        "composite": true,
+        "composites": { "realm": ["requester"] }
+      }
+    ]
+  },
+  "defaultRole": { "name": "default-roles-era" },
+  "clients": [
+    {
+      "clientId": "location-code-manager",
+      "name": "Location Code Manager",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "__LCM_PUBLIC_URL__",
+      "baseUrl": "/",
+      "redirectUris": ["__LCM_PUBLIC_URL__/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "workflow roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "lcm_roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

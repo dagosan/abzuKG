@@ -1,12 +1,14 @@
 # Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
 # Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside;
 # the app's port is a setting (ABZUKG_PORT).
+# Modified 2026-11-01: a login service (Keycloak) for the location code register.
 #
 # On the NAS this is run by deploy/update.sh (see deploy/README.md), which puts
 # the Tiamat source next to this folder and keeps the database password in
 # ../abzukg.env.
 services:
-  # The Location Code Manager: static files, plus /era/ passed on to Tiamat.
+  # The Location Code Manager: static files, plus /era/ passed on to Tiamat
+  # and /auth/ to Keycloak.
   abzukg:
     build: .
     image: abzukg:latest
@@ -16,6 +18,7 @@ services:
       - "${ABZUKG_PORT:-8090}:80"
     depends_on:
       - tiamat
+      - keycloak
     restart: unless-stopped
     # To change settings without rebuilding, copy deploy/bootstrap.json next to
     # the app folder (see deploy/README.md), then uncomment these two lines:
@@ -34,6 +37,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://tiamat-db:5432/tiamat
       SPRING_DATASOURCE_USERNAME: tiamat
       SPRING_DATASOURCE_PASSWORD: ${TIAMAT_DB_PASSWORD:?set in ../abzukg.env, see deploy/README.md}
+      # Requests and steps need a login; the keys that sign the login tokens.
+      ERA_LOCATION_CODES_LOGIN_REQUIRED: "true"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI: http://keycloak:8080/auth/realms/era/protocol/openid-connect/certs
     depends_on:
       tiamat-db:
         condition: service_healthy
@@ -56,7 +62,51 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # The login service, at /auth/ on the app's address (nginx passes it on).
+  # Accounts and roles: realm "era", from deploy/keycloak/era-realm.json the
+  # first time, then kept in its database. Admin console: <address>/auth/admin.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    container_name: abzukg-keycloak
+    command: start --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in ../abzukg.env, see deploy/README.md}
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in ../abzukg.env, see deploy/README.md}
+      # The https address people open the app at, e.g. through tailscale serve.
+      KC_HOSTNAME: ${LCM_PUBLIC_URL:?set in ../abzukg.env, see deploy/README.md}/auth
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+    volumes:
+      - ./deploy/keycloak/era-realm.json:/opt/keycloak/data/import/era-realm.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  keycloak-db:
+    image: postgres:17-alpine
+    container_name: abzukg-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in ../abzukg.env, see deploy/README.md}
+    volumes:
+      - keycloak-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
 volumes:
   tiamat-db:
     # A fixed name, so the data survives a rename of the app folder.
     name: abzukg-tiamat-db
+  keycloak-db:
+    name: abzukg-keycloak-db

@@ -2,6 +2,8 @@
 # Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
 # Modified 2026-10-30: also installs the location code register (Tiamat + PostGIS);
 # both repositories from master; the app's port from ABZUKG_PORT in abzukg.env.
+# Modified 2026-11-01: the login service (Keycloak): its passwords, the app's
+# https address (LCM_PUBLIC_URL) and the realm's addresses.
 #
 # Installs or updates the Location Code Manager (abzuKG) and its location code
 # register (Tiamat, dagosan/tiamatLCs) on the NAS from GitHub, and rebuilds
@@ -41,15 +43,35 @@ download() {
 
 cd "$PARENT"
 
-# The database password, made once and kept outside the app folders. The
-# database only accepts the password it was created with, so never change it
-# here without changing it in the database too.
+# Passwords, made once and kept outside the app folders (abzukg.env). The
+# databases only accept the password they were created with, so never change
+# one here without changing it in its database too.
 if [ ! -f "$ENV_FILE" ]; then
-  password=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)
-  printf 'TIAMAT_DB_PASSWORD=%s\n' "$password" > "$ENV_FILE"
+  : > "$ENV_FILE"
   chmod 600 "$ENV_FILE"
-  echo "Created $ENV_FILE with a new database password."
 fi
+add_password() {
+  if ! grep -q "^$1=" "$ENV_FILE"; then
+    printf '%s=%s\n' "$1" "$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)" >> "$ENV_FILE"
+    echo "Added a new $1 to $ENV_FILE."
+  fi
+}
+add_password TIAMAT_DB_PASSWORD
+add_password KEYCLOAK_DB_PASSWORD
+add_password KEYCLOAK_ADMIN_PASSWORD
+
+# The https address people open the app at. Logging in only works over https,
+# and the login service writes this address into its pages and tokens.
+PUBLIC_URL=$(sed -n 's/^LCM_PUBLIC_URL=//p' "$ENV_FILE")
+case "$PUBLIC_URL" in
+  https://*[!/]) ;;
+  *)
+    echo "Set the app's https address in $ENV_FILE, without a final /, e.g.:" >&2
+    echo "  echo LCM_PUBLIC_URL=https://ts464.taile5a20b.ts.net:8443 >> $ENV_FILE" >&2
+    echo "then run this script again (see deploy/README.md, Login)." >&2
+    exit 1
+    ;;
+esac
 
 # The app's port on the NAS (ABZUKG_PORT in the same file, default 8090).
 PORT=$(sed -n 's/^ABZUKG_PORT=//p' "$ENV_FILE")
@@ -68,6 +90,10 @@ rm -rf "$APP" "$TIAMAT_DIR"
 mv "$APP.new" "$APP"
 mv "$TIAMAT_DIR.new" "$TIAMAT_DIR"
 
+# The realm's address for the app's login (used the first time Keycloak
+# starts; later, change it in the admin console: Clients → location-code-manager).
+sed -i "s#__LCM_PUBLIC_URL__#$PUBLIC_URL#g" "$APP/deploy/keycloak/era-realm.json"
+
 cd "$APP"
 echo "Building (the first Tiamat build downloads its libraries and takes 10–20 minutes)…"
 docker compose --env-file "$ENV_FILE" up -d --build
@@ -85,5 +111,21 @@ until wget -qO /dev/null "http://localhost:$PORT/era/v1/location-codes/codes"; d
   sleep 5
 done
 
+# Keycloak takes a minute to start (longer the first time, as it sets up its
+# database and imports the realm).
+echo "Waiting for the login service…"
+tries=0
+until wget -qO /dev/null "http://localhost:$PORT/auth/realms/era/.well-known/openid-configuration"; do
+  tries=$((tries + 1))
+  if [ "$tries" -ge 60 ]; then
+    echo "The login service did not answer within 5 minutes. Its log:" >&2
+    docker logs --tail 60 abzukg-keycloak >&2
+    exit 1
+  fi
+  sleep 5
+done
+
 echo "The Location Code Manager serves $BRANCH at $SHA on port $PORT,"
 echo "with the register from tiamatLCs $TIAMAT_BRANCH at $TIAMAT_SHA (see /version.txt)."
+echo "Open it at $PUBLIC_URL; accounts and roles: $PUBLIC_URL/auth/admin (user admin,"
+echo "password KEYCLOAK_ADMIN_PASSWORD in $ENV_FILE)."

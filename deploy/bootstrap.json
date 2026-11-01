@@ -3,6 +3,15 @@
   "themeConfigs": ["theme/era-theme.json"],
   "rinfSparqlEndpoint": "https://graph.data.era.europa.eu/repositories/rinf-plus",
   "locationCodesApiUrl": "/era/v1/location-codes",
+  "locationCodesLoginRequired": true,
+  "oidcConfig": {
+    "authority": "/auth/realms/era",
+    "client_id": "location-code-manager",
+    "scope": "openid profile",
+    "response_type": "code"
+  },
+  "claimsNamespace": "lcm_roles",
+  "preferredNameNamespace": "name",
   "tiamatBaseUrl": "https://api.dev.entur.io/stop-places/v1/graphql",
   "tiamatEnv": "development",
   "netexPrefix": "NSR",
@@ -15,16 +24,11 @@
       }
     ],
     "defaultBaseLayer": "OpenStreetMap",
-    "center": [
-      50.5,
-      4.5
-    ],
+    "center": [50.5, 4.5],
     "zoom": 6
   },
   "localeConfig": {
-    "locales": [
-      "en"
-    ],
+    "locales": ["en"],
     "defaultLocale": "en"
   }
 }

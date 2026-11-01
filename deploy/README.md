@@ -1,28 +1,32 @@
 <!-- Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
      Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside;
-     the app's port is a setting (ABZUKG_PORT). -->
+     the app's port is a setting (ABZUKG_PORT).
+     Modified 2026-11-01: a login (Keycloak) for location code requests and steps. -->
 
 # Running the Location Code Manager in Docker (e.g. on a NAS)
 
 The app folder, image and container on the server are called `abzukg`, after
 the repository; renaming them would leave an old container holding the port.
 
-Three containers, all started by one `docker compose`:
+Five containers, all started by one `docker compose`:
 
 | Container | What it is |
 | --- | --- |
-| `abzukg` | The app (static files and `bootstrap.json`) in nginx, port 8090 (or `ABZUKG_PORT`). The browser fetches RINF data straight from ERA's SPARQL endpoint. Requests to `/era/…` are passed on to Tiamat, so the browser talks to one address only |
+| `abzukg` | The app (static files and `bootstrap.json`) in nginx, port 8090 (or `ABZUKG_PORT`). The browser fetches RINF data straight from ERA's SPARQL endpoint. Requests to `/era/…` are passed on to Tiamat and `/auth/…` to Keycloak, so the browser talks to one address only |
 | `abzukg-tiamat` | The location code register: Tiamat from dagosan/tiamatLCs (`master`), built from source with its `Dockerfile.era`, profile `era-location-codes`. No port of its own on the NAS |
 | `abzukg-tiamat-db` | PostgreSQL 17 with PostGIS for Tiamat. Data in the Docker volume `abzukg-tiamat-db` |
+| `abzukg-keycloak` | The login service (Keycloak 26, Apache 2.0 licence), realm `era`: the accounts and their roles in the location code workflow |
+| `abzukg-keycloak-db` | PostgreSQL 17 for Keycloak. Data in the Docker volume `abzukg-keycloak-db` |
 
 | File | Purpose |
 | --- | --- |
 | `Dockerfile` (repo root) | Builds the app with Node 22, then copies it into nginx |
-| `docker-compose.yml` (repo root) | The three containers; restart with the NAS |
-| `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; `/era/` goes to Tiamat; caching |
-| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes` |
+| `docker-compose.yml` (repo root) | The five containers; restart with the NAS |
+| `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; `/era/` goes to Tiamat, `/auth/` to Keycloak; caching |
+| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes`, login at `/auth/realms/era` |
+| `deploy/keycloak/era-realm.json` | The realm Keycloak imports the first time it starts: the five workflow roles (new accounts get *requester*), the app as a client, and the `lcm_roles` claim that carries an account's roles |
 | `deploy/update.sh` | Installs or updates both repositories from GitHub and rebuilds the containers |
-| `/share/Container/abzukg.env` | Made by `update.sh` on first run: the database password, and optionally `ABZUKG_PORT`. Keep it; the database only accepts the password it was created with |
+| `/share/Container/abzukg.env` | Made by `update.sh` on first run: the passwords of both databases and of Keycloak's `admin`, the app's https address `LCM_PUBLIC_URL` (you add it, see Login), and optionally `ABZUKG_PORT`. Keep it; each database only accepts the password it was created with |
 
 ## Install on a QNAP NAS (Container Station)
 
@@ -58,6 +62,72 @@ echo ABZUKG_PORT=8095 >> /share/Container/abzukg.env
 
 Every `:8090` below is then that port.
 
+## Login
+
+Submitting a request, amending one, and every step of the Agency need a
+login; the map, the search, the RINF reports and the register of codes stay
+open to anyone who reaches the app. An account's roles decide what it can
+do; someone with several roles switches between those only.
+
+Browsers allow the login only over https, so the app needs an https address
+first. Inside your tailnet, `tailscale serve` gives it one (in the Tailscale
+admin console, DNS → turn on MagicDNS and HTTPS certificates once):
+
+```sh
+docker exec <tailscale-container> tailscale serve --bg --https=8443 http://127.0.0.1:8090
+```
+
+The app is then at `https://ts464.<tailnet>.ts.net:8443` (the address
+`tailscale serve status` shows), reachable from your own devices only.
+Tell the install that address, without a final `/`, then run `update.sh`:
+
+```sh
+echo LCM_PUBLIC_URL=https://ts464.taile5a20b.ts.net:8443 >> /share/Container/abzukg.env
+```
+
+Until the login is on `master`, install it from its branch in both repositories:
+
+```sh
+wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/location-codes-login/deploy/update.sh | sh -s location-codes-login location-codes-login
+```
+
+`update.sh` adds Keycloak's passwords to `abzukg.env` (existing ones are
+kept) and waits until the login service answers too.
+
+**Accounts.** Open `<LCM_PUBLIC_URL>/auth/admin`, log in as `admin` with
+`KEYCLOAK_ADMIN_PASSWORD` from `/share/Container/abzukg.env`, and switch to
+the realm **era** (top left). Then, for each person:
+
+1. Users → Add user: username, e-mail, **first and last name** (the name the
+   register records with each step), then Create.
+2. Credentials → Set password (leave *Temporary* on, so they choose their own
+   at first login).
+3. Role mapping → Assign role → Filter by realm roles: pick their roles
+   (`codeAdministrator`, `rinfCorrespondent`, `externalCoordinationPoint`,
+   `validatingOfficer`). Every new account is already a `requester`; for
+   Agency staff who shouldn't file requests, remove `default-roles-era`.
+
+There is no self-registration and no "forgot password" (the NAS sends no
+e-mail): you set and reset passwords in the admin console.
+
+The Agency's four-eyes rule needs two different accounts: the code
+administrator and the validating officer of one request must be different
+people.
+
+Good to know:
+
+- Tiamat takes the name and roles from the login itself, so a page cannot
+  act for someone else. Without a valid login, Tiamat answers 401; with a
+  role the account doesn't hold, 403.
+- Requests and their history are readable only with a login, but for now
+  any logged-in account can read every request through the API; the page
+  shows a requester only their own.
+- If the https address changes, update `LCM_PUBLIC_URL`, and in the admin
+  console Clients → `location-code-manager` change *Root URL* and *Valid
+  redirect URIs* (`<address>/*`): the realm file is read only the first time.
+- Logging in from `http://<nas-address>:8090` doesn't work (no https); the
+  rest of the app does.
+
 ## Update to the latest commit
 
 Run the same command again:
@@ -82,7 +152,8 @@ before `sh`.
 
 ## The location code register
 
-- **Logs**: `docker logs -f abzukg-tiamat` (Tiamat), `docker logs abzukg-tiamat-db`.
+- **Logs**: `docker logs -f abzukg-tiamat` (Tiamat), `docker logs abzukg-tiamat-db`,
+  `docker logs -f abzukg-keycloak` (login).
 - **Is it up?** `http://<nas-address>:8090/era/v1/location-codes/codes` returns
   the register as JSON (`[]` when empty); 502 means Tiamat isn't running.
 - **Backup**: the ⋮ menu's backup in the Location codes tab downloads the whole
@@ -115,21 +186,21 @@ Funnel only accepts ports 443, 8443 and 10000. To publish the app on 8443:
 docker exec <tailscale-container> tailscale funnel --bg --https=8443 http://127.0.0.1:8090
 ```
 
-The app has no login yet, so anyone with the link can use it, **including
-the location code register**: they can submit requests and take any role.
-Don't publish it with Funnel until there is a login; inside your tailnet only
-your own devices reach it.
+Funnel makes the app, and Keycloak's login page and admin console at
+`/auth/`, reachable from the internet. Requests and steps need an account,
+but the admin console is then only as safe as the `admin` password: prefer
+`tailscale serve` (above), which keeps everything inside your tailnet. With
+Funnel, `LCM_PUBLIC_URL` is the Funnel address.
 
 ## Known limits of this setup
 
-- "Log in" and the "Stop places" search mode need a Tiamat backend and an OIDC
-  login, which this config doesn't set up. The RINF features don't need them.
-- If you keep your own `bootstrap.json` (above), add
-  `"locationCodesApiUrl": "/era/v1/location-codes"` and
-  `"themeConfigs": ["theme/era-theme.json"]` to it; without them the app keeps
-  location codes in each visitor's browser instead of Tiamat, and shows
-  Abzu's default look.
-- Roles in the register are picked with the "Acting as" switch, not from a
-  login; Tiamat applies its rules to the name and role the page sends.
+- The "Stop places" search mode needs Entur's Tiamat backend, which this
+  config doesn't set up. The RINF features don't need it.
+- If you keep your own `bootstrap.json` (above), copy into it the lines of
+  `deploy/bootstrap.json` it lacks: `locationCodesApiUrl`, `themeConfigs`,
+  and for the login `locationCodesLoginRequired`, `oidcConfig`,
+  `claimsNamespace` and `preferredNameNamespace`. Without the login lines,
+  the page shows the "Acting as" switch with every role, while Tiamat
+  refuses every request and step without a login.
 - Map tiles come from openstreetmap.org; for heavier use, set a tile server of
   your own in `mapConfig.baseLayers`.
