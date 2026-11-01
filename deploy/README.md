@@ -74,8 +74,21 @@ first. Inside your tailnet, `tailscale serve` gives it one (in the Tailscale
 admin console, DNS → turn on MagicDNS and HTTPS certificates once):
 
 ```sh
+docker exec <tailscale-container> tailscale serve status
 docker exec <tailscale-container> tailscale serve --bg --https=8443 http://127.0.0.1:8090
+docker exec <tailscale-container> tailscale serve status
 ```
+
+- `<tailscale-container>` is the name `docker ps` shows (e.g. `tailscale-tailscale-1`);
+  `127.0.0.1` reaches the app because that container shares the NAS's network.
+  If Tailscale is the QNAP app instead, run its `tailscale` with `sudo` and the
+  full path (`find / -name tailscale -type f 2>/dev/null`).
+- With `ABZUKG_PORT` set, use that port instead of 8090.
+- Check `status` first: if another app is already served (e.g. on 443, with
+  Funnel), leave it as it is. Each port is set separately, so adding 8443
+  doesn't change it; pick another port if 8443 is taken. Never run
+  `tailscale serve reset`, which removes every entry.
+- Afterwards `status` should show `:8443 (tailnet only)`, not "Funnel on".
 
 The app is then at `https://ts464.<tailnet>.ts.net:8443` (the address
 `tailscale serve status` shows), reachable from your own devices only.
