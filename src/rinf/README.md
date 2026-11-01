@@ -8,7 +8,26 @@ draws it on Abzu's modern (MapLibre) map; the RINF data itself is read-only.
 
 - **Map layers** (zoom 8 and closer, loaded for the visible area): operational
   points as circles, sections of line as lines. Each can be switched off in
-  Map preferences; the choice is remembered.
+  Map preferences; the choice is remembered. Further out, a hint at the bottom
+  of the map says to zoom in. The deployed `bootstrap.json` opens the map at
+  zoom 8 (a position saved in Initial map settings still takes precedence).
+- **Location codes on the map** (zoom 11 and closer, on by default, own switch
+  in Map preferences): a label under each OP, and on the middle of each SoL,
+  with its codes. They come from two places, told apart by style, with a
+  legend at the bottom of the map:
+  - outlined dark: in RINF only (the PLC the OP/SoL carries in the KG, read
+    with the map layers at no extra cost);
+  - filled blue: in the register and in RINF (the same code on the same element);
+  - dashed blue: in the register only, not (yet) in RINF.
+
+  Register codes are placed on their linked element (an asset's code on its
+  OP/SoL); an SLC without a link goes with its parent PLC, a PLC without a link
+  on the elements that carry it in RINF. Closed codes are left out. The
+  register is loaded when the labels are on; if it can't be reached the legend
+  says so and only RINF's codes show. SLCs in the KG (Bane NOR) are not read,
+  so register SLCs always show as "register only". Clicking a label opens the
+  element's panel. Above 400 labels in view (a dense node) none are drawn until
+  you zoom in further.
 - **Details panel**: click an OP or a SoL, or open its link
   (`/operational-point/BELGB`, `/section-of-line/1440_BELGB_BECAD`), for every
   parameter of the element, its parts (tracks, sidings) and the objects each

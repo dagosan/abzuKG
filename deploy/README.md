@@ -23,7 +23,7 @@ Five containers, all started by one `docker compose`:
 | `Dockerfile` (repo root) | Builds the app with Node 22, then copies it into nginx |
 | `docker-compose.yml` (repo root) | The five containers; restart with the NAS |
 | `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; `/era/` goes to Tiamat, `/auth/` to Keycloak; caching |
-| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes`, login at `/auth/realms/era` |
+| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Belgium at zoom 8 (where RINF data shows), register at `/era/v1/location-codes`, login at `/auth/realms/era` |
 | `deploy/keycloak/era-realm.json` | The realm Keycloak imports the first time it starts: the five workflow roles (new accounts get *requester*), the app as a client, and the `lcm_roles` claim that carries an account's roles |
 | `deploy/update.sh` | Installs or updates both repositories from GitHub and rebuilds the containers |
 | `/share/Container/abzukg.env` | Made by `update.sh` on first run: the passwords of both databases and of Keycloak's `admin`, the app's https address `LCM_PUBLIC_URL` (you add it, see Login), and optionally `ABZUKG_PORT`. Keep it; each database only accepts the password it was created with |

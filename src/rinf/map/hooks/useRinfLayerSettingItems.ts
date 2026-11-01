@@ -12,10 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: location codes switch. */
 
 import { useIntl } from "react-intl";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { setShowLocationCodes } from "../../state/locationCodeLabelsSlice";
 import { setShowOperationalPoints } from "../../state/operationalPointsSlice";
 import { setShowSectionsOfLine } from "../../state/sectionsOfLineSlice";
 
@@ -37,6 +38,9 @@ export const useRinfLayerSettingItems = (): RinfSettingItem[] => {
   const showSectionsOfLine = useAppSelector(
     (state) => state.rinf.sectionsOfLine.show,
   );
+  const showLocationCodes = useAppSelector(
+    (state) => state.rinf.locationCodeLabels.show,
+  );
 
   return [
     {
@@ -50,6 +54,12 @@ export const useRinfLayerSettingItems = (): RinfSettingItem[] => {
       label: formatMessage({ id: "rinf_show_sections_of_line" }),
       checked: showSectionsOfLine,
       onChange: (value) => dispatch(setShowSectionsOfLine(value)),
+    },
+    {
+      key: "rinfLocationCodes",
+      label: formatMessage({ id: "rinf_show_location_codes" }),
+      checked: showLocationCodes,
+      onChange: (value) => dispatch(setShowLocationCodes(value)),
     },
   ];
 };

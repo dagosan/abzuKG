@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: location codes on OPs. */
 
 import { describe, expect, it } from "vitest";
 import { buildOperationalPointsQuery } from "../rinf/api/operationalPointsQuery";
@@ -89,6 +89,7 @@ describe("toOperationalPoint", () => {
       name: "Buizingen",
       lat: 50.751581,
       lng: 4.258561,
+      locationCodes: [],
     });
   });
 

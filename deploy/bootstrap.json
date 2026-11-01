@@ -25,7 +25,7 @@
     ],
     "defaultBaseLayer": "OpenStreetMap",
     "center": [50.5, 4.5],
-    "zoom": 6
+    "zoom": 8
   },
   "localeConfig": {
     "locales": ["en"],

@@ -12,10 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: location code labels. */
 
 export const SHOW_OPERATIONAL_POINTS_KEY = "rinf.showOperationalPoints";
 export const SHOW_SECTIONS_OF_LINE_KEY = "rinf.showSectionsOfLine";
+export const SHOW_LOCATION_CODES_KEY = "rinf.showLocationCodes";
 
 /** A remembered on/off choice; on by default. Storage can be blocked, so failures fall back. */
 export const readShowPreference = (key: string): boolean => {
