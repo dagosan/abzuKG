@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: primary location codes for the map labels. */
 
 import {
   BoundingBox,
@@ -28,7 +28,9 @@ const CURRENT_MODEL_OP_PREFIX = `${ERA_NAMESPACE}operationalPoint/`;
 /**
  * One row per OP version inside the box that is valid on `validOn`
  * (YYYY-MM-DD). An OP has one net reference per line it sits on, all at the
- * same position, so rows are grouped and one value sampled.
+ * same position, so rows are grouped and one value sampled. The primary
+ * location codes the OP carries come along (space-separated), for the code
+ * labels; measured 2026-11-01, they add no time.
  */
 export const buildOperationalPointsQuery = (
   box: BoundingBox,
@@ -37,6 +39,7 @@ export const buildOperationalPointsQuery = (
 ): string => `${SPARQL_PREFIXES}
 SELECT ?op (SAMPLE(?uopid) AS ?id) (SAMPLE(?canonical) AS ?canonicalUri)
        (SAMPLE(?name) AS ?label)
+       (GROUP_CONCAT(DISTINCT ?plc; separator=" ") AS ?codes)
        (SAMPLE(?lat) AS ?latitude) (SAMPLE(?lng) AS ?longitude)
 WHERE {
   ?op a era:OperationalPoint ;
@@ -45,6 +48,7 @@ WHERE {
       era:netReference ?reference .
   ?reference wgs:lat ?lat ; wgs:long ?lng .
   OPTIONAL { ?op era:opName ?name }
+  OPTIONAL { ?op era:primaryLocation/era:primaryLocationCode ?plc }
   FILTER(STRSTARTS(STR(?op), "${CURRENT_MODEL_OP_PREFIX}"))
   FILTER(?lat >= ${formatCoordinate(box.south)} && ?lat <= ${formatCoordinate(box.north)}
       && ?lng >= ${formatCoordinate(box.west)} && ?lng <= ${formatCoordinate(box.east)})

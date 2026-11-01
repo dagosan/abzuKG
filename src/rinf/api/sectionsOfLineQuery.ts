@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: primary location codes for the map labels. */
 
 import {
   BoundingBox,
@@ -27,7 +27,8 @@ const CURRENT_MODEL_SOL_PREFIX = `${ERA_NAMESPACE}sectionOfLine/`;
 /**
  * One row per SoL version valid on `validOn` whose shape crosses the box.
  * The geographic test also finds a long SoL crossing the view when both of
- * its end OPs are outside it.
+ * its end OPs are outside it. The primary location codes the SoL carries
+ * come along (space-separated), for the code labels.
  */
 export const buildSectionsOfLineQuery = (
   box: BoundingBox,
@@ -36,6 +37,7 @@ export const buildSectionsOfLineQuery = (
 ): string => `${SPARQL_PREFIXES}
 SELECT ?sol (SAMPLE(?canonical) AS ?canonicalUri) (SAMPLE(?name) AS ?label)
        (SAMPLE(?shape) AS ?wkt)
+       (GROUP_CONCAT(DISTINCT ?plc; separator=" ") AS ?codes)
 WHERE {
   ?sol era:netReference/geo:hasGeometry/geo:asWKT ?shape .
   FILTER(geof:sfIntersects(?shape, "${boundingBoxWkt(box)}"^^geo:wktLiteral))
@@ -43,6 +45,7 @@ WHERE {
   FILTER(STRSTARTS(STR(?sol), "${CURRENT_MODEL_SOL_PREFIX}"))
   OPTIONAL { ?sol era:canonicalURI ?canonical }
   OPTIONAL { ?sol rdfs:label ?name }
+  OPTIONAL { ?sol era:primaryLocation/era:primaryLocationCode ?plc }
   ${validOnPattern("?sol", validOn)}
 }
 GROUP BY ?sol

@@ -20,7 +20,7 @@ Three containers, all started by one `docker compose`:
 | `Dockerfile` (repo root) | Builds the app with Node 22, then copies it into nginx |
 | `docker-compose.yml` (repo root) | The three containers; restart with the NAS |
 | `deploy/nginx.conf` | Deep links (`/section-of-line/…`) load the app; `/era/` goes to Tiamat; caching |
-| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Europe, register at `/era/v1/location-codes` |
+| `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Belgium at zoom 8 (where RINF data shows), register at `/era/v1/location-codes` |
 | `deploy/update.sh` | Installs or updates both repositories from GitHub and rebuilds the containers |
 | `/share/Container/abzukg.env` | Made by `update.sh` on first run: the database password, and optionally `ABZUKG_PORT`. Keep it; the database only accepts the password it was created with |
 

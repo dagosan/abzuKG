@@ -12,11 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: primary location codes. */
 
 import type { SparqlBinding } from "../api/sparqlClient";
 import { canonicalIdFromUri } from "../detailsKinds";
 import { sectionOfLineName } from "./labels";
+import { parseLocationCodeList } from "./locationCodeList";
 import { LinePositions, parseWktLines } from "./wkt";
 
 /** What the map needs to draw and open one SoL. */
@@ -27,6 +28,8 @@ export interface SectionOfLineSummary {
   canonicalId: string;
   name: string;
   lines: LinePositions[];
+  /** Primary location codes the SoL carries in RINF. */
+  locationCodes: string[];
 }
 
 export const toSectionOfLineSummary = (
@@ -44,6 +47,7 @@ export const toSectionOfLineSummary = (
     canonicalId,
     name: sectionOfLineName(binding.label?.value ?? canonicalId),
     lines,
+    locationCodes: parseLocationCodeList(binding.codes?.value),
   };
 };
 

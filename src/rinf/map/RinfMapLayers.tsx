@@ -12,9 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: banner while picking an element for a location code request. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: banner while picking an element for a location code request.
+2026-11-01: location code labels; zoom hint and code legend. */
 
 import { RinfLoadingIndicator } from "./RinfLoadingIndicator";
+import { RinfLocationCodesLayer } from "./locationCodes/RinfLocationCodesLayer";
+import { RinfMapHint } from "./RinfMapHint";
 import { RinfOperationalPointsLayer } from "./RinfOperationalPointsLayer";
 import { RinfSearchResultsLayer } from "./RinfSearchResultsLayer";
 import { RinfSectionsOfLineLayer } from "./RinfSectionsOfLineLayer";
@@ -24,7 +27,8 @@ import { useAppSelector } from "../../store/hooks";
 
 /**
  * Every RINF layer, in drawing order: lines first so OP circles sit on top,
- * then the report's results over both. The upstream map renders only this
+ * then the report's results over both. Code labels are HTML markers, so they
+ * sit above all map layers whatever their place here. The upstream map renders only this
  * component, so new layers need no further change there.
  */
 export const RinfMapLayers = () => {
@@ -36,7 +40,9 @@ export const RinfMapLayers = () => {
       <RinfSectionsOfLineLayer />
       <RinfOperationalPointsLayer />
       <RinfSearchResultsLayer />
+      <RinfLocationCodesLayer />
       <RinfLoadingIndicator />
+      <RinfMapHint />
       {showReport && <ReportOnMapChip />}
       <PickingBanner />
     </>

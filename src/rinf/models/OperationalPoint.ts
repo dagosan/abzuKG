@@ -12,10 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-11-01: primary location codes. */
 
 import type { SparqlBinding } from "../api/sparqlClient";
 import { canonicalIdFromUri } from "../detailsKinds";
+import { parseLocationCodeList } from "./locationCodeList";
 
 /** What the map needs to draw and open one OP; the panel loads the rest. */
 export interface OperationalPoint {
@@ -30,6 +31,8 @@ export interface OperationalPoint {
   name: string;
   lat: number;
   lng: number;
+  /** Primary location codes the OP carries in RINF (an OP may carry several). */
+  locationCodes: string[];
 }
 
 /** Maps one SPARQL row to an OP; null when the row lacks an id or a usable position. */
@@ -54,6 +57,7 @@ export const toOperationalPoint = (
     name: binding.label?.value || uopid,
     lat,
     lng,
+    locationCodes: parseLocationCodeList(binding.codes?.value),
   };
 };
 
