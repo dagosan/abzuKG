@@ -1,3 +1,4 @@
+/* Modified for the ERA RINF frontend, 2026-11-01: a login address relative to the app is resolved against its own address. */
 import { useCallback } from "react";
 import {
   AuthProvider as OidcAuthProvider,
@@ -78,6 +79,16 @@ export const useAuth = (): Auth => {
 };
 
 /**
+ * The login service's address; a path such as "/auth/realms/era" is taken
+ * relative to the app's own address, so one bootstrap.json fits every host
+ * name the app is reached by.
+ */
+const absoluteAuthority = (authority?: string): string | undefined =>
+  authority?.startsWith("/")
+    ? new URL(authority, window.location.origin).toString().replace(/\/$/, "")
+    : authority;
+
+/**
  * Wraps AuthProvider from react-oidc-context to add the signing callback
  * and redirect uri props.
  */
@@ -86,6 +97,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <OidcAuthProvider
       {...oidcConfig!}
+      authority={absoluteAuthority(oidcConfig?.authority)}
       onSigninCallback={() => {
         window.history.replaceState(
           {},

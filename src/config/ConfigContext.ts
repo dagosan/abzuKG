@@ -1,5 +1,5 @@
 /* Modified for the ERA RINF frontend, 2026-10-28: added rinfSparqlEndpoint;
-   2026-10-29: added locationCodesApiUrl. */
+   2026-10-29: added locationCodesApiUrl; 2026-11-01: added locationCodesLoginRequired. */
 import { OidcClientSettings } from "oidc-client-ts";
 import React, { useContext } from "react";
 import { FeatureFlags } from "./FeatureFlags";
@@ -17,6 +17,13 @@ export interface Config {
    * and codes are kept in the browser.
    */
   locationCodesApiUrl?: string;
+  /**
+   * Location codes need a login (ERA RINF frontend): requests and every step
+   * are taken by the logged-in account, in its roles (claimsNamespace), under
+   * its name (preferredNameNamespace). Needs oidcConfig. When unset, a role
+   * switcher is used instead, as during development.
+   */
+  locationCodesLoginRequired?: boolean;
   baatTokenProxyEndpoint?: string;
   sentryDSN?: string;
   tiamatEnv?: string;

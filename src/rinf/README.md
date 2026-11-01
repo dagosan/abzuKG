@@ -211,9 +211,20 @@ Known limits of this first version:
   changed in Tiamat's `workflow/` too.** The results of the technical
   checks and the value to assign are still worked out in the browser
   (they need its KG lookups) and sent as the step's payload.
-- **Roles are picked by hand** (the "Acting as" switch and a name), not
-  taken from the login. Tiamat applies its rules to the actor the page
-  names; until there is a login it cannot check that this is who is acting.
+- **Login (since 2026-11-01).** With `"locationCodesLoginRequired": true`
+  and an `oidcConfig` in `bootstrap.json`, requests, amendments and every
+  Agency step need a login (`login/`): the register of codes stays public,
+  the other views ask to log in (`login/LoginGate.tsx`). The account's
+  roles come from the token claim named by `claimsNamespace` (on the NAS
+  `lcm_roles`), its name from `preferredNameNamespace`; the "Acting as"
+  switch offers only the account's own roles, and the ⋮ data menu is for
+  code administrators. Every call to Tiamat carries the access token, and
+  Tiamat (with `ERA_LOCATION_CODES_LOGIN_REQUIRED=true`) takes the actor's
+  name from the token and refuses a role the account does not hold.
+  Without the switch, roles are picked by hand as before (the "Acting as"
+  switch and a name), which is what development and the tests use.
+  Not yet: Tiamat lets a logged-in requester read every request, not only
+  their own; the page shows only theirs.
 - **The page depends on the role** (`page/RoleViews.tsx`). A requester gets
   New request (the form, also the tab's landing page), My requests
   (`/location-codes/mine`, only their own) and Code register, with no
@@ -334,7 +345,10 @@ showed through the hidden map over the Reports footer:
   an inset shadow, not a 1 px border
 - `src/containers/modern/App.tsx` — map controls hidden with the map
 - `src/reducers/index.ts` — registers `rinfReducer` as `rinf`
-- `src/config/ConfigContext.ts` — `rinfSparqlEndpoint` and `locationCodesApiUrl` config fields
+- `src/config/ConfigContext.ts` — `rinfSparqlEndpoint`, `locationCodesApiUrl` and
+  `locationCodesLoginRequired` config fields
+- `src/auth/auth.tsx` — a login address starting with `/` is resolved against
+  the app's own address, so one `bootstrap.json` works on any host name
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds
   English placeholders, to keep upstream's rule that both files carry every key)
 

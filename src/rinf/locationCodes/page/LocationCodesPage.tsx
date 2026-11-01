@@ -24,6 +24,9 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RegisterTable } from "../register/RegisterTable";
 import { cancelPicking } from "../state/locationCodesSlice";
 import { loadLocationCodes } from "../state/locationCodesThunks";
+import { LoginGate } from "../login/LoginGate";
+import { useAccountActor } from "../login/useAccountActor";
+import { useLocationCodesLogin } from "../login/useLocationCodesLogin";
 import {
   LocationCodesActionBar,
   LocationCodesView,
@@ -63,8 +66,16 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
     (state) => state.rinf.locationCodes.actor.role === "requester",
   );
 
+  useAccountActor();
+  const login = useLocationCodesLogin();
+  // Requests name people: with a login set up, they load only once logged in.
+  const mayReadRequests = !login.configured || login.loggedIn;
+
   useEffect(() => {
-    dispatch(loadLocationCodes());
+    dispatch(loadLocationCodes({ withRequests: mayReadRequests }));
+  }, [dispatch, mayReadRequests]);
+
+  useEffect(() => {
     // Came back without choosing (e.g. by the tab): the map stops picking.
     dispatch(cancelPicking());
   }, [dispatch]);
@@ -85,10 +96,14 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
         <Box sx={{ flex: 1, overflow: "auto" }}>
           <RegisterTable />
         </Box>
-      ) : isRequester ? (
-        <RequesterView mode={mode} requestId={requestId} />
       ) : (
-        <AgencyView mode={mode} requestId={requestId} />
+        <LoginGate>
+          {isRequester ? (
+            <RequesterView mode={mode} requestId={requestId} />
+          ) : (
+            <AgencyView mode={mode} requestId={requestId} />
+          )}
+        </LoginGate>
       )}
     </Box>
   );

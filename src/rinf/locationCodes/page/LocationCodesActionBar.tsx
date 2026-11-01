@@ -24,6 +24,7 @@ import { useIntl } from "react-intl";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../store/hooks";
 import { ActorSwitcher } from "./ActorSwitcher";
+import { useLocationCodesLogin } from "../login/useLocationCodesLogin";
 import { DataMenu } from "./DataMenu";
 import {
   LOCATION_CODES_PATH,
@@ -66,6 +67,10 @@ export const LocationCodesActionBar = ({
   const navigate = useNavigate();
   const role = useAppSelector((state) => state.rinf.locationCodes.actor.role);
   const views = role === "requester" ? REQUESTER_VIEWS : AGENCY_VIEWS;
+  const login = useLocationCodesLogin();
+  // Backups hold every request: with a login, a code administrator's task.
+  const showDataMenu =
+    !login.configured || (login.loggedIn && role === "codeAdministrator");
 
   return (
     <Box
@@ -111,7 +116,7 @@ export const LocationCodesActionBar = ({
         }}
       >
         <ActorSwitcher />
-        <DataMenu />
+        {showDataMenu && <DataMenu />}
       </Box>
     </Box>
   );

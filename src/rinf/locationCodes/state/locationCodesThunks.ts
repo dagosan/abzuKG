@@ -36,13 +36,18 @@ export interface LoadedData {
   codes: RegisteredCode[];
 }
 
-export const loadLocationCodes = createAsyncThunk<LoadedData>(
-  "rinf/locationCodes/load",
-  async () => ({
-    requests: await locationCodeStore.loadRequests(),
-    codes: await locationCodeStore.loadCodes(),
-  }),
-);
+interface LoadArgs {
+  /** False before logging in: the register is public, requests are not. */
+  withRequests?: boolean;
+}
+
+export const loadLocationCodes = createAsyncThunk<
+  LoadedData,
+  LoadArgs | undefined
+>("rinf/locationCodes/load", async ({ withRequests = true } = {}) => ({
+  requests: withRequests ? await locationCodeStore.loadRequests() : [],
+  codes: await locationCodeStore.loadCodes(),
+}));
 
 export const submitLocationCodeRequest = createAsyncThunk<
   LocationCodeRequest,

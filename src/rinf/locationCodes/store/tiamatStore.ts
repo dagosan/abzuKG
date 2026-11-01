@@ -22,13 +22,18 @@ import type {
   LocationCodeStore,
   StepResult,
 } from "./LocationCodeStore";
+import { currentAccessToken } from "../login/accessToken";
 import {
   KG_UNAVAILABLE_ERROR,
+  LOGIN_REQUIRED_ERROR,
+  ROLE_NOT_HELD_ERROR,
   STALE_ERROR,
   UNREACHABLE_ERROR,
 } from "./storeErrors";
 
 const JSON_TYPE = "application/json";
+const UNAUTHORIZED = 401;
+const FORBIDDEN = 403;
 const CONFLICT = 409;
 const UNAVAILABLE = 503;
 const TEXT_KEY_PREFIX = "rinf_lc_";
@@ -58,6 +63,8 @@ const readError = async (response: Response): Promise<RegisterError> => {
  */
 const refusal = async (response: Response): Promise<Error> => {
   const body = await readError(response);
+  if (response.status === UNAUTHORIZED) return new Error(LOGIN_REQUIRED_ERROR);
+  if (response.status === FORBIDDEN) return new Error(ROLE_NOT_HELD_ERROR);
   if (response.status === CONFLICT && STALE_ERRORS.includes(body.error ?? ""))
     return new Error(STALE_ERROR);
   if (response.status === UNAVAILABLE) return new Error(KG_UNAVAILABLE_ERROR);
@@ -81,12 +88,14 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
     body?: unknown,
   ): Promise<Response> => {
     let response: Response;
+    const token = await currentAccessToken();
     try {
       response = await fetch(`${root}${path}`, {
         method,
         headers: {
           Accept: JSON_TYPE,
           ...(body !== undefined && { "Content-Type": JSON_TYPE }),
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });

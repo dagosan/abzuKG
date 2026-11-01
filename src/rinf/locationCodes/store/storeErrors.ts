@@ -18,5 +18,8 @@ Added for the ERA RINF frontend, 2026-10-30. */
 export const STALE_ERROR = "rinf_lc_error_store_stale";
 export const UNREACHABLE_ERROR = "rinf_lc_error_store_unreachable";
 export const KG_UNAVAILABLE_ERROR = "rinf_lc_error_store_kg_unavailable";
+/** Tiamat refused: no valid login, or a role the account does not hold. */
+export const LOGIN_REQUIRED_ERROR = "rinf_lc_error_login_required";
+export const ROLE_NOT_HELD_ERROR = "rinf_lc_error_role_not_held";
 export const WRONG_STATUS_ERROR = "rinf_lc_blocked_wrong_status";
 export const WRONG_ROLE_ERROR = "rinf_lc_blocked_wrong_role";
