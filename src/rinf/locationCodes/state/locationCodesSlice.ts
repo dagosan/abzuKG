@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-05: codesLoadStatus, the state of the register alone. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RinfLoadStatus } from "../../state/loadStatus";
@@ -26,12 +27,16 @@ import type { Actor } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
 import {
   loadLocationCodes,
+  loadRegisterCodes,
   performLocationCodeAction,
   submitLocationCodeRequest,
 } from "./locationCodesThunks";
 
 export interface LocationCodesState {
+  /** Requests and codes together, for the Location codes tab. */
   loadStatus: RinfLoadStatus;
+  /** The register of codes alone: public, so the map can always ask for it. */
+  codesLoadStatus: RinfLoadStatus;
   requests: LocationCodeRequest[];
   codes: RegisteredCode[];
   actor: Actor;
@@ -54,6 +59,7 @@ export interface MapPicking {
 
 const initialState: LocationCodesState = {
   loadStatus: "idle",
+  codesLoadStatus: "idle",
   requests: [],
   codes: [],
   actor: readActor(),
@@ -114,11 +120,22 @@ const locationCodesSlice = createSlice({
       })
       .addCase(loadLocationCodes.fulfilled, (state, action) => {
         state.loadStatus = "loaded";
+        state.codesLoadStatus = "loaded";
         state.requests = action.payload.requests;
         state.codes = action.payload.codes;
       })
       .addCase(loadLocationCodes.rejected, (state) => {
         state.loadStatus = "failed";
+      })
+      .addCase(loadRegisterCodes.pending, (state) => {
+        state.codesLoadStatus = "loading";
+      })
+      .addCase(loadRegisterCodes.fulfilled, (state, action) => {
+        state.codesLoadStatus = "loaded";
+        state.codes = action.payload;
+      })
+      .addCase(loadRegisterCodes.rejected, (state) => {
+        state.codesLoadStatus = "failed";
       })
       .addCase(submitLocationCodeRequest.fulfilled, (state, action) => {
         state.requests = replaceRequest(state.requests, action.payload);
