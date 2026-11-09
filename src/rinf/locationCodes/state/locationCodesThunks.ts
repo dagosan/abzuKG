@@ -14,9 +14,11 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: steps are taken by the store (Tiamat or this browser), not here.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-05: the map reads the register alone (loadRegisterCodes). */
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import type { RootState } from "../../../store/store";
 import { todayIsoDate } from "../../api/queryParts";
 import { assignableCode } from "../checks/assignableCode";
 import { gatherCheckContext } from "../checks/gatherCheckContext";
@@ -49,6 +51,20 @@ export const loadLocationCodes = createAsyncThunk<
   requests: withRequests ? await locationCodeStore.loadRequests() : [],
   codes: await locationCodeStore.loadCodes(),
 }));
+
+/**
+ * The register of codes alone, for the map. It is public, so this works
+ * logged in or not, while the requests would be refused without a login.
+ */
+export const loadRegisterCodes = createAsyncThunk<
+  CodeVersion[],
+  void,
+  { state: RootState }
+>("rinf/locationCodes/loadCodes", () => locationCodeStore.loadCodes(), {
+  // Several map layers ask at once; the register is fetched once.
+  condition: (_, { getState }) =>
+    getState().rinf.locationCodes.codesLoadStatus !== "loading",
+});
 
 export const submitLocationCodeRequest = createAsyncThunk<
   LocationCodeRequest,
