@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: banner while picking an element for a location code request.
-2026-11-01: location code labels; zoom hint and code legend. */
+2026-11-01: location code labels; zoom hint and code legend.
+2026-11-09: right-click "Use this location". */
 
 import { RinfLoadingIndicator } from "./RinfLoadingIndicator";
 import { RinfLocationCodesLayer } from "./locationCodes/RinfLocationCodesLayer";
@@ -22,6 +23,7 @@ import { RinfOperationalPointsLayer } from "./RinfOperationalPointsLayer";
 import { RinfSearchResultsLayer } from "./RinfSearchResultsLayer";
 import { RinfSectionsOfLineLayer } from "./RinfSectionsOfLineLayer";
 import { ReportOnMapChip } from "./ReportOnMapChip";
+import { RinfMapLocation } from "../locationCodes/mapLocation/RinfMapLocation";
 import { PickingBanner } from "../locationCodes/picking/PickingBanner";
 import { useAppSelector } from "../../store/hooks";
 
@@ -45,6 +47,7 @@ export const RinfMapLayers = () => {
       <RinfMapHint />
       {showReport && <ReportOnMapChip />}
       <PickingBanner />
+      <RinfMapLocation />
     </>
   );
 };

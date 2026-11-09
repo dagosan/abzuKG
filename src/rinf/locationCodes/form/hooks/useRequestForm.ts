@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-09: latitude/longitude pre-filled from the URL ("Use this location"). */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -65,8 +66,23 @@ export interface RequestForm extends Omit<
   pickOnMap: () => void;
 }
 
+/** A coordinate from the URL, if it is a number in range. */
+const coordinateParam = (
+  params: URLSearchParams,
+  key: string,
+  limit: number,
+): string => {
+  const value = Number(params.get(key) ?? Number.NaN);
+  return Number.isFinite(value) && Math.abs(value) <= limit
+    ? String(value)
+    : "";
+};
+
+const MAX_LATITUDE = 90;
+const MAX_LONGITUDE = 180;
+
 /** The form's first state: remembered requester, and what the URL pre-fills. */
-const initialData = (
+export const initialRequestData = (
   params: URLSearchParams,
   actorName: string,
 ): RequestData => {
@@ -74,8 +90,16 @@ const initialData = (
   const operationalPoint = params.get(PREFILL_PARAMS.operationalPoint);
   const country = params.get(PREFILL_PARAMS.country) ?? "";
   const name = params.get(PREFILL_PARAMS.name) ?? "";
+  const latitude = coordinateParam(params, PREFILL_PARAMS.latitude, MAX_LATITUDE);
+  const longitude = coordinateParam(
+    params,
+    PREFILL_PARAMS.longitude,
+    MAX_LONGITUDE,
+  );
   return {
     ...empty,
+    ...(latitude &&
+      longitude && { crd: { ...empty.crd, latitude, longitude } }),
     country: isCountryPrefix(country) ? country : "",
     locationName: name,
     rinfLink: operationalPoint
@@ -104,7 +128,7 @@ export const useRequestForm = (): RequestForm => {
   const resumed = Boolean(params.get(RESUME_PARAM) && formDraft);
   // Back from the map: the form as it was, with the element picked there.
   const [data, setData] = useState<RequestData>(() =>
-    resumed && formDraft ? formDraft : initialData(params, actor.name),
+    resumed && formDraft ? formDraft : initialRequestData(params, actor.name),
   );
   const pickOnMap = usePickOnMap(data);
   const dataRef = useRef(data);

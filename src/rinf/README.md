@@ -338,6 +338,18 @@ For an SLC the map opens on the OP its parent PLC is on.
   or section of line in the KG (976 of 8,441 signals, 135 of 17,853
   switches), so they seldom appear in a panel.
 
+**Starting from a point on the map** (`mapLocation/`, 2026-11-09).
+Right-clicking the map (long press on touch screens) opens a menu with the
+point's coordinates and "Use this location". The next step asks for the
+reference OP: the 10 nearest valid today within 20 km, nearest first by
+straight-line distance (same query as the OP layer on a 40 km box, ~1 s),
+and as the last choice "Pick another operational point on the map", which
+picks like above but only OPs can be used. A pin marks the point meanwhile.
+The new request opens with the point as CRD latitude/longitude and the OP as
+its RINF element; name, country and IM come from RINF as usual, the OP's
+position does not (`positionFromMap` in the slice; `holdsMapPosition`).
+Only for a requester, and not while a form is already waiting for a pick.
+
 ## Structure
 
 | Folder             | What it does                                                       |

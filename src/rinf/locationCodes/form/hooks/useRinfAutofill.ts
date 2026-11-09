@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-09: a position chosen on the map is kept. */
 
 import {
   Dispatch,
@@ -24,12 +25,18 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAppSelector } from "../../../../store/hooks";
 import { todayIsoDate } from "../../../api/queryParts";
 import { useRinfSparqlEndpoint } from "../../../config/rinfEndpoint";
 import type { RequestField } from "../../checks/admissibility";
 import { fetchElement } from "../../checks/kgLookups";
 import { fetchElementPosition } from "../../checks/kgPosition";
-import type { RequestData, RinfLink } from "../../model/LocationCodeRequest";
+import { holdsMapPosition } from "../../mapLocation/mapPosition";
+import {
+  crdOf,
+  type RequestData,
+  type RinfLink,
+} from "../../model/LocationCodeRequest";
 import { elementOfLink } from "../../model/rinfLink";
 import { autofillFromRinf, CodeChoiceField, RinfNotice } from "../rinfAutofill";
 
@@ -56,6 +63,9 @@ export const useRinfAutofill = (
   setData: Dispatch<SetStateAction<RequestData>>,
 ): RinfAutofillState => {
   const endpoint = useRinfSparqlEndpoint();
+  const positionFromMap = useAppSelector(
+    (state) => state.rinf.locationCodes.positionFromMap,
+  );
   const [fromRinf, setFromRinf] = useState<RequestField[]>([]);
   const [notice, setNotice] = useState<RinfNotice | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,7 +84,10 @@ export const useRinfAutofill = (
       const controller = new AbortController();
       controllerRef.current = controller;
       setLoading(true);
-      const wantsPosition = dataRef.current.codeType === "primary";
+      // A point chosen on the map stays: the element is only its reference.
+      const wantsPosition =
+        dataRef.current.codeType === "primary" &&
+        !holdsMapPosition(crdOf(dataRef.current), positionFromMap);
       Promise.all([
         fetchElement(
           endpoint,
@@ -107,7 +120,7 @@ export const useRinfAutofill = (
           if (!controller.signal.aborted) setLoading(false);
         });
     },
-    [endpoint, dataRef, setData],
+    [endpoint, dataRef, setData, positionFromMap],
   );
 
   const forgetFromRinf = useCallback(

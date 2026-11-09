@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-09: position pre-filled from a point chosen on the map. */
 
 /** Route segment of the location code workflow. */
 export const LOCATION_CODES_ROUTE = "location-codes";
@@ -48,4 +49,6 @@ export const PREFILL_PARAMS = {
   operationalPoint: "op",
   name: "name",
   country: "country",
+  latitude: "lat",
+  longitude: "lng",
 } as const;

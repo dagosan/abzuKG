@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-09: hint for picking the reference OP of a point. */
 
 import AdsClickIcon from "@mui/icons-material/AdsClick";
 import { Button, Paper, Typography } from "@mui/material";
@@ -27,6 +28,11 @@ export const PickingBanner = () => {
   const { formatMessage } = useIntl();
   const { picking, cancel } = usePickTarget();
   if (!picking) return null;
+  const hintId = picking.referencePosition
+    ? "rinf_lc_picking_hint_reference"
+    : picking.allowAssets
+      ? "rinf_lc_picking_hint_assets"
+      : "rinf_lc_picking_hint";
   return (
     <Paper
       elevation={4}
@@ -50,11 +56,7 @@ export const PickingBanner = () => {
     >
       <AdsClickIcon sx={{ color: "primary.main" }} />
       <Typography variant="body2" sx={{ flex: 1 }}>
-        {formatMessage({
-          id: picking.allowAssets
-            ? "rinf_lc_picking_hint_assets"
-            : "rinf_lc_picking_hint",
-        })}
+        {formatMessage({ id: hintId })}
       </Typography>
       <Button size="small" onClick={cancel} sx={{ flexShrink: 0 }}>
         {formatMessage({ id: "rinf_lc_picking_back" })}

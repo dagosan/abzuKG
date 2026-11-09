@@ -14,9 +14,11 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-05: codesLoadStatus, the state of the register alone. */
+Modified 2026-11-05: codesLoadStatus, the state of the register alone.
+Modified 2026-11-09: a point chosen on the map, with its reference OP. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { MapPosition } from "../mapLocation/mapPosition";
 import type { RinfLoadStatus } from "../../state/loadStatus";
 import type {
   LocationCodeRequest,
@@ -52,11 +54,18 @@ export interface LocationCodesState {
   formDraft: RequestData | null;
   /** An element was picked on the map; the form fills in from RINF. */
   pendingAutofill: boolean;
+  /**
+   * Last point chosen with "Use this location": while the form still holds
+   * it, RINF's position of the reference element does not replace it.
+   */
+  positionFromMap: MapPosition | null;
 }
 
 export interface MapPicking {
   /** Tracks, platform edges… may be picked too, not only OPs and SoLs. */
   allowAssets: boolean;
+  /** Picking the reference OP of this point: only OPs can be used. */
+  referencePosition?: MapPosition;
 }
 
 const initialState: LocationCodesState = {
@@ -70,6 +79,7 @@ const initialState: LocationCodesState = {
   picking: null,
   formDraft: null,
   pendingAutofill: false,
+  positionFromMap: null,
 };
 
 const replaceRequest = (
@@ -90,10 +100,21 @@ const locationCodesSlice = createSlice({
     },
     startPicking(
       state,
-      action: PayloadAction<{ draft: RequestData; allowAssets: boolean }>,
+      action: PayloadAction<{
+        draft: RequestData;
+        allowAssets: boolean;
+        referencePosition?: MapPosition;
+      }>,
     ) {
-      state.formDraft = action.payload.draft;
-      state.picking = { allowAssets: action.payload.allowAssets };
+      const { draft, allowAssets, referencePosition } = action.payload;
+      state.formDraft = draft;
+      state.picking = {
+        allowAssets,
+        ...(referencePosition && { referencePosition }),
+      };
+    },
+    setPositionFromMap(state, action: PayloadAction<MapPosition>) {
+      state.positionFromMap = action.payload;
     },
     pickRinfElement(state, action: PayloadAction<RinfLink>) {
       if (state.formDraft) state.formDraft.rinfLink = action.payload;
@@ -157,6 +178,7 @@ export const {
   setActor,
   clearLocationCodeError,
   startPicking,
+  setPositionFromMap,
   pickRinfElement,
   cancelPicking,
   clearFormDraft,
