@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-11-09. */
+Added for the ERA RINF frontend, 2026-11-09. Same day: always opens; the item says why it can't be used. */
 
 import AddLocationAltOutlinedIcon from "@mui/icons-material/AddLocationAltOutlined";
 import {
@@ -27,11 +27,14 @@ import type { MapContextMenuAt } from "./hooks/useMapContextMenu";
 import { formatPosition } from "./mapPosition";
 
 const SUBHEADER_LINE_HEIGHT = 2.5;
+const MENU_ITEM_MAX_WIDTH = 320;
 
 interface MapLocationMenuProps {
   openAt: MapContextMenuAt | null;
   onUseLocation: () => void;
   onClose: () => void;
+  /** Text key saying why "Use this location" can't be used now; null if it can. */
+  unavailableId: string | null;
 }
 
 /** The map's right-click menu: the point's coordinates and what to do with it. */
@@ -39,6 +42,7 @@ export const MapLocationMenu = ({
   openAt,
   onUseLocation,
   onClose,
+  unavailableId,
 }: MapLocationMenuProps) => {
   const { formatMessage } = useIntl();
   return (
@@ -56,17 +60,24 @@ export const MapLocationMenu = ({
       }}
     >
       {openAt && (
-        <ListSubheader sx={{ lineHeight: SUBHEADER_LINE_HEIGHT, fontFamily: "monospace" }}>
+        <ListSubheader
+          sx={{ lineHeight: SUBHEADER_LINE_HEIGHT, fontFamily: "monospace" }}
+        >
           {formatPosition(openAt.position)}
         </ListSubheader>
       )}
-      <MenuItem onClick={onUseLocation}>
+      <MenuItem
+        onClick={onUseLocation}
+        disabled={unavailableId !== null}
+        sx={{ whiteSpace: "normal", maxWidth: MENU_ITEM_MAX_WIDTH }}
+      >
         <ListItemIcon>
           <AddLocationAltOutlinedIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText>
-          {formatMessage({ id: "rinf_lc_map_use_location" })}
-        </ListItemText>
+        <ListItemText
+          primary={formatMessage({ id: "rinf_lc_map_use_location" })}
+          secondary={unavailableId && formatMessage({ id: unavailableId })}
+        />
       </MenuItem>
     </Menu>
   );

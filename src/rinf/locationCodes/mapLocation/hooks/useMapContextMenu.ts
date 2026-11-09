@@ -36,14 +36,14 @@ export interface MapContextMenu {
  * there. MapLibre only sends "contextmenu" when the right button was not
  * dragged, so rotating the map with it still works.
  */
-export const useMapContextMenu = (enabled: boolean): MapContextMenu => {
+export const useMapContextMenu = (): MapContextMenu => {
   const { current: mapRef } = useMap();
   const [openAt, setOpenAt] = useState<MapContextMenuAt | null>(null);
   const close = useCallback(() => setOpenAt(null), []);
 
   useEffect(() => {
     const map = mapRef?.getMap();
-    if (!map || !enabled) return;
+    if (!map) return;
     const handleContextMenu = (event: MapMouseEvent) => {
       event.preventDefault();
       event.originalEvent.preventDefault();
@@ -60,11 +60,7 @@ export const useMapContextMenu = (enabled: boolean): MapContextMenu => {
     return () => {
       map.off("contextmenu", handleContextMenu);
     };
-  }, [mapRef, enabled]);
-
-  useEffect(() => {
-    if (!enabled) setOpenAt(null);
-  }, [enabled]);
+  }, [mapRef]);
 
   return { openAt, close };
 };

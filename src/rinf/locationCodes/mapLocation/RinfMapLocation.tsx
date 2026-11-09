@@ -27,21 +27,27 @@ import { ReferenceOperationalPointDialog } from "./ReferenceOperationalPointDial
 /**
  * "Use this location": right-click a point on the map, choose its
  * reference OP among the nearest ones (or on the map), and a new location
- * code request opens with the point's coordinates. Only for a requester,
- * like "Request a location code" in an OP's panel, and not while a form
- * is already waiting for a pick on the map.
+ * code request opens with the point's coordinates. The menu always opens,
+ * so a right-click is never silent; the item can only be used by a
+ * requester (like "Request a location code" in an OP's panel) and not
+ * while a form is already waiting for a pick on the map.
  */
 export const RinfMapLocation = () => {
   const { actor, picking } = useAppSelector(
     (state) => state.rinf.locationCodes,
   );
-  const enabled = actor.role === "requester" && picking === null;
-  const { openAt, close } = useMapContextMenu(enabled);
+  const unavailableId =
+    actor.role !== "requester"
+      ? "rinf_lc_map_use_location_requester_only"
+      : picking !== null
+        ? "rinf_lc_map_use_location_while_picking"
+        : null;
+  const { openAt, close } = useMapContextMenu();
   const [chosen, setChosen] = useState<MapPosition | null>(null);
   const { withOperationalPoint, pickOnMap } = useStartRequestAtPosition();
 
   const takeLocation = () => {
-    if (openAt) setChosen(openAt.position);
+    if (openAt && !unavailableId) setChosen(openAt.position);
     close();
   };
   const chooseOperationalPoint = (operationalPoint: OperationalPoint) => {
@@ -63,6 +69,7 @@ export const RinfMapLocation = () => {
         openAt={openAt}
         onUseLocation={takeLocation}
         onClose={close}
+        unavailableId={unavailableId}
       />
       <ReferenceOperationalPointDialog
         position={chosen}

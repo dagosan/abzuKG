@@ -410,6 +410,8 @@
   "rinf_lc_map_reference_pick_on_map_hint": "The location stays marked while you choose.",
   "rinf_lc_map_reference_title": "Reference operational point",
   "rinf_lc_map_use_location": "Use this location",
+  "rinf_lc_map_use_location_requester_only": "Only the requester role can start a request. Choose it on the Location codes tab.",
+  "rinf_lc_map_use_location_while_picking": "Finish picking the element for the request in progress first.",
   "rinf_lc_new_request": "New request",
   "rinf_lc_no_role": "You are logged in, but your account has no role in the location code workflow yet. Ask a code administrator to give you one.",
   "rinf_lc_not_registered": "Not registered yet",
