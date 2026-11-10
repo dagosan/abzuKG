@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-09: position pre-filled from a point chosen on the map. */
+Modified 2026-11-09: position pre-filled from a point chosen on the map.
+Modified 2026-11-10: Master data view. */
 
 /** Route segment of the location code workflow. */
 export const LOCATION_CODES_ROUTE = "location-codes";
@@ -22,6 +23,8 @@ export const LOCATION_CODES_PATH = `/${LOCATION_CODES_ROUTE}`;
 /** Sub-routes: the new request form and one request file. */
 export const NEW_REQUEST_SEGMENT = "new";
 export const REGISTER_SEGMENT = "register";
+/** Countries and subsidiary types (LCMS specification FR-27). */
+export const MASTER_DATA_SEGMENT = "master-data";
 /** A requester's own requests. */
 export const MY_REQUESTS_SEGMENT = "mine";
 export const REQUEST_ID_PARAM = "requestId";
@@ -34,6 +37,8 @@ export const RESUME_PARAM = "resume";
 export const resumeRequestPath = `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${RESUME_PARAM}=1`;
 
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
+
+export const masterDataPath = `${LOCATION_CODES_PATH}/${MASTER_DATA_SEGMENT}`;
 
 export const myRequestsPath = `${LOCATION_CODES_PATH}/${MY_REQUESTS_SEGMENT}`;
 

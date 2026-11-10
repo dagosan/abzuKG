@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: the store submits and takes steps instead of saving documents.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: master data. */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -22,6 +23,8 @@ import type {
   RequestData,
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
+import { DEFAULT_COUNTRIES } from "../model/defaultCountries";
+import { DEFAULT_SUBSIDIARY_TYPES } from "../model/defaultSubsidiaryTypes";
 import type { Actor } from "../model/roles";
 import { parseBackup } from "./backupFile";
 import type { WorkflowStep } from "./LocationCodeStore";
@@ -143,6 +146,59 @@ describe("tiamatStore", () => {
     mockFetch(new TypeError("Failed to fetch"));
     await expect(createTiamatStore(BASE).loadRequests()).rejects.toThrow(
       UNREACHABLE_ERROR,
+    );
+  });
+});
+
+describe("tiamatStore master data", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const belgium = DEFAULT_COUNTRIES.find(({ isoCode }) => isoCode === "BE");
+  const [track] = DEFAULT_SUBSIDIARY_TYPES.filter(({ code }) => code === "01");
+
+  it("reads countries and subsidiary types", async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      answer(200, url.endsWith("/countries") ? [belgium] : [track]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(createTiamatStore(BASE).loadMasterData()).resolves.toEqual({
+      countries: [belgium],
+      subsidiaryTypes: [track],
+    });
+    expect(fetchMock.mock.calls.map(([url]) => url).sort()).toEqual([
+      "https://tiamat.test/era/v1/location-codes/countries",
+      "https://tiamat.test/era/v1/location-codes/subsidiary-types",
+    ]);
+  });
+
+  it("saves one entry under its key", async () => {
+    if (!belgium) throw new Error("BE is missing");
+    const fetchMock = mockFetch(answer(200, belgium));
+    await expect(createTiamatStore(BASE).saveCountry(belgium)).resolves.toEqual(
+      belgium,
+    );
+    expect(sent(fetchMock)).toEqual({
+      url: "https://tiamat.test/era/v1/location-codes/countries/BE",
+      method: "PUT",
+      body: JSON.stringify(belgium),
+    });
+    const typeFetch = mockFetch(answer(200, track));
+    await createTiamatStore(BASE).saveSubsidiaryType(track);
+    expect(sent(typeFetch).url).toBe(
+      "https://tiamat.test/era/v1/location-codes/subsidiary-types/01",
+    );
+  });
+
+  it("passes on why the register refused an entry", async () => {
+    if (!belgium) throw new Error("BE is missing");
+    mockFetch(
+      answer(409, {
+        error: "duplicateUicCode",
+        details: ["another country already has UIC code 88"],
+      }),
+    );
+    await expect(createTiamatStore(BASE).saveCountry(belgium)).rejects.toThrow(
+      "another country already has UIC code 88",
     );
   });
 });

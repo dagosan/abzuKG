@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: a type's requesters are its requesterRoles (master data). */
 
 import type { CheckResult } from "../model/checklist";
 import { isCreation } from "../model/codeTypes";
@@ -97,7 +98,10 @@ const entitlementCheck = ({ data }: LocationCodeRequest): CheckResult => {
     outcome === "consult"
       ? "rinf_lc_detail_consult_party"
       : "rinf_lc_detail_confirm_owner",
-    { type: `${type.code} ${type.name}`, parties: type.entitled.join(", ") },
+    {
+      type: `${type.code} ${type.name}`,
+      parties: type.requesterRoles.join(", "),
+    },
   );
 };
 

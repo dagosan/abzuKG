@@ -12,73 +12,48 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: countries and subsidiary types come from the master data. */
+
+import { todayIsoDate } from "../../api/queryParts";
+import { Country, isValidOn } from "./masterData";
+import { currentMasterData } from "./masterDataRegistry";
 
 /**
  * Country prefixes of primary location codes. The ERA Knowledge Graph writes
  * codes as ISO 3166 alpha-2 plus five digits (e.g. "BE00438"), and "EU" for
  * some border points; that form is followed here. TD 103 4.10.1 describes a
- * two-digit numeric country code instead (code list B.9.1).
+ * two-digit numeric country code instead (code list B.9.1), kept as the
+ * country's uicCode. The countries are master data (model/masterData.ts).
  */
-export const EU_MEMBER_STATE_PREFIXES = [
-  "AT",
-  "BE",
-  "BG",
-  "CZ",
-  "DE",
-  "DK",
-  "EE",
-  "ES",
-  "FI",
-  "FR",
-  "GR",
-  "HR",
-  "HU",
-  "IE",
-  "IT",
-  "LT",
-  "LU",
-  "LV",
-  "NL",
-  "PL",
-  "PT",
-  "RO",
-  "SE",
-  "SI",
-  "SK",
-];
+export const findCountry = (prefix: string): Country | null =>
+  currentMasterData().countries.find((country) => country.isoCode === prefix) ??
+  null;
 
-/** Border points declared jointly, e.g. EU00010. */
-export const UNION_PREFIX = "EU";
+/** The countries codes are assigned for today, by prefix. */
+export const countriesInUse = (
+  today = todayIsoDate(),
+  countries = currentMasterData().countries,
+): Country[] =>
+  countries
+    .filter((country) => isValidOn(country, today))
+    .sort((first, second) => first.isoCode.localeCompare(second.isoCode));
 
-/** Non-EU countries: uniqueness is confirmed with UIC/RNE first (10.3). */
-export const NON_EU_PREFIXES = [
-  "AL",
-  "BA",
-  "BY",
-  "CH",
-  "GB",
-  "LI",
-  "MD",
-  "ME",
-  "MK",
-  "NO",
-  "RS",
-  "TR",
-  "UA",
-];
-
-export const COUNTRY_PREFIXES = [
-  ...EU_MEMBER_STATE_PREFIXES,
-  UNION_PREFIX,
-  ...NON_EU_PREFIXES,
-];
-
+/**
+ * Not an EU Member State: uniqueness is confirmed with UIC/RNE first (10.3).
+ * A prefix that is not listed counts as outside, as in the register.
+ */
 export const isNonEuCountry = (prefix: string): boolean =>
-  NON_EU_PREFIXES.includes(prefix);
+  !(findCountry(prefix)?.euMemberState ?? false);
 
-export const isCountryPrefix = (prefix: string): boolean =>
-  COUNTRY_PREFIXES.includes(prefix);
+/** A prefix codes are assigned for today. */
+export const isCountryPrefix = (
+  prefix: string,
+  today = todayIsoDate(),
+): boolean => {
+  const country = findCountry(prefix);
+  return country !== null && isValidOn(country, today);
+};
 
 /** Country name in the user's language, e.g. "Belgium"; the prefix if unknown. */
 export const countryName = (prefix: string, locale: string): string => {

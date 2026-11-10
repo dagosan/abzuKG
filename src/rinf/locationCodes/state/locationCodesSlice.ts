@@ -15,7 +15,8 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
 Modified 2026-11-05: codesLoadStatus, the state of the register alone.
-Modified 2026-11-09: a point chosen on the map, with its reference OP. */
+Modified 2026-11-09: a point chosen on the map, with its reference OP.
+Modified 2026-11-10: master data (countries, subsidiary types). */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { MapPosition } from "../mapLocation/mapPosition";
@@ -27,6 +28,12 @@ import type {
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
 import { mergeVersions } from "../model/codeVersions";
+import {
+  MasterData,
+  withCountry,
+  withSubsidiaryType,
+} from "../model/masterData";
+import { defaultMasterData } from "../model/masterDataRegistry";
 import type { Actor } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
 import {
@@ -35,6 +42,11 @@ import {
   performLocationCodeAction,
   submitLocationCodeRequest,
 } from "./locationCodesThunks";
+import {
+  loadMasterData,
+  saveCountry,
+  saveSubsidiaryType,
+} from "./masterDataThunks";
 
 export interface LocationCodesState {
   /** Requests and codes together, for the Location codes tab. */
@@ -43,6 +55,9 @@ export interface LocationCodesState {
   codesLoadStatus: RinfLoadStatus;
   requests: LocationCodeRequest[];
   codes: CodeVersion[];
+  /** Countries and subsidiary types; the built-in lists until loaded. */
+  masterData: MasterData;
+  masterDataLoadStatus: RinfLoadStatus;
   actor: Actor;
   /** An action or submission is under way. */
   working: boolean;
@@ -73,6 +88,8 @@ const initialState: LocationCodesState = {
   codesLoadStatus: "idle",
   requests: [],
   codes: [],
+  masterData: defaultMasterData(),
+  masterDataLoadStatus: "idle",
   actor: readActor(),
   working: false,
   error: null,
@@ -154,6 +171,22 @@ const locationCodesSlice = createSlice({
       })
       .addCase(loadRegisterCodes.rejected, (state) => {
         state.codesLoadStatus = "failed";
+      })
+      .addCase(loadMasterData.pending, (state) => {
+        state.masterDataLoadStatus = "loading";
+      })
+      .addCase(loadMasterData.fulfilled, (state, action) => {
+        state.masterDataLoadStatus = "loaded";
+        state.masterData = action.payload;
+      })
+      .addCase(loadMasterData.rejected, (state) => {
+        state.masterDataLoadStatus = "failed";
+      })
+      .addCase(saveCountry.fulfilled, (state, action) => {
+        state.masterData = withCountry(state.masterData, action.payload);
+      })
+      .addCase(saveSubsidiaryType.fulfilled, (state, action) => {
+        state.masterData = withSubsidiaryType(state.masterData, action.payload);
       })
       .addCase(submitLocationCodeRequest.fulfilled, (state, action) => {
         state.requests = replaceRequest(state.requests, action.payload);

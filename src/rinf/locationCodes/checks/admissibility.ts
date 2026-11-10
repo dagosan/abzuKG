@@ -13,15 +13,17 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: countries and subsidiary types come from the master data. */
 
 import { isCreation } from "../model/codeTypes";
 import { isValidSubsidiaryCode, parsePrimaryCode } from "../model/codeFormat";
-import { isCountryPrefix } from "../model/countries";
+import { findCountry, isCountryPrefix } from "../model/countries";
+import { isInRange } from "../model/masterData";
 import { isOfficialEuLanguage } from "../model/languages";
 import type { CrdFlag, RequestData } from "../model/LocationCodeRequest";
 import { isStakeholderCategory } from "../model/stakeholderCategories";
-import { findSubsidiaryType } from "../model/subsidiaryTypes";
+import { isSubsidiaryTypeInUse } from "../model/subsidiaryTypes";
 import { amendsSomething, crdErrors } from "./crdAdmissibility";
 
 /** Form fields that can be in error. */
@@ -79,11 +81,24 @@ const requesterErrors = ({
   ...(!preSubmissionConfirmed && { preSubmissionConfirmed: REQUIRED }),
 });
 
+/** A new PLC proposes a number of its country's range (BR-10); an existing code is taken as it is. */
+const isOutsideRange = (data: RequestData): boolean => {
+  const proposed = parsePrimaryCode(data.proposedCode);
+  const country = findCountry(data.country);
+  return (
+    data.operation === "newCode" &&
+    proposed !== null &&
+    country !== null &&
+    !isInRange(country, proposed.locationNumber)
+  );
+};
+
 const primaryErrors = (data: RequestData): AdmissibilityErrors => {
   const creating = isCreation(data.operation);
   const proposed = parsePrimaryCode(data.proposedCode);
   const target = parsePrimaryCode(data.targetCode);
   return {
+    ...(isOutsideRange(data) && { proposedCode: "rinf_lc_error_code_range" }),
     ...(creating && !isCountryPrefix(data.country) && { country: REQUIRED }),
     ...(creating &&
       !isBlank(data.proposedCode) &&
@@ -114,7 +129,7 @@ const subsidiaryErrors = (data: RequestData): AdmissibilityErrors => {
       parentPrimaryCode: "rinf_lc_error_primary_code",
     }),
     ...(creating &&
-      !findSubsidiaryType(data.subsidiaryTypeCode) && {
+      !isSubsidiaryTypeInUse(data.subsidiaryTypeCode) && {
         subsidiaryTypeCode: REQUIRED,
       }),
     ...(creating && isBlank(data.locationName) && { locationName: REQUIRED }),

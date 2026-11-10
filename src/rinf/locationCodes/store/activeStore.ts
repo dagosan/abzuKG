@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend added the same day.
-Modified 2026-10-30: stores take workflow steps; newId moved to newId.ts. */
+Modified 2026-10-30: stores take workflow steps; newId moved to newId.ts.
+Modified 2026-11-10: master data (countries, subsidiary types). */
 
 import { getFetchedConfig } from "../../../config/fetchConfig";
 import { browserStore } from "./browserStore";
@@ -45,6 +46,10 @@ export const locationCodeStore: LocationCodeStore = {
   submitRequest: (data, actor) =>
     currentLocationCodeStore().submitRequest(data, actor),
   takeStep: (step) => currentLocationCodeStore().takeStep(step),
+  loadMasterData: () => currentLocationCodeStore().loadMasterData(),
+  saveCountry: (country) => currentLocationCodeStore().saveCountry(country),
+  saveSubsidiaryType: (type) =>
+    currentLocationCodeStore().saveSubsidiaryType(type),
   exportSnapshot: () => currentLocationCodeStore().exportSnapshot(),
   importSnapshot: (snapshot) =>
     currentLocationCodeStore().importSnapshot(snapshot),

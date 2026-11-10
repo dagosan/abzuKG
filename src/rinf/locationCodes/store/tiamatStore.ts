@@ -14,10 +14,12 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: Tiamat takes the workflow steps; this store only asks for them.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: master data (countries, subsidiary types). */
 
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
+import type { Country, SubsidiaryType } from "../model/masterData";
 import type {
   LocationCodeSnapshot,
   LocationCodeStore,
@@ -124,6 +126,25 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
         `/requests/${encodeURIComponent(requestId)}/actions`,
         "POST",
         { action, actor, payload, expectedEventCount },
+      ),
+    loadMasterData: async () => {
+      const [countries, subsidiaryTypes] = await Promise.all([
+        read<Country[]>("/countries"),
+        read<SubsidiaryType[]>("/subsidiary-types"),
+      ]);
+      return { countries, subsidiaryTypes };
+    },
+    saveCountry: (country) =>
+      read<Country>(
+        `/countries/${encodeURIComponent(country.isoCode)}`,
+        "PUT",
+        country,
+      ),
+    saveSubsidiaryType: (type) =>
+      read<SubsidiaryType>(
+        `/subsidiary-types/${encodeURIComponent(type.code)}`,
+        "PUT",
+        type,
       ),
     exportSnapshot: () => read<LocationCodeSnapshot>("/snapshot"),
     importSnapshot: async (snapshot) => {

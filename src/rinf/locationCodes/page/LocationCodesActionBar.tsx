@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: Master data view. */
 
 import {
   Box,
@@ -28,6 +29,7 @@ import { useLocationCodesLogin } from "../login/useLocationCodesLogin";
 import { DataMenu } from "./DataMenu";
 import {
   LOCATION_CODES_PATH,
+  masterDataPath,
   myRequestsPath,
   newRequestPath,
   registerPath,
@@ -35,17 +37,28 @@ import {
 
 const BAR_MIN_HEIGHT = 56;
 
-export type LocationCodesView = "new" | "mine" | "requests" | "register";
+export type LocationCodesView =
+  "new" | "mine" | "requests" | "register" | "masterData";
 
 /** Views per role: a requester asks and follows; Agency roles handle cases. */
-const REQUESTER_VIEWS: LocationCodesView[] = ["new", "mine", "register"];
-const AGENCY_VIEWS: LocationCodesView[] = ["requests", "register"];
+const REQUESTER_VIEWS: LocationCodesView[] = [
+  "new",
+  "mine",
+  "register",
+  "masterData",
+];
+const AGENCY_VIEWS: LocationCodesView[] = [
+  "requests",
+  "register",
+  "masterData",
+];
 
 const PATH_OF_VIEW: Record<LocationCodesView, string> = {
   new: newRequestPath(),
   mine: myRequestsPath,
   requests: LOCATION_CODES_PATH,
   register: registerPath,
+  masterData: masterDataPath,
 };
 
 const LABEL_OF_VIEW: Record<LocationCodesView, string> = {
@@ -53,6 +66,7 @@ const LABEL_OF_VIEW: Record<LocationCodesView, string> = {
   mine: "rinf_lc_view_mine",
   requests: "rinf_lc_view_requests",
   register: "rinf_lc_view_register",
+  masterData: "rinf_lc_view_master_data",
 };
 
 interface LocationCodesActionBarProps {

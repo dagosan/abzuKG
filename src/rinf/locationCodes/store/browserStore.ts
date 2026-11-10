@@ -14,10 +14,16 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
 Modified 2026-10-30: takes the workflow steps itself (browserWorkflow.ts).
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: master data (countries, subsidiary types). */
 
 import { upgradeCodes } from "../model/legacyCodes";
 import { createRequest } from "../workflow/createRequest";
+import {
+  readMasterData,
+  saveCountryInBrowser,
+  saveSubsidiaryTypeInBrowser,
+} from "./browserMasterData";
 import { takeStepInBrowser } from "./browserWorkflow";
 import type {
   LocationCodeSnapshot,
@@ -87,6 +93,9 @@ export const browserStore: LocationCodeStore = {
     writeSnapshot(snapshot);
     return result;
   },
+  loadMasterData: async () => readMasterData(),
+  saveCountry: async (country) => saveCountryInBrowser(country),
+  saveSubsidiaryType: async (type) => saveSubsidiaryTypeInBrowser(type),
   exportSnapshot: async () => readSnapshot(),
   /** Replaces what this browser holds. */
   importSnapshot: async (snapshot) => writeSnapshot(upgradeSnapshot(snapshot)),

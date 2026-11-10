@@ -14,13 +14,15 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
 Modified 2026-10-30: the store takes workflow steps (submitRequest, takeStep) instead of saving documents.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: master data (countries, subsidiary types). */
 
 import type {
   LocationCodeRequest,
   RequestData,
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
+import type { Country, MasterData, SubsidiaryType } from "../model/masterData";
 import type { Actor } from "../model/roles";
 import type { WorkflowAction } from "../workflow/actions";
 import type { ActionPayload } from "../workflow/applyAction";
@@ -57,6 +59,12 @@ export interface LocationCodeStore {
   submitRequest(data: RequestData, actor: Actor): Promise<LocationCodeRequest>;
   /** Takes one step, or refuses it with an Error whose message is a text key or the reasons. */
   takeStep(step: WorkflowStep): Promise<StepResult>;
+  /** The countries and subsidiary types the rules read; public. */
+  loadMasterData(): Promise<MasterData>;
+  /** Adds or replaces a country (code administrator); returns it as stored. */
+  saveCountry(country: Country): Promise<Country>;
+  /** Adds or replaces a subsidiary type (code administrator). */
+  saveSubsidiaryType(type: SubsidiaryType): Promise<SubsidiaryType>;
   /** Everything, for the backup file. */
   exportSnapshot(): Promise<LocationCodeSnapshot>;
   /** Loads a backup file. */

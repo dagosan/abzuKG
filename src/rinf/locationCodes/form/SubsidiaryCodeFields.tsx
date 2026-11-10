@@ -12,12 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: countries and subsidiary types come from the master data. */
 
 import { MenuItem, TextField } from "@mui/material";
 import { useIntl } from "react-intl";
 import { isCreation } from "../model/codeTypes";
-import { SUBSIDIARY_TYPES } from "../model/subsidiaryTypes";
+import { subsidiaryTypesInUse } from "../model/subsidiaryTypes";
+import { useMasterData } from "../state/useMasterData";
 import { FieldRow } from "./FieldRow";
 import { useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
@@ -30,6 +32,7 @@ interface SubsidiaryCodeFieldsProps {
 export const SubsidiaryCodeFields = ({ form }: SubsidiaryCodeFieldsProps) => {
   const { formatMessage } = useIntl();
   const { data, update, errors } = form;
+  const { subsidiaryTypes } = useMasterData();
   const fieldError = useFieldError(errors, form.fromRinf);
   const creating = isCreation(data.operation);
 
@@ -53,7 +56,7 @@ export const SubsidiaryCodeFields = ({ form }: SubsidiaryCodeFieldsProps) => {
       onChange={(event) => update({ subsidiaryTypeCode: event.target.value })}
       {...fieldError("subsidiaryTypeCode", "rinf_lc_field_type_hint")}
     >
-      {SUBSIDIARY_TYPES.map((type) => (
+      {subsidiaryTypesInUse(undefined, subsidiaryTypes).map((type) => (
         <MenuItem key={type.code} value={type.code}>
           {type.code} · {type.name}
         </MenuItem>

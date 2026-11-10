@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-11-09. */
+Added for the ERA RINF frontend, 2026-11-09.
+Modified 2026-11-10: the countries are master data, loaded here too. */
 
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,7 @@ import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import type { OperationalPoint } from "../../../models/OperationalPoint";
 import { initialRequestData } from "../../form/hooks/useRequestForm";
 import { isCountryPrefix } from "../../model/countries";
+import { useMasterData } from "../../state/useMasterData";
 import { newRequestPath, PREFILL_PARAMS } from "../../page/locationCodesPath";
 import {
   setPositionFromMap,
@@ -53,6 +55,7 @@ const positionParams = (position: MapPosition): Record<string, string> => ({
 export const useStartRequestAtPosition = (): StartRequestAtPosition => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  useMasterData();
   const actorName = useAppSelector(
     (state) => state.rinf.locationCodes.actor.name,
   );
@@ -60,9 +63,7 @@ export const useStartRequestAtPosition = (): StartRequestAtPosition => {
   const withOperationalPoint = useCallback(
     (position: MapPosition, operationalPoint: OperationalPoint) => {
       const { canonicalId, name } = operationalPoint;
-      const prefix = canonicalId
-        .slice(0, COUNTRY_PREFIX_LENGTH)
-        .toUpperCase();
+      const prefix = canonicalId.slice(0, COUNTRY_PREFIX_LENGTH).toUpperCase();
       dispatch(setPositionFromMap(roundedPosition(position)));
       const prefill = new URLSearchParams({
         [PREFILL_PARAMS.operationalPoint]: canonicalId,
