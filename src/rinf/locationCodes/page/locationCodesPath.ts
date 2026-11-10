@@ -23,6 +23,8 @@ export const LOCATION_CODES_PATH = `/${LOCATION_CODES_ROUTE}`;
 /** Sub-routes: the new request form and one request file. */
 export const NEW_REQUEST_SEGMENT = "new";
 export const REGISTER_SEGMENT = "register";
+/** Bulk requests: a CSV file checked line by line (LCMS specification FR-08). */
+export const BULK_SEGMENT = "bulk";
 /** Countries and subsidiary types (LCMS specification FR-27). */
 export const MASTER_DATA_SEGMENT = "master-data";
 /** A requester's own requests. */
@@ -42,6 +44,8 @@ export const draftPath = (draftId: string): string =>
   `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${DRAFT_PARAM}=${encodeURIComponent(draftId)}`;
 
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
+
+export const bulkPath = `${LOCATION_CODES_PATH}/${BULK_SEGMENT}`;
 
 export const masterDataPath = `${LOCATION_CODES_PATH}/${MASTER_DATA_SEGMENT}`;
 

@@ -48,6 +48,7 @@ const viewOf = (
 ): LocationCodesView => {
   if (mode === "register" || mode === "masterData") return mode;
   if (!isRequester) return "requests";
+  if (mode === "bulk") return "bulk";
   return mode === "mine" || mode === "request" ? "mine" : "new";
 };
 

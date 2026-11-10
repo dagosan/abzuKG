@@ -12,11 +12,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: Bulk request view. */
 
 import { Box, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
 import { Navigate, useNavigate } from "react-router-dom";
+import { BulkRequestPage } from "../bulk/BulkRequestPage";
 import { NewRequestForm } from "../form/NewRequestForm";
 import { RequestFile } from "../requestFile/RequestFile";
 import { LOCATION_CODES_PATH, requestPath } from "./locationCodesPath";
@@ -26,7 +28,7 @@ import { RequestList } from "./RequestList";
 const HINT_MAX_WIDTH = 640;
 
 /** Page modes besides the code register, which every role shares. */
-export type WorkMode = "home" | "new" | "mine" | "request";
+export type WorkMode = "home" | "new" | "bulk" | "mine" | "request";
 
 interface RoleViewProps {
   mode: WorkMode;
@@ -40,6 +42,7 @@ interface RoleViewProps {
 export const RequesterView = ({ mode, requestId }: RoleViewProps) => (
   <Box sx={{ flex: 1, overflow: "auto", minWidth: 0 }}>
     {(mode === "home" || mode === "new") && <NewRequestForm />}
+    {mode === "bulk" && <BulkRequestPage />}
     {mode === "mine" && <MyRequests />}
     {mode === "request" && requestId && (
       <RequestFile key={requestId} requestId={requestId} />
@@ -54,7 +57,7 @@ export const RequesterView = ({ mode, requestId }: RoleViewProps) => (
 export const AgencyView = ({ mode, requestId }: RoleViewProps) => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  if (mode === "new" || mode === "mine")
+  if (mode === "new" || mode === "bulk" || mode === "mine")
     return <Navigate to={LOCATION_CODES_PATH} replace />;
   const isHome = mode === "home";
 

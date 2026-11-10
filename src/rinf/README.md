@@ -401,6 +401,42 @@ views own requests).
   it submitted. Without one it cannot tell who asks, and the list is
   filtered here as before (`page/hooks/useVisibleRequests.ts`).
 
+### Bulk requests, first part: the file check (2026-11-10)
+
+From the LCMS specification (FR-08) and its Annex A, "Structure of the bulk
+request CSV file" (drafted with it, not yet confirmed). View "Bulk request"
+(`/location-codes/bulk`, requesters only; `bulk/`): the requester chooses a
+CSV file and gets the report per line. **Nothing is created or sent**: making
+one request with a line per code out of the accepted lines is the second
+part, not built.
+
+- The file (`bulk/bulkColumns.ts`): header with the annex's 24 column names
+  (CRD's where the meaning is the same), any order, comma separated, UTF-8,
+  RFC 4180 quoting, one line per new PLC or SLC, at most 500. "Download
+  template" gives the header line.
+- File checks (`bulk/bulkFile.ts`) refuse the whole file: not UTF-8, a quote
+  left open, no header, unknown or repeated column names, a column missing
+  that its lines require, no line, more than 500 lines.
+- Line checks (`bulk/checkBulkLines.ts`), all failures reported: each column's
+  form (`bulkLineChecks.ts`, `bulkPrimaryChecks.ts`, `bulkSubsidiaryChecks.ts`);
+  the master data (country, subsidiary type, numbers for new PLCs); the codes
+  that exist (`bulkRegisterChecks.ts`: a proposed value not in the register,
+  an SLC's parent active when the SLC starts); and the other lines
+  (`bulkCrossChecks.ts`: the same code proposed twice, an SLC whose parent is
+  asked for in the same file).
+- The parent of an SLC is looked for in the register first, then in the
+  Knowledge Graph (one query per country). If the Knowledge Graph cannot be
+  reached those lines are refused and the page says so.
+- The report (`bulk/bulkReportCsv.ts`) is the annex's: `line, result,
+  item_ref, column, rule, message`, one row per accepted line and one per
+  failure. `item_ref` is empty until the second part gives lines a reference.
+- Where the check differs from the annex's wording: a proposed PLC that the
+  Knowledge Graph already holds is accepted when the register does not hold
+  it (first population of an existing code); `Responsible_IM_Code` and
+  `Allocation_Company_Code` are checked for their form only (the tool has no
+  company table); `RINF_Element_Id` is not looked up; `NUTS_Code` is checked
+  for length only.
+
 ## Structure
 
 | Folder             | What it does                                                       |
