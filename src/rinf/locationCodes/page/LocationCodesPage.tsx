@@ -34,6 +34,7 @@ import {
   LocationCodesActionBar,
   LocationCodesView,
 } from "./LocationCodesActionBar";
+import { useSavedDrafts } from "./hooks/useSavedDrafts";
 import { REQUEST_ID_PARAM } from "./locationCodesPath";
 import { AgencyView, RequesterView, WorkMode } from "./RoleViews";
 
@@ -72,6 +73,8 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
   useAccountActor();
   // The rules of every view read the countries and subsidiary types.
   useMasterData();
+  // A requester's drafts: listed under "My requests", continued in the form.
+  useSavedDrafts();
   const login = useLocationCodesLogin();
   // Requests name people: with a login set up, they load only once logged in.
   const mayReadRequests = !login.configured || login.loggedIn;

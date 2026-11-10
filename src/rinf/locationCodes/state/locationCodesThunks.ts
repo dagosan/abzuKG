@@ -16,7 +16,8 @@ Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: steps are taken by the store (Tiamat or this browser), not here.
 Modified 2026-11-02: register as code versions with CRD's columns.
 Modified 2026-11-05: the map reads the register alone (loadRegisterCodes).
-Modified 2026-11-10: a submitted request always carries its country. */
+Modified 2026-11-10: a submitted request always carries its country.
+Modified 2026-11-10: a submission names the draft it was written from. */
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import type { RootState } from "../../../store/store";
@@ -70,13 +71,14 @@ export const loadRegisterCodes = createAsyncThunk<
 
 export const submitLocationCodeRequest = createAsyncThunk<
   LocationCodeRequest,
-  { data: RequestData; actor: Actor }
->("rinf/locationCodes/submit", ({ data, actor }) =>
+  { data: RequestData; actor: Actor; draftId?: string }
+>("rinf/locationCodes/submit", ({ data, actor, draftId }) =>
   // The register wants every request's country (it checks it is one codes
   // are assigned for); the form only asks for it when a PLC is created.
   locationCodeStore.submitRequest(
     { ...data, country: countryOfRequest(data) },
     actor,
+    draftId,
   ),
 );
 

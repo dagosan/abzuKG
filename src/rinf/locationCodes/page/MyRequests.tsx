@@ -12,11 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: drafts above the requests. */
 
 import { Box, List, Paper, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
 import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "../../../store/hooks";
+import { DraftList } from "./DraftList";
 import { useVisibleRequests } from "./hooks/useVisibleRequests";
 import { requestPath } from "./locationCodesPath";
 import { RequestListItem } from "./RequestListItem";
@@ -25,18 +28,23 @@ const LIST_MAX_WIDTH = 760;
 
 /**
  * A requester's own requests, newest first: where each one stands and,
- * when the Agency asks for something, the way back into it.
+ * when the Agency asks for something, the way back into it. Above them, the
+ * drafts not yet submitted.
  */
 export const MyRequests = () => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
   const requests = useVisibleRequests("all");
+  const drafts = useAppSelector(
+    (state) => state.rinf.locationCodes.savedDrafts,
+  );
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: LIST_MAX_WIDTH }}>
       <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
         {formatMessage({ id: "rinf_lc_view_mine" })}
       </Typography>
+      <DraftList drafts={drafts} />
       {requests.length === 0 ? (
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {formatMessage({ id: "rinf_lc_empty_mine" })}

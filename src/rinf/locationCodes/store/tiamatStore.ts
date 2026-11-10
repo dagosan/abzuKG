@@ -15,11 +15,13 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: Tiamat takes the workflow steps; this store only asks for them.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-10: master data (countries, subsidiary types). */
+Modified 2026-11-10: master data (countries, subsidiary types).
+Modified 2026-11-10: request drafts. */
 
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
 import type { Country, SubsidiaryType } from "../model/masterData";
+import type { RequestDraft } from "../model/RequestDraft";
 import type {
   LocationCodeSnapshot,
   LocationCodeStore,
@@ -81,6 +83,10 @@ const refusal = async (response: Response): Promise<Error> => {
   return new Error(reasons || `Tiamat answered ${response.status}`);
 };
 
+/** Whose drafts: Tiamat uses it only when no login is set up. */
+const ownerQuery = (owner: string): string =>
+  `?owner=${encodeURIComponent(owner)}`;
+
 /** The register kept in Tiamat, at e.g. https://…/era/v1/location-codes. */
 export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
   const root = baseUrl.replace(/\/+$/, "");
@@ -119,8 +125,25 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
   return {
     loadRequests: () => read<LocationCodeRequest[]>("/requests"),
     loadCodes: () => read<CodeVersion[]>("/codes"),
-    submitRequest: (data, actor) =>
-      read<LocationCodeRequest>("/requests", "POST", { actor, data }),
+    submitRequest: (data, actor, draftId) =>
+      read<LocationCodeRequest>("/requests", "POST", {
+        actor,
+        data,
+        ...(draftId && { draftId }),
+      }),
+    loadDrafts: (owner) => read<RequestDraft[]>(`/drafts${ownerQuery(owner)}`),
+    saveDraft: (id, data, owner) =>
+      read<RequestDraft>(
+        `/drafts/${encodeURIComponent(id)}${ownerQuery(owner)}`,
+        "PUT",
+        { data },
+      ),
+    deleteDraft: async (id, owner) => {
+      await call(
+        `/drafts/${encodeURIComponent(id)}${ownerQuery(owner)}`,
+        "DELETE",
+      );
+    },
     takeStep: ({ requestId, action, actor, payload, expectedEventCount }) =>
       read<StepResult>(
         `/requests/${encodeURIComponent(requestId)}/actions`,

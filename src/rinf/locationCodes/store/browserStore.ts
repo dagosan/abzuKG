@@ -15,10 +15,16 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
 Modified 2026-10-30: takes the workflow steps itself (browserWorkflow.ts).
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-10: master data (countries, subsidiary types). */
+Modified 2026-11-10: master data (countries, subsidiary types).
+Modified 2026-11-10: request drafts. */
 
 import { upgradeCodes } from "../model/legacyCodes";
 import { createRequest } from "../workflow/createRequest";
+import {
+  deleteDraftInBrowser,
+  readDrafts,
+  saveDraftInBrowser,
+} from "./browserDrafts";
 import {
   readMasterData,
   saveCountryInBrowser,
@@ -77,7 +83,7 @@ export const writeSnapshot = (snapshot: LocationCodeSnapshot): void => {
 export const browserStore: LocationCodeStore = {
   loadRequests: async () => readSnapshot().requests,
   loadCodes: async () => readSnapshot().codes,
-  submitRequest: async (data, actor) => {
+  submitRequest: async (data, actor, draftId) => {
     const request = createRequest(
       newId(),
       data,
@@ -86,8 +92,12 @@ export const browserStore: LocationCodeStore = {
     );
     const snapshot = readSnapshot();
     writeSnapshot({ ...snapshot, requests: [...snapshot.requests, request] });
+    if (draftId) deleteDraftInBrowser(draftId, actor.name);
     return request;
   },
+  loadDrafts: async (owner) => readDrafts(owner),
+  saveDraft: async (id, data, owner) => saveDraftInBrowser(id, data, owner),
+  deleteDraft: async (id, owner) => deleteDraftInBrowser(id, owner),
   takeStep: async (step) => {
     const { result, snapshot } = await takeStepInBrowser(readSnapshot(), step);
     writeSnapshot(snapshot);

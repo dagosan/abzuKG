@@ -150,6 +150,41 @@ describe("tiamatStore", () => {
   });
 });
 
+describe("tiamatStore drafts", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const draft = { id: "d-1", owner: "Anna B", savedAt: "2026-11-10", data };
+
+  it("reads, saves and discards the owner's drafts", async () => {
+    const store = createTiamatStore(BASE);
+    const readMock = mockFetch(answer(200, [draft]));
+    await expect(store.loadDrafts("Anna B")).resolves.toEqual([draft]);
+    expect(sent(readMock).url).toBe(
+      "https://tiamat.test/era/v1/location-codes/drafts?owner=Anna%20B",
+    );
+    const saveMock = mockFetch(answer(200, draft));
+    await expect(store.saveDraft("d-1", data, "Anna B")).resolves.toEqual(
+      draft,
+    );
+    expect(sent(saveMock)).toEqual({
+      url: "https://tiamat.test/era/v1/location-codes/drafts/d-1?owner=Anna%20B",
+      method: "PUT",
+      body: JSON.stringify({ data }),
+    });
+    const deleteMock = mockFetch(answer(204));
+    await expect(store.deleteDraft("d-1", "Anna B")).resolves.toBeUndefined();
+    expect(sent(deleteMock).method).toBe("DELETE");
+  });
+
+  it("names the draft a request was written from", async () => {
+    const fetchMock = mockFetch(answer(201, request));
+    await createTiamatStore(BASE).submitRequest(data, anna, "d-1");
+    expect(sent(fetchMock).body).toBe(
+      JSON.stringify({ actor: anna, data, draftId: "d-1" }),
+    );
+  });
+});
+
 describe("tiamatStore master data", () => {
   afterEach(() => vi.unstubAllGlobals());
 

@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-09: latitude/longitude pre-filled from the URL ("Use this location"). */
+Modified 2026-11-09: latitude/longitude pre-filled from the URL ("Use this location").
+Modified 2026-11-10: the form can be saved as a draft and a draft continued. */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -32,16 +33,20 @@ import {
   RinfLink,
 } from "../../model/LocationCodeRequest";
 import {
+  DRAFT_PARAM,
   PREFILL_PARAMS,
   requestPath,
   RESUME_PARAM,
 } from "../../page/locationCodesPath";
+import { saveRequestDraft } from "../../state/draftThunks";
 import {
   autofillStarted,
   clearFormDraft,
   setActor,
+  setFormDraftId,
 } from "../../state/locationCodesSlice";
 import { submitLocationCodeRequest } from "../../state/locationCodesThunks";
+import { newId } from "../../store/newId";
 import { emptyRequestData } from "../../workflow/createRequest";
 import { readRequester, writeRequester } from "../requesterPreference";
 import { usePickOnMap } from "./usePickOnMap";
@@ -62,9 +67,32 @@ export interface RequestForm extends Omit<
   errors: AdmissibilityErrors;
   submitting: boolean;
   submit: () => void;
+  /** Saves the form as it is, to continue later (no checks). */
+  saveDraft: () => void;
+  savingDraft: boolean;
+  /** What the last save as draft came to: a text key and how to show it. */
+  draftNotice: DraftNotice | null;
   /** Leaves for the map to pick the RINF element; the form waits. */
   pickOnMap: () => void;
 }
+
+export interface DraftNotice {
+  severity: "success" | "warning" | "error";
+  messageId: string;
+}
+
+const DRAFT_SAVED: DraftNotice = {
+  severity: "success",
+  messageId: "rinf_lc_draft_saved",
+};
+const DRAFT_NEEDS_NAME: DraftNotice = {
+  severity: "warning",
+  messageId: "rinf_lc_draft_needs_name",
+};
+const DRAFT_NOT_SAVED: DraftNotice = {
+  severity: "error",
+  messageId: "rinf_lc_draft_not_saved",
+};
 
 /** A coordinate from the URL, if it is a number in range. */
 const coordinateParam = (
@@ -90,7 +118,11 @@ export const initialRequestData = (
   const operationalPoint = params.get(PREFILL_PARAMS.operationalPoint);
   const country = params.get(PREFILL_PARAMS.country) ?? "";
   const name = params.get(PREFILL_PARAMS.name) ?? "";
-  const latitude = coordinateParam(params, PREFILL_PARAMS.latitude, MAX_LATITUDE);
+  const latitude = coordinateParam(
+    params,
+    PREFILL_PARAMS.latitude,
+    MAX_LATITUDE,
+  );
   const longitude = coordinateParam(
     params,
     PREFILL_PARAMS.longitude,
@@ -122,14 +154,26 @@ export const useRequestForm = (): RequestForm => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { actor, formDraft, pendingAutofill } = useAppSelector(
-    (state) => state.rinf.locationCodes,
-  );
+  const { actor, formDraft, formDraftId, pendingAutofill, savedDrafts } =
+    useAppSelector((state) => state.rinf.locationCodes);
   const resumed = Boolean(params.get(RESUME_PARAM) && formDraft);
-  // Back from the map: the form as it was, with the element picked there.
-  const [data, setData] = useState<RequestData>(() =>
-    resumed && formDraft ? formDraft : initialRequestData(params, actor.name),
+  // A saved draft to continue (?draft=…), as it was when the form opened.
+  const [openedDraft] = useState(
+    () =>
+      savedDrafts.find((draft) => draft.id === params.get(DRAFT_PARAM)) ?? null,
   );
+  // Back from the map: the form as it was, with the element picked there.
+  const [data, setData] = useState<RequestData>(() => {
+    if (resumed && formDraft) return formDraft;
+    if (openedDraft) return { ...emptyRequestData(), ...openedDraft.data };
+    return initialRequestData(params, actor.name);
+  });
+  useEffect(() => {
+    // Back from the map the form keeps its draft; otherwise the one opened.
+    if (!resumed) dispatch(setFormDraftId(openedDraft?.id ?? null));
+    // Once, when the form opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const pickOnMap = usePickOnMap(data);
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -139,7 +183,9 @@ export const useRequestForm = (): RequestForm => {
   // An element picked on the map, or given by an OP's panel: fill from RINF.
   useEffect(() => {
     const link = dataRef.current.rinfLink;
-    if (!link || (resumed && !pendingAutofill)) return;
+    // A draft keeps what its owner typed: RINF does not fill it in again.
+    const keepsItsValues = (resumed && !pendingAutofill) || openedDraft;
+    if (!link || keepsItsValues) return;
     dispatch(autofillStarted());
     chooseRinfElement(link);
     // Once, when the form opens.
@@ -147,6 +193,8 @@ export const useRequestForm = (): RequestForm => {
   }, []);
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [draftNotice, setDraftNotice] = useState<DraftNotice | null>(null);
   const allErrors = useMemo(() => admissibilityErrors(data), [data]);
 
   const update = useCallback(
@@ -186,14 +234,41 @@ export const useRequestForm = (): RequestForm => {
       name: actor.name || data.requester.name.trim(),
     };
     if (!actor.name) dispatch(setActor(submitter));
-    dispatch(submitLocationCodeRequest({ data, actor: submitter }))
+    dispatch(
+      submitLocationCodeRequest({
+        data,
+        actor: submitter,
+        ...(formDraftId && { draftId: formDraftId }),
+      }),
+    )
       .unwrap()
       .then((request) => {
         dispatch(clearFormDraft());
         navigate(requestPath(request.id));
       })
       .finally(() => setSubmitting(false));
-  }, [allErrors, submitting, data, actor, dispatch, navigate]);
+  }, [allErrors, submitting, data, actor, formDraftId, dispatch, navigate]);
+
+  const saveDraft = useCallback(() => {
+    // A draft belongs to whoever acts now; without a name yet, the form's.
+    const owner = actor.name || data.requester.name.trim();
+    if (!owner) {
+      setDraftNotice(DRAFT_NEEDS_NAME);
+      return;
+    }
+    if (savingDraft) return;
+    if (!actor.name) dispatch(setActor({ ...actor, name: owner }));
+    setSavingDraft(true);
+    writeRequester(data.requester);
+    dispatch(saveRequestDraft({ id: formDraftId ?? newId(), data, owner }))
+      .unwrap()
+      .then((draft) => {
+        dispatch(setFormDraftId(draft.id));
+        setDraftNotice(DRAFT_SAVED);
+      })
+      .catch(() => setDraftNotice(DRAFT_NOT_SAVED))
+      .finally(() => setSavingDraft(false));
+  }, [actor, data, formDraftId, savingDraft, dispatch]);
 
   return {
     data,
@@ -203,6 +278,9 @@ export const useRequestForm = (): RequestForm => {
     errors: attempted ? allErrors : {},
     submitting,
     submit,
+    saveDraft,
+    savingDraft,
+    draftNotice,
     pickOnMap,
     chooseRinfElement,
     fromRinf: autofill.fromRinf,

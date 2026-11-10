@@ -383,6 +383,24 @@ administrator maintains, no longer lists in the code.
   code format per type, German and French country names. The backup file
   does not carry master data.
 
+### Drafts, and a requester's own requests (2026-11-10)
+
+From the LCMS specification (state "Draft"; a requester amends own drafts and
+views own requests).
+
+- "Save as draft" on the request form saves it as it is, without checks; the
+  draft is listed under "My requests" with "Continue" (`/location-codes/new?draft=<id>`)
+  and "Discard". Submitting the form removes its draft.
+- A draft is not a request (`model/RequestDraft.ts`): no status, history or
+  reference, and the Agency never sees it, so the request statuses are as
+  before. It belongs to the actor's name (with a login: the account).
+  Continuing a draft keeps what was typed; RINF does not fill it in again.
+- Where they live: with Tiamat, its `/drafts` endpoints; without, this
+  browser (`store/browserDrafts.ts`).
+- With a login, Tiamat returns to a requester's account only the requests
+  it submitted. Without one it cannot tell who asks, and the list is
+  filtered here as before (`page/hooks/useVisibleRequests.ts`).
+
 ## Structure
 
 | Folder             | What it does                                                       |

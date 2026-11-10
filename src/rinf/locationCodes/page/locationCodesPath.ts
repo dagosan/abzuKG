@@ -36,6 +36,11 @@ export const newRequestPath = (prefill?: URLSearchParams): string =>
 export const RESUME_PARAM = "resume";
 export const resumeRequestPath = `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${RESUME_PARAM}=1`;
 
+/** Continues a saved draft in the form. */
+export const DRAFT_PARAM = "draft";
+export const draftPath = (draftId: string): string =>
+  `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${DRAFT_PARAM}=${encodeURIComponent(draftId)}`;
+
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
 
 export const masterDataPath = `${LOCATION_CODES_PATH}/${MASTER_DATA_SEGMENT}`;

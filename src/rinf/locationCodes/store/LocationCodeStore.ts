@@ -15,7 +15,8 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
 Modified 2026-10-30: the store takes workflow steps (submitRequest, takeStep) instead of saving documents.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-10: master data (countries, subsidiary types). */
+Modified 2026-11-10: master data (countries, subsidiary types).
+Modified 2026-11-10: request drafts. */
 
 import type {
   LocationCodeRequest,
@@ -23,6 +24,7 @@ import type {
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
 import type { Country, MasterData, SubsidiaryType } from "../model/masterData";
+import type { RequestDraft } from "../model/RequestDraft";
 import type { Actor } from "../model/roles";
 import type { WorkflowAction } from "../workflow/actions";
 import type { ActionPayload } from "../workflow/applyAction";
@@ -55,8 +57,25 @@ export interface StepResult {
 export interface LocationCodeStore {
   loadRequests(): Promise<LocationCodeRequest[]>;
   loadCodes(): Promise<CodeVersion[]>;
-  /** Procedure step 2: records a new request and returns it. */
-  submitRequest(data: RequestData, actor: Actor): Promise<LocationCodeRequest>;
+  /**
+   * Procedure step 2: records a new request and returns it. `draftId`: the
+   * submitter's draft the request was written from, removed with it.
+   */
+  submitRequest(
+    data: RequestData,
+    actor: Actor,
+    draftId?: string,
+  ): Promise<LocationCodeRequest>;
+  /** The drafts of `owner`, last saved first; with a login, the account's. */
+  loadDrafts(owner: string): Promise<RequestDraft[]>;
+  /** Saves a form as the draft `id` of `owner`, new or saved before. */
+  saveDraft(
+    id: string,
+    data: RequestData,
+    owner: string,
+  ): Promise<RequestDraft>;
+  /** Discards a draft of `owner`. */
+  deleteDraft(id: string, owner: string): Promise<void>;
   /** Takes one step, or refuses it with an Error whose message is a text key or the reasons. */
   takeStep(step: WorkflowStep): Promise<StepResult>;
   /** The countries and subsidiary types the rules read; public. */
