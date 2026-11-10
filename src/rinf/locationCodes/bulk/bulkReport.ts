@@ -67,6 +67,10 @@ export interface BulkReport {
   lines: CheckedLine[];
   /** False when the Knowledge Graph could not be asked about parent PLCs. */
   knowledgeGraphReached: boolean;
+  /** The file's lines as read, to make the request from the accepted ones. */
+  source: BulkLine[];
+  /** Proposed PLCs the Knowledge Graph already holds: existing codes, not new ones. */
+  existingCodes: string[];
   /** False when the register could not be read: lines were not compared with its codes. */
   registerReached: boolean;
 }

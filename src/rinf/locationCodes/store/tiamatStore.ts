@@ -83,6 +83,8 @@ const refusal = async (response: Response): Promise<Error> => {
   return new Error(reasons || `Tiamat answered ${response.status}`);
 };
 
+const BULK_NOT_IN_TIAMAT = "rinf_lc_bulk_error_not_in_tiamat";
+
 /** Whose drafts: Tiamat uses it only when no login is set up. */
 const ownerQuery = (owner: string): string =>
   `?owner=${encodeURIComponent(owner)}`;
@@ -131,6 +133,10 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
         data,
         ...(draftId && { draftId }),
       }),
+    // The register in Tiamat takes one request per code; bulk requests are
+    // so far tried out with the browser store only.
+    submitBulk: () => Promise.reject(new Error(BULK_NOT_IN_TIAMAT)),
+    registerBulk: () => Promise.reject(new Error(BULK_NOT_IN_TIAMAT)),
     loadDrafts: (owner) => read<RequestDraft[]>(`/drafts${ownerQuery(owner)}`),
     saveDraft: (id, data, owner) =>
       read<RequestDraft>(

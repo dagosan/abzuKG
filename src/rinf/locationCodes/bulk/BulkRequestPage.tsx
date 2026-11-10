@@ -23,15 +23,17 @@ import { downloadCsv } from "../../reports/csv";
 import { bulkTemplateCsv, MAX_BULK_LINES } from "./bulkColumns";
 import { BulkReportSummary } from "./BulkReportSummary";
 import { BulkReportTable } from "./BulkReportTable";
+import { acceptedLines } from "./bulkReport";
+import { BulkSubmitSection } from "./BulkSubmitSection";
 import { useBulkCheck } from "./hooks/useBulkCheck";
 
 const TEMPLATE_FILE_NAME = "location-codes-bulk-template.csv";
 const PAGE_MAX_WIDTH = 1320;
 
 /**
- * Bulk requests, first part (LCMS specification FR-08, Annex A): a requester
- * chooses the CSV file, and the file and line checks of the annex are run
- * and reported per line. Nothing is sent to the Agency yet.
+ * Bulk requests (LCMS specification FR-08, Annex A): a requester chooses
+ * the CSV file, the file and line checks of the annex are run and reported
+ * per line, and the accepted lines can be sent to the Agency as one request.
  */
 export const BulkRequestPage = () => {
   const { formatMessage } = useIntl();
@@ -85,6 +87,9 @@ export const BulkRequestPage = () => {
       {report && (
         <Stack spacing={2}>
           <BulkReportSummary report={report} />
+          {acceptedLines(report).length > 0 && (
+            <BulkSubmitSection key={report.fileName} report={report} />
+          )}
           {report.lines.length > 0 && <BulkReportTable report={report} />}
         </Stack>
       )}

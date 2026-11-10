@@ -311,6 +311,17 @@ describe("the checks against existing codes", () => {
       ].join("\n"),
     );
     expect(countriesToAsk(lines, [version({})])).toEqual(["NO"]);
+    const proposing = readBulkFile(
+      oneLine({
+        ...PLC_LINE,
+        Country_ISO_code: "IT",
+        Primary_Location_Code: "5",
+      }),
+    );
+    expect(countriesToAsk(proposing.lines, [])).toEqual(["IT"]);
+    expect(countriesToAsk(readBulkFile(oneLine(PLC_LINE)).lines, [])).toEqual(
+      [],
+    );
   });
 });
 
@@ -371,6 +382,8 @@ describe("the report file", () => {
       ),
       knowledgeGraphReached: true,
       registerReached: true,
+      source: [],
+      existingCodes: [],
     };
     const formatMessage = (({ id }: { id: string }, values?: object) =>
       `${id}${values ? ` ${JSON.stringify(values)}` : ""}`) as never;

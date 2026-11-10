@@ -29,6 +29,7 @@ import {
 } from "./reports/rinfReportsPath";
 import { RinfReportsPage } from "./reports/RinfReportsPage";
 import {
+  BULK_ID_PARAM,
   BULK_SEGMENT,
   LOCATION_CODES_ROUTE,
   MASTER_DATA_SEGMENT,
@@ -47,6 +48,7 @@ const LOCATION_CODES_SUBROUTES: [string, LocationCodesPageMode][] = [
   ["", "home"],
   [`/${NEW_REQUEST_SEGMENT}`, "new"],
   [`/${BULK_SEGMENT}`, "bulk"],
+  [`/${BULK_SEGMENT}/:${BULK_ID_PARAM}`, "bulkFile"],
   [`/${REGISTER_SEGMENT}`, "register"],
   [`/${MASTER_DATA_SEGMENT}`, "masterData"],
   [`/${MY_REQUESTS_SEGMENT}`, "mine"],

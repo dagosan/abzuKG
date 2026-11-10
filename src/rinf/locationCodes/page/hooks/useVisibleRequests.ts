@@ -12,13 +12,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: the lines of a bulk request are shown as one item. */
 
 import { useMemo } from "react";
 import { useAppSelector } from "../../../../store/hooks";
 import { todayIsoDate } from "../../../api/queryParts";
 import type { LocationCodeRequest } from "../../model/LocationCodeRequest";
 import { isAgencyRole, isSamePerson } from "../../model/roles";
+import {
+  bulkWaitsFor,
+  groupRequests,
+  RequestGroup,
+} from "../../bulk/bulkRequests";
 import { waitsFor } from "../../workflow/availableActions";
 import { isOpen } from "../../workflow/routing";
 
@@ -62,4 +68,41 @@ export const useVisibleRequests = (
     });
     return [...filtered].sort(bySubmissionDescending);
   }, [requests, actor, filter]);
+};
+
+/** A group passes a filter as its request does; a bulk request, as its lines do together. */
+const groupMatches = (
+  group: RequestGroup,
+  filter: RequestFilter,
+  matches: (request: LocationCodeRequest) => boolean,
+  waits: (lines: LocationCodeRequest[]) => boolean,
+): boolean => {
+  if (group.kind === "request") return matches(group.request);
+  if (filter === "forMe") return waits(group.lines);
+  // Closed once every line is; open while one still is.
+  return filter === "closed"
+    ? group.lines.every(matches)
+    : group.lines.some(matches);
+};
+
+/**
+ * The requests the current actor may see, the lines of a bulk request
+ * gathered into one item, filtered and newest first.
+ */
+export const useVisibleGroups = (filter: RequestFilter): RequestGroup[] => {
+  const actor = useAppSelector((state) => state.rinf.locationCodes.actor);
+  const visible = useVisibleRequests("all");
+  return useMemo(() => {
+    const today = todayIsoDate();
+    const matches = (request: LocationCodeRequest): boolean => {
+      if (filter === "forMe") return waitsFor(request, actor, today);
+      if (filter === "open") return isOpen(request);
+      return filter === "closed" ? !isOpen(request) : true;
+    };
+    return groupRequests(visible).filter((group) =>
+      groupMatches(group, filter, matches, (lines) =>
+        bulkWaitsFor(lines, actor, today),
+      ),
+    );
+  }, [visible, actor, filter]);
 };

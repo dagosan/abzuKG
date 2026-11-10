@@ -21,6 +21,8 @@ import { fetchCountryCodes } from "../../checks/kgLookups";
 import type { CodeVersion } from "../../model/CodeVersion";
 import { locationCodeStore } from "../../store/activeStore";
 import { readBulkFile } from "../bulkFile";
+import { codeTypeOf } from "../bulkLineChecks";
+import { primaryCodeOfLine } from "../bulkLineCodes";
 import { countriesToAsk } from "../bulkRegisterChecks";
 import type { BulkLine, BulkReport } from "../bulkReport";
 import { checkBulkLines } from "../checkBulkLines";
@@ -89,6 +91,14 @@ const checkLines = async (
     }),
     knowledgeGraphReached: knowledgeGraphCodes !== null,
     registerReached: register !== null,
+    source: lines,
+    existingCodes: lines
+      .filter((line) => codeTypeOf(line) === "PLC")
+      .map(primaryCodeOfLine)
+      .filter(
+        (code): code is string =>
+          code !== null && Boolean(knowledgeGraphCodes?.has(code)),
+      ),
   };
 };
 
@@ -101,6 +111,8 @@ const refusedFile = (
   lines: [],
   knowledgeGraphReached: true,
   registerReached: true,
+  source: [],
+  existingCodes: [],
 });
 
 /**

@@ -46,6 +46,10 @@ export const draftPath = (draftId: string): string =>
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
 
 export const bulkPath = `${LOCATION_CODES_PATH}/${BULK_SEGMENT}`;
+/** One bulk request: its lines and the steps taken on all of them. */
+export const BULK_ID_PARAM = "bulkId";
+export const bulkFilePath = (bulkId: string): string =>
+  `${bulkPath}/${encodeURIComponent(bulkId)}`;
 
 export const masterDataPath = `${LOCATION_CODES_PATH}/${MASTER_DATA_SEGMENT}`;
 

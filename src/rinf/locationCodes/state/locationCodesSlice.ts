@@ -17,7 +17,8 @@ Modified 2026-11-02: register as code versions with CRD's columns.
 Modified 2026-11-05: codesLoadStatus, the state of the register alone.
 Modified 2026-11-09: a point chosen on the map, with its reference OP.
 Modified 2026-11-10: master data (countries, subsidiary types).
-Modified 2026-11-10: saved drafts. */
+Modified 2026-11-10: saved drafts.
+Modified 2026-11-10: bulk requests. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { MapPosition } from "../mapLocation/mapPosition";
@@ -38,6 +39,7 @@ import { defaultMasterData } from "../model/masterDataRegistry";
 import { RequestDraft, withDraft, withoutDraft } from "../model/RequestDraft";
 import { Actor, isSamePerson } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
+import { registerBulkRequest, submitBulkRequest } from "./bulkThunks";
 import {
   deleteRequestDraft,
   loadDrafts,
@@ -214,6 +216,12 @@ const locationCodesSlice = createSlice({
       })
       .addCase(saveSubsidiaryType.fulfilled, (state, action) => {
         state.masterData = withSubsidiaryType(state.masterData, action.payload);
+      })
+      .addCase(submitBulkRequest.fulfilled, (state, action) => {
+        state.requests = action.payload.reduce(replaceRequest, state.requests);
+      })
+      .addCase(registerBulkRequest.fulfilled, (state, action) => {
+        state.requests = action.payload.reduce(replaceRequest, state.requests);
       })
       .addCase(loadDrafts.pending, (state) => {
         state.savedDraftsLoadStatus = "loading";

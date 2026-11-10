@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: the first-population warning's detail is exported (bulk requests do not hold such lines back). */
 
 import type { CheckResult } from "../model/checklist";
 import { normalisePrimaryCode } from "../model/codeFormat";
@@ -25,6 +26,9 @@ import {
   CheckContext,
   findRegistered,
 } from "./checkContext";
+
+/** Detail of the warning that an existing code is already in the KG for the same OP: what first population is. */
+export const EXISTING_CODE_ON_ITS_ELEMENT = "rinf_lc_detail_already_in_kg";
 
 /** First population: the code may already be in the KG for the same OP. */
 export const existingCodeCheck = (
@@ -48,7 +52,7 @@ export const existingCodeCheck = (
     data.rinfLink?.canonicalId ?? "",
   );
   return sameElement
-    ? result("codeValueFree", "warning", "rinf_lc_detail_already_in_kg", {
+    ? result("codeValueFree", "warning", EXISTING_CODE_ON_ITS_ELEMENT, {
         code: proposed,
       })
     : result("codeValueFree", "fail", "rinf_lc_detail_used_elsewhere", {

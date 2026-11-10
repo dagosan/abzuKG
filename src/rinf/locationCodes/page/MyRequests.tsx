@@ -13,16 +13,17 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-10: drafts above the requests. */
+Modified 2026-11-10: drafts above the requests.
+Modified 2026-11-10: the lines of a bulk request are shown as one item. */
 
 import { Box, List, Paper, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../../store/hooks";
 import { DraftList } from "./DraftList";
-import { useVisibleRequests } from "./hooks/useVisibleRequests";
-import { requestPath } from "./locationCodesPath";
-import { RequestListItem } from "./RequestListItem";
+import { useVisibleGroups } from "./hooks/useVisibleRequests";
+import { bulkFilePath, requestPath } from "./locationCodesPath";
+import { groupKey, RequestGroupItem } from "./RequestGroupItem";
 
 const LIST_MAX_WIDTH = 760;
 
@@ -34,7 +35,7 @@ const LIST_MAX_WIDTH = 760;
 export const MyRequests = () => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  const requests = useVisibleRequests("all");
+  const groups = useVisibleGroups("all");
   const drafts = useAppSelector(
     (state) => state.rinf.locationCodes.savedDrafts,
   );
@@ -45,19 +46,20 @@ export const MyRequests = () => {
         {formatMessage({ id: "rinf_lc_view_mine" })}
       </Typography>
       <DraftList drafts={drafts} />
-      {requests.length === 0 ? (
+      {groups.length === 0 ? (
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
           {formatMessage({ id: "rinf_lc_empty_mine" })}
         </Typography>
       ) : (
         <Paper variant="outlined">
           <List disablePadding>
-            {requests.map((request) => (
-              <RequestListItem
-                key={request.id}
-                request={request}
-                selected={false}
+            {groups.map((group) => (
+              <RequestGroupItem
+                key={groupKey(group)}
+                group={group}
+                selectedId={null}
                 onOpen={(id) => navigate(requestPath(id))}
+                onOpenBulk={(id) => navigate(bulkFilePath(id))}
               />
             ))}
           </List>

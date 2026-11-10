@@ -35,7 +35,7 @@ import {
   LocationCodesView,
 } from "./LocationCodesActionBar";
 import { useSavedDrafts } from "./hooks/useSavedDrafts";
-import { REQUEST_ID_PARAM } from "./locationCodesPath";
+import { BULK_ID_PARAM, REQUEST_ID_PARAM } from "./locationCodesPath";
 import { AgencyView, RequesterView, WorkMode } from "./RoleViews";
 
 /** Which part of the page a route shows. */
@@ -49,7 +49,9 @@ const viewOf = (
   if (mode === "register" || mode === "masterData") return mode;
   if (!isRequester) return "requests";
   if (mode === "bulk") return "bulk";
-  return mode === "mine" || mode === "request" ? "mine" : "new";
+  return mode === "mine" || mode === "request" || mode === "bulkFile"
+    ? "mine"
+    : "new";
 };
 
 interface LocationCodesPageProps {
@@ -67,6 +69,7 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
   const params = useParams<Record<string, string>>();
   const requestId =
     mode === "request" ? (params[REQUEST_ID_PARAM] ?? null) : null;
+  const bulkId = mode === "bulkFile" ? (params[BULK_ID_PARAM] ?? null) : null;
   const isRequester = useAppSelector(
     (state) => state.rinf.locationCodes.actor.role === "requester",
   );
@@ -108,9 +111,9 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
       ) : (
         <LoginGate>
           {isRequester ? (
-            <RequesterView mode={mode} requestId={requestId} />
+            <RequesterView mode={mode} requestId={requestId} bulkId={bulkId} />
           ) : (
-            <AgencyView mode={mode} requestId={requestId} />
+            <AgencyView mode={mode} requestId={requestId} bulkId={bulkId} />
           )}
         </LoginGate>
       )}

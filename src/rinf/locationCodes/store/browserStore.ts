@@ -20,6 +20,7 @@ Modified 2026-11-10: request drafts. */
 
 import { upgradeCodes } from "../model/legacyCodes";
 import { createRequest } from "../workflow/createRequest";
+import { registerBulkInBrowser, submitBulkInBrowser } from "./browserBulk";
 import {
   deleteDraftInBrowser,
   readDrafts,
@@ -94,6 +95,16 @@ export const browserStore: LocationCodeStore = {
     writeSnapshot({ ...snapshot, requests: [...snapshot.requests, request] });
     if (draftId) deleteDraftInBrowser(draftId, actor.name);
     return request;
+  },
+  submitBulk: async (lines, actor, fileName) => {
+    const result = submitBulkInBrowser(readSnapshot(), lines, actor, fileName);
+    writeSnapshot(result.snapshot);
+    return result.lines;
+  },
+  registerBulk: async (bulkId, actor) => {
+    const result = registerBulkInBrowser(readSnapshot(), bulkId, actor);
+    writeSnapshot(result.snapshot);
+    return result.lines;
   },
   loadDrafts: async (owner) => readDrafts(owner),
   saveDraft: async (id, data, owner) => saveDraftInBrowser(id, data, owner),

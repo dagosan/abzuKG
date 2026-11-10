@@ -88,9 +88,6 @@ export const BulkReportSummary = ({ report }: BulkReportSummaryProps) => {
           {formatMessage({ id: "rinf_lc_bulk_kg_unreachable" })}
         </Alert>
       )}
-      <Alert severity="info">
-        {formatMessage({ id: "rinf_lc_bulk_nothing_sent" })}
-      </Alert>
     </Stack>
   );
 };

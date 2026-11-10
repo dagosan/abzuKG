@@ -46,6 +46,10 @@ export const locationCodeStore: LocationCodeStore = {
   loadCodes: () => currentLocationCodeStore().loadCodes(),
   submitRequest: (data, actor, draftId) =>
     currentLocationCodeStore().submitRequest(data, actor, draftId),
+  submitBulk: (lines, actor, fileName) =>
+    currentLocationCodeStore().submitBulk(lines, actor, fileName),
+  registerBulk: (bulkId, actor) =>
+    currentLocationCodeStore().registerBulk(bulkId, actor),
   loadDrafts: (owner) => currentLocationCodeStore().loadDrafts(owner),
   saveDraft: (id, data, owner) =>
     currentLocationCodeStore().saveDraft(id, data, owner),

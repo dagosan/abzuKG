@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: also used by the bulk upload. */
 
 import { MenuItem, TextField } from "@mui/material";
 import { useIntl } from "react-intl";
@@ -22,8 +23,14 @@ import { FieldRow } from "./FieldRow";
 import { FormSection, useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
 
+/** What the section reads and changes: the request form's, or the bulk upload's. */
+export type RequesterForm = Pick<
+  RequestForm,
+  "data" | "update" | "updateRequester" | "errors"
+>;
+
 interface RequesterFieldsProps {
-  form: RequestForm;
+  form: RequesterForm;
 }
 
 /** Who applies, as which Article 3(9) stakeholder, and in which language. */

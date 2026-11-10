@@ -12,13 +12,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: a bulk line links back to its bulk request. */
 
-import { Box, Typography } from "@mui/material";
+import { Box, Link, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
+import { Link as RouterLink } from "react-router-dom";
 import { CODE_TYPE_ABBREVIATIONS } from "../model/codeTypes";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import { DeadlineLabel } from "../page/DeadlineLabel";
+import { bulkFilePath } from "../page/locationCodesPath";
 import { requestSubject } from "../page/RequestListItem";
 import { StatusChip } from "../page/StatusChip";
 
@@ -29,7 +32,7 @@ interface RequestFileHeaderProps {
 /** Reference, what is asked, status and the deadline that runs. */
 export const RequestFileHeader = ({ request }: RequestFileHeaderProps) => {
   const { formatMessage, formatDate } = useIntl();
-  const { data, reference, status, submittedAt, submittedBy } = request;
+  const { data, reference, status, submittedAt, submittedBy, bulk } = request;
   return (
     <Box
       sx={{
@@ -40,6 +43,19 @@ export const RequestFileHeader = ({ request }: RequestFileHeaderProps) => {
       }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>
+        {bulk && (
+          <Link
+            component={RouterLink}
+            to={bulkFilePath(bulk.id)}
+            variant="caption"
+            sx={{ display: "block" }}
+          >
+            {formatMessage(
+              { id: "rinf_lc_bulk_line_of" },
+              { line: bulk.line, fileName: bulk.fileName },
+            )}
+          </Link>
+        )}
         <Typography
           variant="overline"
           sx={{ color: "text.secondary", lineHeight: 1.5 }}

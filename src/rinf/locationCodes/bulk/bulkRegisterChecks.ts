@@ -131,7 +131,8 @@ export const registerFailures = (
 
 /**
  * Countries whose PLCs must be read from the Knowledge Graph: those of SLC
- * lines whose parent is not in the register.
+ * lines whose parent is not in the register, and those of PLC lines that
+ * propose a value (is it a new code, or one that exists already?).
  */
 export const countriesToAsk = (
   lines: BulkLine[],
@@ -139,7 +140,6 @@ export const countriesToAsk = (
 ): string[] => [
   ...new Set(
     lines
-      .filter((line) => codeTypeOf(line) === "SLC")
       .map(primaryCodeOfLine)
       .filter(
         (code): code is string =>
