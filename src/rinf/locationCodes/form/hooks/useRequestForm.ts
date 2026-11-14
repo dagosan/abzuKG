@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-09: latitude/longitude pre-filled from the URL ("Use this location"). */
+Modified 2026-11-09: latitude/longitude pre-filled from the URL ("Use this location").
+Modified 2026-11-14: Reset and Cancel. */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -44,13 +45,17 @@ import {
 import { submitLocationCodeRequest } from "../../state/locationCodesThunks";
 import { emptyRequestData } from "../../workflow/createRequest";
 import { readRequester, writeRequester } from "../requesterPreference";
+import {
+  DiscardRequestForm,
+  useDiscardRequestForm,
+} from "./useDiscardRequestForm";
 import { usePickOnMap } from "./usePickOnMap";
 import { RinfAutofillState, useRinfAutofill } from "./useRinfAutofill";
 
-export interface RequestForm extends Omit<
-  RinfAutofillState,
-  "forgetFromRinf" | "chooseRinfElement"
-> {
+export interface RequestForm
+  extends
+    Omit<RinfAutofillState, "forgetFromRinf" | "chooseRinfElement">,
+    DiscardRequestForm {
   /** Sets the RINF element and fills the rest of the form from RINF. */
   chooseRinfElement: (link: RinfLink | null) => void;
   data: RequestData;
@@ -90,7 +95,11 @@ export const initialRequestData = (
   const operationalPoint = params.get(PREFILL_PARAMS.operationalPoint);
   const country = params.get(PREFILL_PARAMS.country) ?? "";
   const name = params.get(PREFILL_PARAMS.name) ?? "";
-  const latitude = coordinateParam(params, PREFILL_PARAMS.latitude, MAX_LATITUDE);
+  const latitude = coordinateParam(
+    params,
+    PREFILL_PARAMS.latitude,
+    MAX_LATITUDE,
+  );
   const longitude = coordinateParam(
     params,
     PREFILL_PARAMS.longitude,
@@ -195,7 +204,21 @@ export const useRequestForm = (): RequestForm => {
       .finally(() => setSubmitting(false));
   }, [allErrors, submitting, data, actor, dispatch, navigate]);
 
+  const blank = useCallback(
+    () => initialRequestData(new URLSearchParams(), actor.name),
+    [actor.name],
+  );
+  const forgetAttempt = useCallback(() => setAttempted(false), []);
+  const discard = useDiscardRequestForm({
+    data,
+    setData,
+    blank,
+    chooseRinfElement,
+    forgetAttempt,
+  });
+
   return {
+    ...discard,
     data,
     update,
     updateCrd,

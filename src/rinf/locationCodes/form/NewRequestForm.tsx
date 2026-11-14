@@ -13,19 +13,14 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-14: Reset and Cancel next to Submit. */
 
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Stack, TextField, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
 import { ChangeFields } from "./ChangeFields";
 import { CrdAttributeFields } from "./CrdAttributeFields";
+import { FormButtons } from "./FormButtons";
 import { FormSection, useFieldError } from "./FormSection";
 import { LocationElementField } from "./LocationElementField";
 import { useRequestForm } from "./hooks/useRequestForm";
@@ -48,7 +43,7 @@ const COLUMN_GAP = { xs: 2, lg: 3 };
 export const NewRequestForm = () => {
   const { formatMessage } = useIntl();
   const form = useRequestForm();
-  const { data, update, errors, submit, submitting } = form;
+  const { data, update, errors } = form;
   const fieldError = useFieldError(errors);
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -105,16 +100,7 @@ export const NewRequestForm = () => {
               {formatMessage({ id: "rinf_lc_form_has_errors" })}
             </Alert>
           )}
-          <Box>
-            <Button
-              variant="contained"
-              onClick={submit}
-              disabled={submitting}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
-            >
-              {formatMessage({ id: "rinf_lc_form_submit" })}
-            </Button>
-          </Box>
+          <FormButtons form={form} />
         </Stack>
       </Box>
     </Box>

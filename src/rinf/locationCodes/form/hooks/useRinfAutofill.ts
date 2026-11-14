@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-09: a position chosen on the map is kept. */
+Modified 2026-11-09: a position chosen on the map is kept.
+Modified 2026-11-14: clearing the element ends the "loading" of a lookup under way. */
 
 import {
   Dispatch,
@@ -80,7 +81,10 @@ export const useRinfAutofill = (
       setNotice(null);
       setFromRinf([]);
       const element = link ? elementOfLink(link) : null;
-      if (!link || !element) return;
+      if (!link || !element) {
+        setLoading(false);
+        return;
+      }
       const controller = new AbortController();
       controllerRef.current = controller;
       setLoading(true);
