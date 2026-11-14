@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: the countries are master data, loaded here too. */
 
 import PinOutlinedIcon from "@mui/icons-material/PinOutlined";
 import { Box, Button } from "@mui/material";
@@ -20,6 +21,7 @@ import { useIntl } from "react-intl";
 import { Link as RouterLink } from "react-router-dom";
 import { useAppSelector } from "../../../store/hooks";
 import { isCountryPrefix } from "../model/countries";
+import { useMasterData } from "../state/useMasterData";
 import { newRequestPath, PREFILL_PARAMS } from "./locationCodesPath";
 
 const COUNTRY_PREFIX_LENGTH = 2;
@@ -40,6 +42,7 @@ export const RequestCodeLink = ({
 }: RequestCodeLinkProps) => {
   const { formatMessage } = useIntl();
   const role = useAppSelector((state) => state.rinf.locationCodes.actor.role);
+  useMasterData();
   const prefix = canonicalId.slice(0, COUNTRY_PREFIX_LENGTH).toUpperCase();
   const prefill = new URLSearchParams({
     [PREFILL_PARAMS.operationalPoint]: canonicalId,

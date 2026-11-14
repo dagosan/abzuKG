@@ -350,6 +350,57 @@ its RINF element; name, country and IM come from RINF as usual, the OP's
 position does not (`positionFromMap` in the slice; `holdsMapPosition`).
 Only for a requester, and not while a form is already waiting for a pick.
 
+### Master data (2026-11-10; on master 2026-11-14)
+
+From the LCMS specification (FR-27, 5.2, 5.5): the countries codes are
+assigned for and the subsidiary location code types are data the code
+administrator maintains, no longer lists in the code.
+
+- Page `/location-codes/master-data` (view "Master data", `masterData/`):
+  everyone reads the two lists; a code administrator adds and edits entries.
+  An entry is never removed: it gets a last valid day.
+- A country (`model/masterData.ts`): prefix (ISO alpha-2, or `EU`), UIC
+  country code, name, EU Member State, the numbers a new PLC can take,
+  validity. A subsidiary type: code, name, the requesters TD 103 Table 6
+  names, retail-related, validity.
+- Where they live: with Tiamat, its tables (`GET /countries`,
+  `GET /subsidiary-types`, `PUT` for one entry); without, this browser
+  (`store/browserMasterData.ts`). Both start with the same lists
+  (`model/defaultCountries.ts`, `model/defaultSubsidiaryTypes.ts`; Tiamat:
+  `DefaultMasterData.java`): 39 prefixes and the 48 XSD types.
+- What reads them: the country list and the type list of the request form
+  (entries valid today), the admissibility check (a proposed new PLC outside
+  the country's numbers is refused), the value to assign (lowest free number
+  of the country's range), the parent/type check, and the routing to
+  external coordination (country not an EU Member State). The rules are
+  plain functions, so they read `model/masterDataRegistry.ts`, which
+  `state/masterDataThunks.ts` fills from the store; until then, and if the
+  store cannot be read, the built-in lists apply.
+- A submitted request always carries its country: the form asks for it only
+  when a PLC is created, so otherwise it is the prefix of the PLC concerned
+  (`model/requestCountry.ts`). Tiamat needs it for every request.
+- Not taken from the specification: definition text, allocation entity,
+  code format per type, German and French country names. The backup file
+  does not carry master data.
+
+### Drafts, and a requester's own requests (2026-11-10; on master 2026-11-14)
+
+From the LCMS specification (state "Draft"; a requester amends own drafts and
+views own requests).
+
+- "Save as draft" on the request form saves it as it is, without checks; the
+  draft is listed under "My requests" with "Continue" (`/location-codes/new?draft=<id>`)
+  and "Discard". Submitting the form removes its draft.
+- A draft is not a request (`model/RequestDraft.ts`): no status, history or
+  reference, and the Agency never sees it, so the request statuses are as
+  before. It belongs to the actor's name (with a login: the account).
+  Continuing a draft keeps what was typed; RINF does not fill it in again.
+- Where they live: with Tiamat, its `/drafts` endpoints; without, this
+  browser (`store/browserDrafts.ts`).
+- With a login, Tiamat returns to a requester's account only the requests
+  it submitted. Without one it cannot tell who asks, and the list is
+  filtered here as before (`page/hooks/useVisibleRequests.ts`).
+
 ### Bulk requests, first part: the file check (2026-11-10; on master 2026-11-14)
 
 From the LCMS specification (FR-08) and its Annex A, "Structure of the bulk
@@ -367,7 +418,7 @@ nothing; sending the accepted lines is the second part, below.
   that its lines require, no line, more than 500 lines.
 - Line checks (`bulk/checkBulkLines.ts`), all failures reported: each column's
   form (`bulkLineChecks.ts`, `bulkPrimaryChecks.ts`, `bulkSubsidiaryChecks.ts`);
-  the country and the subsidiary type against the tool's lists; the codes
+  the master data (country, subsidiary type, numbers for new PLCs); the codes
   that exist (`bulkRegisterChecks.ts`: a proposed value not in the register,
   an SLC's parent active when the SLC starts); and the other lines
   (`bulkCrossChecks.ts`: the same code proposed twice, an SLC whose parent is

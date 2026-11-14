@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: Master data view. */
 
 import {
   Box,
@@ -29,6 +30,7 @@ import { DataMenu } from "./DataMenu";
 import {
   bulkPath,
   LOCATION_CODES_PATH,
+  masterDataPath,
   myRequestsPath,
   newRequestPath,
   registerPath,
@@ -37,7 +39,7 @@ import {
 const BAR_MIN_HEIGHT = 56;
 
 export type LocationCodesView =
-  "new" | "bulk" | "mine" | "requests" | "register";
+  "new" | "bulk" | "mine" | "requests" | "register" | "masterData";
 
 /** Views per role: a requester asks and follows; Agency roles handle cases. */
 const REQUESTER_VIEWS: LocationCodesView[] = [
@@ -45,8 +47,13 @@ const REQUESTER_VIEWS: LocationCodesView[] = [
   "bulk",
   "mine",
   "register",
+  "masterData",
 ];
-const AGENCY_VIEWS: LocationCodesView[] = ["requests", "register"];
+const AGENCY_VIEWS: LocationCodesView[] = [
+  "requests",
+  "register",
+  "masterData",
+];
 
 const PATH_OF_VIEW: Record<LocationCodesView, string> = {
   new: newRequestPath(),
@@ -54,6 +61,7 @@ const PATH_OF_VIEW: Record<LocationCodesView, string> = {
   requests: LOCATION_CODES_PATH,
   bulk: bulkPath,
   register: registerPath,
+  masterData: masterDataPath,
 };
 
 const LABEL_OF_VIEW: Record<LocationCodesView, string> = {
@@ -62,6 +70,7 @@ const LABEL_OF_VIEW: Record<LocationCodesView, string> = {
   requests: "rinf_lc_view_requests",
   bulk: "rinf_lc_view_bulk",
   register: "rinf_lc_view_register",
+  masterData: "rinf_lc_view_master_data",
 };
 
 interface LocationCodesActionBarProps {

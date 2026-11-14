@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-09: position pre-filled from a point chosen on the map. */
+Modified 2026-11-09: position pre-filled from a point chosen on the map.
+Modified 2026-11-10: Master data view. */
 
 /** Route segment of the location code workflow. */
 export const LOCATION_CODES_ROUTE = "location-codes";
@@ -24,6 +25,8 @@ export const NEW_REQUEST_SEGMENT = "new";
 export const REGISTER_SEGMENT = "register";
 /** Bulk requests: a CSV file checked line by line (LCMS specification FR-08). */
 export const BULK_SEGMENT = "bulk";
+/** Countries and subsidiary types (LCMS specification FR-27). */
+export const MASTER_DATA_SEGMENT = "master-data";
 /** A requester's own requests. */
 export const MY_REQUESTS_SEGMENT = "mine";
 export const REQUEST_ID_PARAM = "requestId";
@@ -35,6 +38,11 @@ export const newRequestPath = (prefill?: URLSearchParams): string =>
 export const RESUME_PARAM = "resume";
 export const resumeRequestPath = `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${RESUME_PARAM}=1`;
 
+/** Continues a saved draft in the form. */
+export const DRAFT_PARAM = "draft";
+export const draftPath = (draftId: string): string =>
+  `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${DRAFT_PARAM}=${encodeURIComponent(draftId)}`;
+
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
 
 export const bulkPath = `${LOCATION_CODES_PATH}/${BULK_SEGMENT}`;
@@ -42,6 +50,8 @@ export const bulkPath = `${LOCATION_CODES_PATH}/${BULK_SEGMENT}`;
 export const BULK_ID_PARAM = "bulkId";
 export const bulkFilePath = (bulkId: string): string =>
   `${bulkPath}/${encodeURIComponent(bulkId)}`;
+
+export const masterDataPath = `${LOCATION_CODES_PATH}/${MASTER_DATA_SEGMENT}`;
 
 export const myRequestsPath = `${LOCATION_CODES_PATH}/${MY_REQUESTS_SEGMENT}`;
 

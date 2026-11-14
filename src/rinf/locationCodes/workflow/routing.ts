@@ -12,10 +12,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: the country's EU flag is master data; an SLC's country is its parent's. */
 
 import { isCreation } from "../model/codeTypes";
 import { isNonEuCountry } from "../model/countries";
+import { countryOfRequest } from "../model/requestCountry";
 import type {
   LocationCodeRequest,
   RequestStatus,
@@ -34,7 +36,7 @@ export const needsRinfHarmonisation = ({ data }: LocationCodeRequest) => {
 /** Non-EU country or legacy range: uniqueness confirmed first (8.7, 10.3). */
 export const needsExternalCoordination = ({ data }: LocationCodeRequest) =>
   isCreation(data.operation) &&
-  (isNonEuCountry(data.country) || data.legacyCodingRange);
+  (isNonEuCountry(countryOfRequest(data)) || data.legacyCodingRange);
 
 /** Where a request goes once technical validation is complete. */
 export const statusAfterValidation = (

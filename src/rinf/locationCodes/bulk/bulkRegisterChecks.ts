@@ -16,10 +16,12 @@ Added for the ERA Location Code Manager, 2026-11-10. */
 
 import type { CodeVersion } from "../model/CodeVersion";
 import { isActiveOn, versionsOf } from "../model/codeVersions";
+import { findCountry } from "../model/countries";
+import { isInRange } from "../model/masterData";
 import { codeTypeOf } from "./bulkLineChecks";
 import { primaryCodeOfLine, subsidiaryKeyOfLine } from "./bulkLineCodes";
 import { BulkFailure, BulkLine, failure } from "./bulkReport";
-import { isIsoDate } from "./bulkValueFormats";
+import { isIsoDate, locationNumberOf } from "./bulkValueFormats";
 
 const COUNTRY_LENGTH = 2;
 
@@ -34,13 +36,26 @@ export interface BulkCheckContext {
   proposedInFile?: ReadonlySet<string>;
 }
 
-/** A proposed PLC is free (BR-10). */
+/** A proposed PLC is free and within the numbers for new codes of its country (BR-10). */
 const proposedPrimaryFailures = (
   line: BulkLine,
   { register }: BulkCheckContext,
 ): BulkFailure[] => {
   const code = primaryCodeOfLine(line);
-  if (!code) return [];
+  const country = findCountry(line.values.Country_ISO_code ?? "");
+  const locationNumber = locationNumberOf(
+    line.values.Primary_Location_Code ?? "",
+  );
+  if (!code || !country || locationNumber === null) return [];
+  if (!isInRange(country, locationNumber))
+    return [
+      failure("Primary_Location_Code", "BR-10", "rinf_lc_bulk_out_of_range", {
+        code,
+        country: country.isoCode,
+        start: country.plcRangeStart,
+        end: country.plcRangeEnd,
+      }),
+    ];
   // In the register at any time: a value is never used again.
   return versionsOf(register, code).length > 0
     ? [

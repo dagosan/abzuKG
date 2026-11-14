@@ -13,7 +13,7 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: location code routes.
-Modified 2026-11-14: bulk request routes. */
+Modified 2026-11-10: master data and bulk request routes. */
 
 import { Route } from "react-router-dom";
 import {
@@ -32,6 +32,7 @@ import {
   BULK_ID_PARAM,
   BULK_SEGMENT,
   LOCATION_CODES_ROUTE,
+  MASTER_DATA_SEGMENT,
   MY_REQUESTS_SEGMENT,
   NEW_REQUEST_SEGMENT,
   REGISTER_SEGMENT,
@@ -49,6 +50,7 @@ const LOCATION_CODES_SUBROUTES: [string, LocationCodesPageMode][] = [
   [`/${BULK_SEGMENT}`, "bulk"],
   [`/${BULK_SEGMENT}/:${BULK_ID_PARAM}`, "bulkFile"],
   [`/${REGISTER_SEGMENT}`, "register"],
+  [`/${MASTER_DATA_SEGMENT}`, "masterData"],
   [`/${MY_REQUESTS_SEGMENT}`, "mine"],
   [`/:${REQUEST_ID_PARAM}`, "request"],
 ];

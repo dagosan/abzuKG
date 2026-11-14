@@ -16,7 +16,9 @@ Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
 Modified 2026-11-05: codesLoadStatus, the state of the register alone.
 Modified 2026-11-09: a point chosen on the map, with its reference OP.
-Modified 2026-11-14: bulk requests. */
+Modified 2026-11-10: master data (countries, subsidiary types).
+Modified 2026-11-10: saved drafts.
+Modified 2026-11-10: bulk requests. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { MapPosition } from "../mapLocation/mapPosition";
@@ -28,15 +30,32 @@ import type {
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
 import { mergeVersions } from "../model/codeVersions";
-import type { Actor } from "../model/roles";
+import {
+  MasterData,
+  withCountry,
+  withSubsidiaryType,
+} from "../model/masterData";
+import { defaultMasterData } from "../model/masterDataRegistry";
+import { RequestDraft, withDraft, withoutDraft } from "../model/RequestDraft";
+import { Actor, isSamePerson } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
 import { registerBulkRequest, submitBulkRequest } from "./bulkThunks";
+import {
+  deleteRequestDraft,
+  loadDrafts,
+  saveRequestDraft,
+} from "./draftThunks";
 import {
   loadLocationCodes,
   loadRegisterCodes,
   performLocationCodeAction,
   submitLocationCodeRequest,
 } from "./locationCodesThunks";
+import {
+  loadMasterData,
+  saveCountry,
+  saveSubsidiaryType,
+} from "./masterDataThunks";
 
 export interface LocationCodesState {
   /** Requests and codes together, for the Location codes tab. */
@@ -45,6 +64,12 @@ export interface LocationCodesState {
   codesLoadStatus: RinfLoadStatus;
   requests: LocationCodeRequest[];
   codes: CodeVersion[];
+  /** Countries and subsidiary types; the built-in lists until loaded. */
+  masterData: MasterData;
+  masterDataLoadStatus: RinfLoadStatus;
+  /** The requester's forms saved before submission, last saved first. */
+  savedDrafts: RequestDraft[];
+  savedDraftsLoadStatus: RinfLoadStatus;
   actor: Actor;
   /** An action or submission is under way. */
   working: boolean;
@@ -54,6 +79,8 @@ export interface LocationCodesState {
   picking: MapPicking | null;
   /** The new request form, kept while the user is on the map. */
   formDraft: RequestData | null;
+  /** The saved draft the form is working on, if any; kept while on the map. */
+  formDraftId: string | null;
   /** An element was picked on the map; the form fills in from RINF. */
   pendingAutofill: boolean;
   /**
@@ -75,11 +102,16 @@ const initialState: LocationCodesState = {
   codesLoadStatus: "idle",
   requests: [],
   codes: [],
+  masterData: defaultMasterData(),
+  masterDataLoadStatus: "idle",
+  savedDrafts: [],
+  savedDraftsLoadStatus: "idle",
   actor: readActor(),
   working: false,
   error: null,
   picking: null,
   formDraft: null,
+  formDraftId: null,
   pendingAutofill: false,
   positionFromMap: null,
 };
@@ -94,6 +126,14 @@ const locationCodesSlice = createSlice({
   initialState,
   reducers: {
     setActor(state, action: PayloadAction<Actor>) {
+      const isSameRequester =
+        action.payload.role === state.actor.role &&
+        isSamePerson(action.payload.name, state.actor.name);
+      // Drafts are one person's: another actor starts without them.
+      if (!isSameRequester) {
+        state.savedDrafts = [];
+        state.savedDraftsLoadStatus = "idle";
+      }
       state.actor = action.payload;
       writeActor(action.payload);
     },
@@ -128,6 +168,10 @@ const locationCodesSlice = createSlice({
     },
     clearFormDraft(state) {
       state.formDraft = null;
+      state.formDraftId = null;
+    },
+    setFormDraftId(state, action: PayloadAction<string | null>) {
+      state.formDraftId = action.payload;
     },
     autofillStarted(state) {
       state.pendingAutofill = false;
@@ -157,14 +201,49 @@ const locationCodesSlice = createSlice({
       .addCase(loadRegisterCodes.rejected, (state) => {
         state.codesLoadStatus = "failed";
       })
+      .addCase(loadMasterData.pending, (state) => {
+        state.masterDataLoadStatus = "loading";
+      })
+      .addCase(loadMasterData.fulfilled, (state, action) => {
+        state.masterDataLoadStatus = "loaded";
+        state.masterData = action.payload;
+      })
+      .addCase(loadMasterData.rejected, (state) => {
+        state.masterDataLoadStatus = "failed";
+      })
+      .addCase(saveCountry.fulfilled, (state, action) => {
+        state.masterData = withCountry(state.masterData, action.payload);
+      })
+      .addCase(saveSubsidiaryType.fulfilled, (state, action) => {
+        state.masterData = withSubsidiaryType(state.masterData, action.payload);
+      })
       .addCase(submitBulkRequest.fulfilled, (state, action) => {
         state.requests = action.payload.reduce(replaceRequest, state.requests);
       })
       .addCase(registerBulkRequest.fulfilled, (state, action) => {
         state.requests = action.payload.reduce(replaceRequest, state.requests);
       })
+      .addCase(loadDrafts.pending, (state) => {
+        state.savedDraftsLoadStatus = "loading";
+      })
+      .addCase(loadDrafts.fulfilled, (state, action) => {
+        state.savedDraftsLoadStatus = "loaded";
+        state.savedDrafts = action.payload;
+      })
+      .addCase(loadDrafts.rejected, (state) => {
+        state.savedDraftsLoadStatus = "failed";
+      })
+      .addCase(saveRequestDraft.fulfilled, (state, action) => {
+        state.savedDrafts = withDraft(state.savedDrafts, action.payload);
+      })
+      .addCase(deleteRequestDraft.fulfilled, (state, action) => {
+        state.savedDrafts = withoutDraft(state.savedDrafts, action.payload);
+      })
       .addCase(submitLocationCodeRequest.fulfilled, (state, action) => {
         state.requests = replaceRequest(state.requests, action.payload);
+        const { draftId } = action.meta.arg;
+        if (draftId)
+          state.savedDrafts = withoutDraft(state.savedDrafts, draftId);
       })
       .addCase(performLocationCodeAction.pending, (state) => {
         state.working = true;
@@ -190,6 +269,7 @@ export const {
   pickRinfElement,
   cancelPicking,
   clearFormDraft,
+  setFormDraftId,
   autofillStarted,
 } = locationCodesSlice.actions;
 

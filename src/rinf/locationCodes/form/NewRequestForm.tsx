@@ -12,97 +12,47 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-14: Reset and Cancel next to Submit. */
+Added for the ERA Location Code Manager, 2026-11-10. */
 
-import { Alert, Box, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
-import { ChangeFields } from "./ChangeFields";
-import { CrdAttributeFields } from "./CrdAttributeFields";
-import { FormButtons } from "./FormButtons";
-import { FormSection, useFieldError } from "./FormSection";
-import { LocationElementField } from "./LocationElementField";
-import { useRequestForm } from "./hooks/useRequestForm";
-import { OperationSection } from "./OperationSection";
-import { PreCheckSection } from "./PreCheckSection";
-import { PrimaryCodeFields } from "./PrimaryCodeFields";
-import { RequesterFields } from "./RequesterFields";
-import { SubsidiaryCodeFields } from "./SubsidiaryCodeFields";
+import { useSearchParams } from "react-router-dom";
+import { useAppSelector } from "../../../store/hooks";
+import { DRAFT_PARAM } from "../page/locationCodesPath";
+import { RequestFormContent } from "./RequestFormContent";
 
-/** One column up to laptop width; on wider screens the request on the left
- *  and the requester, check and submit on the right. */
-const FORM_MAX_WIDTH = { md: 760, lg: 1320 };
-const COLUMNS = {
-  xs: "minmax(0, 1fr)",
-  lg: "minmax(0, 7fr) minmax(0, 5fr)",
-};
-const COLUMN_GAP = { xs: 2, lg: 3 };
-
-/** Steps 1 and 2: the requester's check, then the request itself. */
+/**
+ * The new request form, or a saved draft continued (?draft=<id>): the form
+ * opens once the requester's drafts are there, with the draft's values.
+ */
 export const NewRequestForm = () => {
   const { formatMessage } = useIntl();
-  const form = useRequestForm();
-  const { data, update, errors } = form;
-  const fieldError = useFieldError(errors);
-  const hasErrors = Object.keys(errors).length > 0;
+  const [params] = useSearchParams();
+  const draftId = params.get(DRAFT_PARAM);
+  const isFound = useAppSelector((state) =>
+    state.rinf.locationCodes.savedDrafts.some((draft) => draft.id === draftId),
+  );
+  const isLoading = useAppSelector(
+    (state) => state.rinf.locationCodes.savedDraftsLoadStatus === "loading",
+  );
+  const isMissing = draftId !== null && !isFound;
 
-  return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: FORM_MAX_WIDTH, mx: "auto" }}>
-      <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-        {formatMessage({ id: "rinf_lc_form_title" })}
+  if (isMissing && isLoading)
+    return (
+      <Typography variant="body2" sx={{ p: 3, color: "text.secondary" }}>
+        {formatMessage({ id: "rinf_lc_draft_loading" })}
       </Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: COLUMNS,
-          gap: COLUMN_GAP,
-          alignItems: "start",
-        }}
-      >
-        <Stack spacing={2}>
-          <OperationSection form={form} />
-          <FormSection
-            titleId="rinf_lc_form_location"
-            hintId={`rinf_lc_form_location_hint_${data.codeType}`}
-          >
-            <LocationElementField form={form} />
-            {data.codeType === "primary" ? (
-              <PrimaryCodeFields form={form} />
-            ) : (
-              <SubsidiaryCodeFields form={form} />
-            )}
-            <ChangeFields form={form} />
-            <TextField
-              size="small"
-              multiline
-              minRows={2}
-              label={formatMessage({ id: "rinf_lc_field_justification" })}
-              value={data.justification}
-              onChange={(event) =>
-                update({ justification: event.target.value })
-              }
-              {...fieldError(
-                "justification",
-                "rinf_lc_field_justification_hint",
-              )}
-            />
-          </FormSection>
-          {data.codeType === "primary" && data.operation !== "deactivation" && (
-            <CrdAttributeFields form={form} />
-          )}
-        </Stack>
-        <Stack spacing={2}>
-          <RequesterFields form={form} />
-          <PreCheckSection form={form} />
-          {hasErrors && (
-            <Alert severity="error">
-              {formatMessage({ id: "rinf_lc_form_has_errors" })}
-            </Alert>
-          )}
-          <FormButtons form={form} />
-        </Stack>
-      </Box>
-    </Box>
+    );
+  return (
+    <>
+      {isMissing && (
+        <Box sx={{ px: { xs: 2, md: 3 }, pt: 2 }}>
+          <Alert severity="warning">
+            {formatMessage({ id: "rinf_lc_draft_not_found" })}
+          </Alert>
+        </Box>
+      )}
+      <RequestFormContent key={isMissing ? "new" : (draftId ?? "new")} />
+    </>
   );
 };

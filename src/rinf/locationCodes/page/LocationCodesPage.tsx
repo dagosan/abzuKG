@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: Master data view. */
 
 import { Box, Typography } from "@mui/material";
 import { useEffect } from "react";
@@ -21,9 +22,11 @@ import { useIntl } from "react-intl";
 import { useParams } from "react-router-dom";
 import { belowAppChromeViewportHeight } from "../../../components/modern/Header/headerMetrics";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { MasterDataPage } from "../masterData/MasterDataPage";
 import { RegisterTable } from "../register/RegisterTable";
 import { cancelPicking } from "../state/locationCodesSlice";
 import { loadLocationCodes } from "../state/locationCodesThunks";
+import { useMasterData } from "../state/useMasterData";
 import { LoginGate } from "../login/LoginGate";
 import { useAccountActor } from "../login/useAccountActor";
 import { useLocationCodesLogin } from "../login/useLocationCodesLogin";
@@ -31,18 +34,19 @@ import {
   LocationCodesActionBar,
   LocationCodesView,
 } from "./LocationCodesActionBar";
+import { useSavedDrafts } from "./hooks/useSavedDrafts";
 import { BULK_ID_PARAM, REQUEST_ID_PARAM } from "./locationCodesPath";
 import { AgencyView, RequesterView, WorkMode } from "./RoleViews";
 
 /** Which part of the page a route shows. */
-export type LocationCodesPageMode = WorkMode | "register";
+export type LocationCodesPageMode = WorkMode | "register" | "masterData";
 
 /** The view the action bar shows as selected. */
 const viewOf = (
   mode: LocationCodesPageMode,
   isRequester: boolean,
 ): LocationCodesView => {
-  if (mode === "register") return "register";
+  if (mode === "register" || mode === "masterData") return mode;
   if (!isRequester) return "requests";
   if (mode === "bulk") return "bulk";
   return mode === "mine" || mode === "request" || mode === "bulkFile"
@@ -55,7 +59,7 @@ interface LocationCodesPageProps {
 }
 
 /**
- * Routes /location-codes[/new|/mine|/register|/:requestId] — the code
+ * Routes /location-codes[/new|/mine|/register|/master-data|/:requestId] — the code
  * allocation workflow of the procedure for the assignment of location
  * codes, laid out for the role the user acts in.
  */
@@ -71,6 +75,10 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
   );
 
   useAccountActor();
+  // The rules of every view read the countries and subsidiary types.
+  useMasterData();
+  // A requester's drafts: listed under "My requests", continued in the form.
+  useSavedDrafts();
   const login = useLocationCodesLogin();
   // Requests name people: with a login set up, they load only once logged in.
   const mayReadRequests = !login.configured || login.loggedIn;
@@ -96,9 +104,9 @@ export const LocationCodesPage = ({ mode }: LocationCodesPageProps) => {
     >
       <Helmet title={formatMessage({ id: "rinf_lc_tab" })} />
       <LocationCodesActionBar view={viewOf(mode, isRequester)} />
-      {mode === "register" ? (
+      {mode === "register" || mode === "masterData" ? (
         <Box sx={{ flex: 1, overflow: "auto" }}>
-          <RegisterTable />
+          {mode === "register" ? <RegisterTable /> : <MasterDataPage />}
         </Box>
       ) : (
         <LoginGate>

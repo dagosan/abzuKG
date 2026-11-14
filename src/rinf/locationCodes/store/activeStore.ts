@@ -13,7 +13,9 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend added the same day.
-Modified 2026-10-30: stores take workflow steps; newId moved to newId.ts. */
+Modified 2026-10-30: stores take workflow steps; newId moved to newId.ts.
+Modified 2026-11-10: master data (countries, subsidiary types).
+Modified 2026-11-10: request drafts. */
 
 import { getFetchedConfig } from "../../../config/fetchConfig";
 import { browserStore } from "./browserStore";
@@ -42,13 +44,21 @@ export const locationCodeStoreKind = (): "tiamat" | "browser" =>
 export const locationCodeStore: LocationCodeStore = {
   loadRequests: () => currentLocationCodeStore().loadRequests(),
   loadCodes: () => currentLocationCodeStore().loadCodes(),
-  submitRequest: (data, actor) =>
-    currentLocationCodeStore().submitRequest(data, actor),
+  submitRequest: (data, actor, draftId) =>
+    currentLocationCodeStore().submitRequest(data, actor, draftId),
   submitBulk: (lines, actor, fileName) =>
     currentLocationCodeStore().submitBulk(lines, actor, fileName),
   registerBulk: (bulkId, actor) =>
     currentLocationCodeStore().registerBulk(bulkId, actor),
+  loadDrafts: (owner) => currentLocationCodeStore().loadDrafts(owner),
+  saveDraft: (id, data, owner) =>
+    currentLocationCodeStore().saveDraft(id, data, owner),
+  deleteDraft: (id, owner) => currentLocationCodeStore().deleteDraft(id, owner),
   takeStep: (step) => currentLocationCodeStore().takeStep(step),
+  loadMasterData: () => currentLocationCodeStore().loadMasterData(),
+  saveCountry: (country) => currentLocationCodeStore().saveCountry(country),
+  saveSubsidiaryType: (type) =>
+    currentLocationCodeStore().saveSubsidiaryType(type),
   exportSnapshot: () => currentLocationCodeStore().exportSnapshot(),
   importSnapshot: (snapshot) =>
     currentLocationCodeStore().importSnapshot(snapshot),

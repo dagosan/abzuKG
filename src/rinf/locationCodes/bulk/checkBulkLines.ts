@@ -47,7 +47,7 @@ export const checkBulkLines = (
       codeType: codeTypeOf(line),
       locationName: line.values.Location_Name ?? "",
       failures: [
-        ...lineFormatFailures(line),
+        ...lineFormatFailures(line, context.today),
         ...(isReadable ? registerFailures(line, withFile) : []),
         ...(acrossLines.get(line.line) ?? []),
       ],

@@ -16,6 +16,12 @@ Added for the ERA Location Code Manager, 2026-11-10. */
 
 import { afterEach, describe, expect, it } from "vitest";
 import type { CodeVersion } from "../model/CodeVersion";
+import { withCountry } from "../model/masterData";
+import {
+  currentMasterData,
+  defaultMasterData,
+  setCurrentMasterData,
+} from "../model/masterDataRegistry";
 import { BULK_COLUMNS, bulkTemplateCsv, MAX_BULK_LINES } from "./bulkColumns";
 import { readBulkFile } from "./bulkFile";
 import { countriesToAsk } from "./bulkRegisterChecks";
@@ -84,6 +90,8 @@ const failuresOf = (lines: CheckedLine[], index = 0): string[] =>
     ({ column, rule, messageId }) =>
       `${column ?? "-"} ${rule} ${messageId.replace("rinf_lc_bulk_", "")}`,
   );
+
+afterEach(() => setCurrentMasterData(defaultMasterData()));
 
 describe("parseCsv", () => {
   it("reads quoted fields with commas, quotes and line breaks", () => {
@@ -232,7 +240,10 @@ describe("the line checks", () => {
 });
 
 describe("the checks against existing codes", () => {
-  it("refuse a proposed PLC already in the register", () => {
+  const belgium = () =>
+    currentMasterData().countries.find((country) => country.isoCode === "BE");
+
+  it("refuse a proposed PLC outside the country's numbers or already in the register", () => {
     const proposing = (value: string) =>
       oneLine({ ...PLC_LINE, Primary_Location_Code: value });
     const closed = version({ endValidity: "2021-01-01" });
@@ -240,6 +251,18 @@ describe("the checks against existing codes", () => {
       "Primary_Location_Code BR-10 code_taken",
     ]);
     expect(failuresOf(check(proposing("00439"), [closed]))).toEqual([]);
+    const country = belgium();
+    if (!country) throw new Error("BE is missing");
+    setCurrentMasterData(
+      withCountry(currentMasterData(), {
+        ...country,
+        plcRangeStart: 100,
+        plcRangeEnd: 200,
+      }),
+    );
+    expect(failuresOf(check(proposing("50")))).toEqual([
+      "Primary_Location_Code BR-10 out_of_range",
+    ]);
   });
 
   it("want an SLC's parent active when the SLC starts", () => {

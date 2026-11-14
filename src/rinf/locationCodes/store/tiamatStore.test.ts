@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: the store submits and takes steps instead of saving documents.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: master data. */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -22,6 +23,8 @@ import type {
   RequestData,
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
+import { DEFAULT_COUNTRIES } from "../model/defaultCountries";
+import { DEFAULT_SUBSIDIARY_TYPES } from "../model/defaultSubsidiaryTypes";
 import type { Actor } from "../model/roles";
 import { parseBackup } from "./backupFile";
 import type { WorkflowStep } from "./LocationCodeStore";
@@ -165,6 +168,94 @@ describe("tiamatStore", () => {
     mockFetch(new TypeError("Failed to fetch"));
     await expect(createTiamatStore(BASE).loadRequests()).rejects.toThrow(
       UNREACHABLE_ERROR,
+    );
+  });
+});
+
+describe("tiamatStore drafts", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const draft = { id: "d-1", owner: "Anna B", savedAt: "2026-11-10", data };
+
+  it("reads, saves and discards the owner's drafts", async () => {
+    const store = createTiamatStore(BASE);
+    const readMock = mockFetch(answer(200, [draft]));
+    await expect(store.loadDrafts("Anna B")).resolves.toEqual([draft]);
+    expect(sent(readMock).url).toBe(
+      "https://tiamat.test/era/v1/location-codes/drafts?owner=Anna%20B",
+    );
+    const saveMock = mockFetch(answer(200, draft));
+    await expect(store.saveDraft("d-1", data, "Anna B")).resolves.toEqual(
+      draft,
+    );
+    expect(sent(saveMock)).toEqual({
+      url: "https://tiamat.test/era/v1/location-codes/drafts/d-1?owner=Anna%20B",
+      method: "PUT",
+      body: JSON.stringify({ data }),
+    });
+    const deleteMock = mockFetch(answer(204));
+    await expect(store.deleteDraft("d-1", "Anna B")).resolves.toBeUndefined();
+    expect(sent(deleteMock).method).toBe("DELETE");
+  });
+
+  it("names the draft a request was written from", async () => {
+    const fetchMock = mockFetch(answer(201, request));
+    await createTiamatStore(BASE).submitRequest(data, anna, "d-1");
+    expect(sent(fetchMock).body).toBe(
+      JSON.stringify({ actor: anna, data, draftId: "d-1" }),
+    );
+  });
+});
+
+describe("tiamatStore master data", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const belgium = DEFAULT_COUNTRIES.find(({ isoCode }) => isoCode === "BE");
+  const [track] = DEFAULT_SUBSIDIARY_TYPES.filter(({ code }) => code === "01");
+
+  it("reads countries and subsidiary types", async () => {
+    const fetchMock = vi.fn(async (url: string) =>
+      answer(200, url.endsWith("/countries") ? [belgium] : [track]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(createTiamatStore(BASE).loadMasterData()).resolves.toEqual({
+      countries: [belgium],
+      subsidiaryTypes: [track],
+    });
+    expect(fetchMock.mock.calls.map(([url]) => url).sort()).toEqual([
+      "https://tiamat.test/era/v1/location-codes/countries",
+      "https://tiamat.test/era/v1/location-codes/subsidiary-types",
+    ]);
+  });
+
+  it("saves one entry under its key", async () => {
+    if (!belgium) throw new Error("BE is missing");
+    const fetchMock = mockFetch(answer(200, belgium));
+    await expect(createTiamatStore(BASE).saveCountry(belgium)).resolves.toEqual(
+      belgium,
+    );
+    expect(sent(fetchMock)).toEqual({
+      url: "https://tiamat.test/era/v1/location-codes/countries/BE",
+      method: "PUT",
+      body: JSON.stringify(belgium),
+    });
+    const typeFetch = mockFetch(answer(200, track));
+    await createTiamatStore(BASE).saveSubsidiaryType(track);
+    expect(sent(typeFetch).url).toBe(
+      "https://tiamat.test/era/v1/location-codes/subsidiary-types/01",
+    );
+  });
+
+  it("passes on why the register refused an entry", async () => {
+    if (!belgium) throw new Error("BE is missing");
+    mockFetch(
+      answer(409, {
+        error: "duplicateUicCode",
+        details: ["another country already has UIC code 88"],
+      }),
+    );
+    await expect(createTiamatStore(BASE).saveCountry(belgium)).rejects.toThrow(
+      "another country already has UIC code 88",
     );
   });
 });

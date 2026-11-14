@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-11-14. */
+Added for the ERA RINF frontend, 2026-11-14.
+Modified 2026-11-14: "Save as draft", moved here from the form. */
 
 import { Button, Stack } from "@mui/material";
 import { useState } from "react";
@@ -26,10 +27,11 @@ interface FormButtonsProps {
   form: RequestForm;
 }
 
-/** Submit, Reset and Cancel; the last two ask first if the form is filled. */
+/** Submit, Save as draft, Reset and Cancel; the last two ask first if the form is filled. */
 export const FormButtons = ({ form }: FormButtonsProps) => {
   const { formatMessage } = useIntl();
   const { submit, submitting, changed, reset, cancel } = form;
+  const { saveDraft, savingDraft } = form;
   const [asking, setAsking] = useState<Discard | null>(null);
   const discard = (which: Discard) => (which === "reset" ? reset() : cancel());
   const ask = (which: Discard) => (changed ? setAsking(which) : discard(which));
@@ -38,6 +40,13 @@ export const FormButtons = ({ form }: FormButtonsProps) => {
     <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
       <Button variant="contained" onClick={submit} disabled={submitting}>
         {formatMessage({ id: "rinf_lc_form_submit" })}
+      </Button>
+      <Button
+        variant="outlined"
+        onClick={saveDraft}
+        disabled={savingDraft || submitting}
+      >
+        {formatMessage({ id: "rinf_lc_draft_save" })}
       </Button>
       <Button
         variant="outlined"

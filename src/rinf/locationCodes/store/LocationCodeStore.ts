@@ -15,13 +15,17 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
 Modified 2026-10-30: the store takes workflow steps (submitRequest, takeStep) instead of saving documents.
 Modified 2026-11-02: register as code versions with CRD's columns.
-Modified 2026-11-14: bulk requests (one request with a line per code). */
+Modified 2026-11-10: master data (countries, subsidiary types).
+Modified 2026-11-10: request drafts.
+Modified 2026-11-10: bulk requests (one request with a line per code). */
 
 import type {
   LocationCodeRequest,
   RequestData,
 } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
+import type { Country, MasterData, SubsidiaryType } from "../model/masterData";
+import type { RequestDraft } from "../model/RequestDraft";
 import type { Actor } from "../model/roles";
 import type { WorkflowAction } from "../workflow/actions";
 import type { ActionPayload } from "../workflow/applyAction";
@@ -61,8 +65,15 @@ export interface StepResult {
 export interface LocationCodeStore {
   loadRequests(): Promise<LocationCodeRequest[]>;
   loadCodes(): Promise<CodeVersion[]>;
-  /** Procedure step 2: records a new request and returns it. */
-  submitRequest(data: RequestData, actor: Actor): Promise<LocationCodeRequest>;
+  /**
+   * Procedure step 2: records a new request and returns it. `draftId`: the
+   * submitter's draft the request was written from, removed with it.
+   */
+  submitRequest(
+    data: RequestData,
+    actor: Actor,
+    draftId?: string,
+  ): Promise<LocationCodeRequest>;
   /**
    * A bulk request (LCMS specification FR-08): one request per line, all
    * submitted together as the lines of one file. Returns the lines.
@@ -74,8 +85,24 @@ export interface LocationCodeStore {
   ): Promise<LocationCodeRequest[]>;
   /** Registers every line of a bulk request under one reference and one T0. */
   registerBulk(bulkId: string, actor: Actor): Promise<LocationCodeRequest[]>;
+  /** The drafts of `owner`, last saved first; with a login, the account's. */
+  loadDrafts(owner: string): Promise<RequestDraft[]>;
+  /** Saves a form as the draft `id` of `owner`, new or saved before. */
+  saveDraft(
+    id: string,
+    data: RequestData,
+    owner: string,
+  ): Promise<RequestDraft>;
+  /** Discards a draft of `owner`. */
+  deleteDraft(id: string, owner: string): Promise<void>;
   /** Takes one step, or refuses it with an Error whose message is a text key or the reasons. */
   takeStep(step: WorkflowStep): Promise<StepResult>;
+  /** The countries and subsidiary types the rules read; public. */
+  loadMasterData(): Promise<MasterData>;
+  /** Adds or replaces a country (code administrator); returns it as stored. */
+  saveCountry(country: Country): Promise<Country>;
+  /** Adds or replaces a subsidiary type (code administrator). */
+  saveSubsidiaryType(type: SubsidiaryType): Promise<SubsidiaryType>;
   /** Everything, for the backup file. */
   exportSnapshot(): Promise<LocationCodeSnapshot>;
   /** Loads a backup file. */

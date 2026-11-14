@@ -27,7 +27,7 @@ import { useIntl } from "react-intl";
 import { useAppSelector } from "../../../../store/hooks";
 import { todayIsoDate } from "../../../api/queryParts";
 import type { LocationCodeRequest } from "../../model/LocationCodeRequest";
-import { errorText } from "../bulkErrorText";
+import { errorText } from "../../masterData/validityText";
 import { BATCH_ACTIONS, linesReadyFor } from "../bulkBatch";
 import { bulkRegistrationRefusal } from "../bulkRequests";
 import { BatchProgress, useBulkBatch } from "./hooks/useBulkBatch";

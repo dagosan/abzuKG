@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: countries and subsidiary types come from the master data. */
 
 import type { CheckResult } from "../model/checklist";
 import { isCreation } from "../model/codeTypes";
@@ -21,7 +22,7 @@ import { normalisePrimaryCode, subsidiaryKey } from "../model/codeFormat";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import { isOpenOn } from "../model/codeVersions";
 import { elementOfLink } from "../model/rinfLink";
-import { findSubsidiaryType } from "../model/subsidiaryTypes";
+import { isSubsidiaryTypeInUse } from "../model/subsidiaryTypes";
 import { assignableCode } from "./assignableCode";
 import {
   activeSubsidiariesOf,
@@ -61,7 +62,7 @@ export const subsidiaryDuplicateCheck = (
     : result("noDuplicate", "pass", "rinf_lc_detail_no_duplicate");
 };
 
-/** Item 7: an active parent PLC exists; the type code is in Table 6. */
+/** Item 7: an active parent PLC exists; the type is one in use (master data, BR-08). */
 export const parentCheck = (
   { data }: LocationCodeRequest,
   context: CheckContext,
@@ -69,7 +70,7 @@ export const parentCheck = (
   const parent = normalisePrimaryCode(data.parentPrimaryCode);
   if (
     isCreation(data.operation) &&
-    !findSubsidiaryType(data.subsidiaryTypeCode)
+    !isSubsidiaryTypeInUse(data.subsidiaryTypeCode, context.today)
   )
     return result("parentPrimaryCode", "fail", "rinf_lc_detail_type_unknown");
   const registered = findRegistered(context.register, parent);

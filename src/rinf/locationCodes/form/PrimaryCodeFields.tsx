@@ -12,12 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: countries and subsidiary types come from the master data. */
 
 import { Checkbox, FormControlLabel, MenuItem, TextField } from "@mui/material";
 import { useIntl } from "react-intl";
 import { isCreation } from "../model/codeTypes";
-import { COUNTRY_PREFIXES, countryName } from "../model/countries";
+import { countriesInUse, countryName } from "../model/countries";
+import { useMasterData } from "../state/useMasterData";
 import { FieldRow } from "./FieldRow";
 import { useFieldError } from "./FormSection";
 import type { RequestForm } from "./hooks/useRequestForm";
@@ -30,6 +32,7 @@ interface PrimaryCodeFieldsProps {
 export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
   const { formatMessage, locale } = useIntl();
   const { data, update, errors } = form;
+  const { countries } = useMasterData();
   const fieldError = useFieldError(errors, form.fromRinf);
   const creating = isCreation(data.operation);
   const amending = data.operation === "amendment";
@@ -47,9 +50,9 @@ export const PrimaryCodeFields = ({ form }: PrimaryCodeFieldsProps) => {
             onChange={(event) => update({ country: event.target.value })}
             {...fieldError("country")}
           >
-            {COUNTRY_PREFIXES.map((prefix) => (
-              <MenuItem key={prefix} value={prefix}>
-                {prefix} · {countryName(prefix, locale)}
+            {countriesInUse(undefined, countries).map(({ isoCode }) => (
+              <MenuItem key={isoCode} value={isoCode}>
+                {isoCode} · {countryName(isoCode, locale)}
               </MenuItem>
             ))}
           </TextField>

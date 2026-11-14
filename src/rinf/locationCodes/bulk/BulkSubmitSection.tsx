@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import { useIntl } from "react-intl";
 import { RequesterFields } from "../form/RequesterFields";
-import { errorText } from "./bulkErrorText";
+import { errorText } from "../masterData/validityText";
 import { acceptedLines, BulkReport, refusedLines } from "./bulkReport";
 import { useBulkSubmit } from "./hooks/useBulkSubmit";
 

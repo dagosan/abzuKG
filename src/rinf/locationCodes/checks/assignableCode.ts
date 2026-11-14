@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: a new PLC takes a number of its country's range (master data). */
 
 import { isCreation } from "../model/codeTypes";
 import {
@@ -22,7 +23,9 @@ import {
   normalisePrimaryCode,
   parsePrimaryCode,
 } from "../model/codeFormat";
+import { findCountry } from "../model/countries";
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
+import { isInRange } from "../model/masterData";
 import {
   CheckContext,
   registeredPrimaryCodes,
@@ -77,8 +80,18 @@ export const assignableCode = (
   }
   const used = usedPrimaryCodes(context, data.country);
   const proposed = normalisePrimaryCode(data.proposedCode);
-  if (proposed && !used.has(proposed)) return proposed;
   if (data.operation === "existingCode") return proposed || null;
-  const free = lowestFreeNumber(usedLocationNumbers(used));
+  // A new code takes a number of the country's range (master data, BR-10).
+  const country = findCountry(data.country);
+  const proposedNumber = parsePrimaryCode(proposed)?.locationNumber;
+  const proposedInRange =
+    proposedNumber !== undefined &&
+    (!country || isInRange(country, proposedNumber));
+  if (proposed && !used.has(proposed) && proposedInRange) return proposed;
+  const free = lowestFreeNumber(
+    usedLocationNumbers(used),
+    country?.plcRangeStart,
+    country?.plcRangeEnd,
+  );
   return free === null ? null : formatPrimaryCode(data.country, free);
 };

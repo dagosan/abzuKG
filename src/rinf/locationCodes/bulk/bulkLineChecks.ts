@@ -63,11 +63,11 @@ const columnUseFailures = (
     ),
 ];
 
-const countryFailures = (country: string): BulkFailure[] => {
+const countryFailures = (country: string, today: string): BulkFailure[] => {
   if (!country) return [];
   if (!isCountryCode(country))
     return [failure("Country_ISO_code", "A1", "rinf_lc_bulk_country_format")];
-  return isCountryPrefix(country)
+  return isCountryPrefix(country, today)
     ? []
     : [
         failure("Country_ISO_code", "A1", "rinf_lc_bulk_country_unknown", {
@@ -109,10 +109,10 @@ const tooLong = (
     : [];
 
 /** The columns a PLC line and an SLC line share. */
-const sharedFailures = (line: BulkLine): BulkFailure[] => {
+const sharedFailures = (line: BulkLine, today: string): BulkFailure[] => {
   const { values } = line;
   return [
-    ...countryFailures(values.Country_ISO_code ?? ""),
+    ...countryFailures(values.Country_ISO_code ?? "", today),
     ...tooLong(line, "Location_Name", NAME_MAX_LENGTH),
     ...tooLong(line, "Location_Name_ASCII", NAME_MAX_LENGTH),
     ...(isAscii(values.Location_Name_ASCII ?? "")
@@ -133,7 +133,10 @@ const sharedFailures = (line: BulkLine): BulkFailure[] => {
  * fields, or without a kind, is not checked further: its columns cannot be
  * told apart.
  */
-export const lineFormatFailures = (line: BulkLine): BulkFailure[] => {
+export const lineFormatFailures = (
+  line: BulkLine,
+  today: string,
+): BulkFailure[] => {
   if (line.fieldCount !== line.headerFieldCount)
     return [
       failure(null, "FILE", "rinf_lc_bulk_line_fields", {
@@ -145,9 +148,9 @@ export const lineFormatFailures = (line: BulkLine): BulkFailure[] => {
   if (!kind) return [failure("Code_Type", "A1", "rinf_lc_bulk_code_type")];
   return [
     ...columnUseFailures(line, kind),
-    ...sharedFailures(line),
+    ...sharedFailures(line, today),
     ...(kind === "PLC"
       ? primaryLineFailures(line)
-      : subsidiaryLineFailures(line)),
+      : subsidiaryLineFailures(line, today)),
   ];
 };
