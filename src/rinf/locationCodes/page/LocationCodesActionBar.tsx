@@ -27,6 +27,7 @@ import { ActorSwitcher } from "./ActorSwitcher";
 import { useLocationCodesLogin } from "../login/useLocationCodesLogin";
 import { DataMenu } from "./DataMenu";
 import {
+  bulkPath,
   LOCATION_CODES_PATH,
   myRequestsPath,
   newRequestPath,
@@ -35,16 +36,23 @@ import {
 
 const BAR_MIN_HEIGHT = 56;
 
-export type LocationCodesView = "new" | "mine" | "requests" | "register";
+export type LocationCodesView =
+  "new" | "bulk" | "mine" | "requests" | "register";
 
 /** Views per role: a requester asks and follows; Agency roles handle cases. */
-const REQUESTER_VIEWS: LocationCodesView[] = ["new", "mine", "register"];
+const REQUESTER_VIEWS: LocationCodesView[] = [
+  "new",
+  "bulk",
+  "mine",
+  "register",
+];
 const AGENCY_VIEWS: LocationCodesView[] = ["requests", "register"];
 
 const PATH_OF_VIEW: Record<LocationCodesView, string> = {
   new: newRequestPath(),
   mine: myRequestsPath,
   requests: LOCATION_CODES_PATH,
+  bulk: bulkPath,
   register: registerPath,
 };
 
@@ -52,6 +60,7 @@ const LABEL_OF_VIEW: Record<LocationCodesView, string> = {
   new: "rinf_lc_new_request",
   mine: "rinf_lc_view_mine",
   requests: "rinf_lc_view_requests",
+  bulk: "rinf_lc_view_bulk",
   register: "rinf_lc_view_register",
 };
 

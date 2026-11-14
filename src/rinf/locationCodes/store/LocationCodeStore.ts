@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29; Tiamat backend methods added the same day.
 Modified 2026-10-30: the store takes workflow steps (submitRequest, takeStep) instead of saving documents.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-14: bulk requests (one request with a line per code). */
 
 import type {
   LocationCodeRequest,
@@ -24,6 +25,13 @@ import type { CodeVersion } from "../model/CodeVersion";
 import type { Actor } from "../model/roles";
 import type { WorkflowAction } from "../workflow/actions";
 import type { ActionPayload } from "../workflow/applyAction";
+
+/** One line of an uploaded bulk file, as a request's data. */
+export interface BulkLineData {
+  /** Line number in the file; the header is line 1. */
+  line: number;
+  data: RequestData;
+}
 
 /** One step on a request, as the actor asks for it. */
 export interface WorkflowStep {
@@ -55,6 +63,17 @@ export interface LocationCodeStore {
   loadCodes(): Promise<CodeVersion[]>;
   /** Procedure step 2: records a new request and returns it. */
   submitRequest(data: RequestData, actor: Actor): Promise<LocationCodeRequest>;
+  /**
+   * A bulk request (LCMS specification FR-08): one request per line, all
+   * submitted together as the lines of one file. Returns the lines.
+   */
+  submitBulk(
+    lines: BulkLineData[],
+    actor: Actor,
+    fileName: string,
+  ): Promise<LocationCodeRequest[]>;
+  /** Registers every line of a bulk request under one reference and one T0. */
+  registerBulk(bulkId: string, actor: Actor): Promise<LocationCodeRequest[]>;
   /** Takes one step, or refuses it with an Error whose message is a text key or the reasons. */
   takeStep(step: WorkflowStep): Promise<StepResult>;
   /** Everything, for the backup file. */

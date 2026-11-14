@@ -350,6 +350,82 @@ its RINF element; name, country and IM come from RINF as usual, the OP's
 position does not (`positionFromMap` in the slice; `holdsMapPosition`).
 Only for a requester, and not while a form is already waiting for a pick.
 
+### Bulk requests, first part: the file check (2026-11-10; on master 2026-11-14)
+
+From the LCMS specification (FR-08) and its Annex A, "Structure of the bulk
+request CSV file" (drafted with it, not yet confirmed). View "Bulk request"
+(`/location-codes/bulk`, requesters only; `bulk/`): the requester chooses a
+CSV file and gets the report per line. The check itself creates and sends
+nothing; sending the accepted lines is the second part, below.
+
+- The file (`bulk/bulkColumns.ts`): header with the annex's 24 column names
+  (CRD's where the meaning is the same), any order, comma separated, UTF-8,
+  RFC 4180 quoting, one line per new PLC or SLC, at most 500. "Download
+  template" gives the header line.
+- File checks (`bulk/bulkFile.ts`) refuse the whole file: not UTF-8, a quote
+  left open, no header, unknown or repeated column names, a column missing
+  that its lines require, no line, more than 500 lines.
+- Line checks (`bulk/checkBulkLines.ts`), all failures reported: each column's
+  form (`bulkLineChecks.ts`, `bulkPrimaryChecks.ts`, `bulkSubsidiaryChecks.ts`);
+  the country and the subsidiary type against the tool's lists; the codes
+  that exist (`bulkRegisterChecks.ts`: a proposed value not in the register,
+  an SLC's parent active when the SLC starts); and the other lines
+  (`bulkCrossChecks.ts`: the same code proposed twice, an SLC whose parent is
+  asked for in the same file).
+- The parent of an SLC is looked for in the register first, then in the
+  Knowledge Graph (one query per country). If the Knowledge Graph cannot be
+  reached those lines are refused and the page says so.
+- The report (`bulk/bulkReportCsv.ts`) is the annex's: `line, result,
+  item_ref, column, rule, message`, one row per accepted line and one per
+  failure. `item_ref` is empty: a line gets its reference at registration.
+- Where the check differs from the annex's wording: a proposed PLC that the
+  Knowledge Graph already holds is accepted when the register does not hold
+  it (first population of an existing code); `Responsible_IM_Code` and
+  `Allocation_Company_Code` are checked for their form only (the tool has no
+  company table); `RINF_Element_Id` is not looked up; `NUTS_Code` is checked
+  for length only.
+
+### Bulk requests, second part: one request with a line per code (2026-11-10; on master 2026-11-14)
+
+FR-08: the accepted lines of a file become one request. **Browser store only
+so far**: with Tiamat the submission is refused with a message
+(`rinf_lc_bulk_error_not_in_tiamat`); the server side is not written.
+
+- Model: each accepted line is a request of its own with `bulk: {id, line,
+  fileName}` (`model/LocationCodeRequest.ts`). The lines of a file share the
+  bulk id, are submitted at the same moment, and are registered together:
+  one number from the year's sequence, one T0, and each line's reference is
+  that reference plus its line number in the file, `LC-2026-0001/3`
+  (`store/browserBulk.ts`). A line cannot be registered on its own.
+- Each line then goes through the ordinary workflow, with its own checks,
+  RINF position, coordination, decision and history, so every rule applies
+  per line and nothing of the workflow was rewritten.
+- Sending (`bulk/BulkSubmitSection.tsx`, `bulk/bulkLineToRequest.ts`): after
+  the check, the requester gives their details once, confirms step 1 for
+  every line and submits the accepted lines. A proposed PLC the Knowledge
+  Graph already holds becomes "existing code" (first population), any other
+  line "new code". `RINF_Element_Id` is taken as an operational point.
+  `Start_Validity` and the validity dates of freight and passenger use are
+  not carried: a request has no place for them, the dates follow from the
+  decision.
+- The bulk request's page (`/location-codes/bulk/<id>`, `bulk/file/`):
+  reference, file, T0, how many lines stand in each status, the lines with
+  what their checks leave to read, and the steps the current role can take
+  on all lines. In the lists a bulk request is one item
+  (`page/RequestGroupItem.tsx`); a line's own file links back to it.
+- Steps on all lines (`bulk/bulkRequests.ts`, `bulk/file/hooks/useBulkBatch.ts`):
+  register; run checks; confirm manual checks; complete validation;
+  confirm RINF position; assign; record and publish; notify and close. Each
+  is the ordinary step taken line by line by the current actor. Left to the
+  line's own file: anything that needs a reason or a choice (information
+  request, rejection, external coordination, a line without a RINF element),
+  and completing validation where the checks leave something to read (a
+  failed check, a warning, or other codes already on the element). The
+  warning that an existing code is in the Knowledge Graph for its own
+  element does not hold a line back: that is first population.
+- Measured with 50 lines and the live Knowledge Graph: checks about 36 s,
+  assignment about 36 s, the other steps 3 to 12 s each.
+
 ## Structure
 
 | Folder             | What it does                                                       |

@@ -18,6 +18,7 @@ Modified 2026-11-02: register as code versions with CRD's columns. */
 
 import { upgradeCodes } from "../model/legacyCodes";
 import { createRequest } from "../workflow/createRequest";
+import { registerBulkInBrowser, submitBulkInBrowser } from "./browserBulk";
 import { takeStepInBrowser } from "./browserWorkflow";
 import type {
   LocationCodeSnapshot,
@@ -81,6 +82,16 @@ export const browserStore: LocationCodeStore = {
     const snapshot = readSnapshot();
     writeSnapshot({ ...snapshot, requests: [...snapshot.requests, request] });
     return request;
+  },
+  submitBulk: async (lines, actor, fileName) => {
+    const result = submitBulkInBrowser(readSnapshot(), lines, actor, fileName);
+    writeSnapshot(result.snapshot);
+    return result.lines;
+  },
+  registerBulk: async (bulkId, actor) => {
+    const result = registerBulkInBrowser(readSnapshot(), bulkId, actor);
+    writeSnapshot(result.snapshot);
+    return result.lines;
   },
   takeStep: async (step) => {
     const { result, snapshot } = await takeStepInBrowser(readSnapshot(), step);

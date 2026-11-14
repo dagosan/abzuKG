@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: bulk requests (one request with a line per code). */
 
 import type { DetailsKind } from "../../detailsKinds";
 import type { CheckResult, ChecklistItemId } from "./checklist";
@@ -203,10 +204,25 @@ export interface Review {
   by: Actor | null;
 }
 
+/**
+ * A line of a bulk request (LCMS specification FR-08): the requests made
+ * from one uploaded file share its id, and are registered together under
+ * one reference and one T0. Added 2026-11-10.
+ */
+export interface BulkLineRef {
+  /** The same for every line of the file. */
+  id: string;
+  /** Line number in the uploaded file; the header is line 1. */
+  line: number;
+  fileName: string;
+}
+
 /** The request file of procedure section 13. */
 export interface LocationCodeRequest {
   id: string;
-  /** Unique reference given at registration, e.g. "LC-2026-0001". */
+  /** Set when the request is a line of a bulk request. */
+  bulk?: BulkLineRef;
+  /** Unique reference given at registration, e.g. "LC-2026-0001"; a bulk line's ends with its line, "LC-2026-0001/3". */
   reference: string | null;
   status: RequestStatus;
   data: RequestData;

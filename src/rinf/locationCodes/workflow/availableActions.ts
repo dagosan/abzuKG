@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-10-30: canBeTakenFrom, for the stores' refusals. */
+Modified 2026-10-30: canBeTakenFrom, for the stores' refusals.
+Modified 2026-11-10: a bulk request's lines are registered together, not one by one. */
 
 import { isBlocking } from "../model/checklist";
 import type {
@@ -83,6 +84,9 @@ const blockingReason = (
   if (isAdministratorAction && !mayAdminister(request, actor.name))
     return "rinf_lc_blocked_four_eyes";
   switch (action) {
+    case "register":
+      // The lines of a bulk request share one reference and one T0.
+      return request.bulk ? "rinf_lc_blocked_bulk_register" : null;
     case "completeValidation":
       if (!request.checksRunAt) return "rinf_lc_blocked_run_checks";
       if (hasUnconfirmedManualChecks(request))

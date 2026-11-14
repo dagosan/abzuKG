@@ -15,7 +15,8 @@ limitations under the Licence.
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-11-02: register as code versions with CRD's columns.
 Modified 2026-11-05: codesLoadStatus, the state of the register alone.
-Modified 2026-11-09: a point chosen on the map, with its reference OP. */
+Modified 2026-11-09: a point chosen on the map, with its reference OP.
+Modified 2026-11-14: bulk requests. */
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { MapPosition } from "../mapLocation/mapPosition";
@@ -29,6 +30,7 @@ import type { CodeVersion } from "../model/CodeVersion";
 import { mergeVersions } from "../model/codeVersions";
 import type { Actor } from "../model/roles";
 import { readActor, writeActor } from "./actorPreference";
+import { registerBulkRequest, submitBulkRequest } from "./bulkThunks";
 import {
   loadLocationCodes,
   loadRegisterCodes,
@@ -154,6 +156,12 @@ const locationCodesSlice = createSlice({
       })
       .addCase(loadRegisterCodes.rejected, (state) => {
         state.codesLoadStatus = "failed";
+      })
+      .addCase(submitBulkRequest.fulfilled, (state, action) => {
+        state.requests = action.payload.reduce(replaceRequest, state.requests);
+      })
+      .addCase(registerBulkRequest.fulfilled, (state, action) => {
+        state.requests = action.payload.reduce(replaceRequest, state.requests);
       })
       .addCase(submitLocationCodeRequest.fulfilled, (state, action) => {
         state.requests = replaceRequest(state.requests, action.payload);

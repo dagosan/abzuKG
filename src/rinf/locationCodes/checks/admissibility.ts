@@ -59,7 +59,8 @@ const REQUIRED = "rinf_lc_error_required";
 
 const isBlank = (value: string) => value.trim() === "";
 
-const requesterErrors = ({
+/** The requester's details and the language: the same checks for a single request and a bulk file. */
+export const requesterErrors = ({
   requester,
   language,
   preSubmissionConfirmed,

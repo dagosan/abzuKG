@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: the lines of a bulk request are shown as one item. */
 
 import { Box, List, Tab, Tabs, Typography } from "@mui/material";
 import { useState } from "react";
@@ -20,22 +21,27 @@ import { useIntl } from "react-intl";
 import {
   REQUEST_FILTERS,
   RequestFilter,
-  useVisibleRequests,
+  useVisibleGroups,
 } from "./hooks/useVisibleRequests";
-import { RequestListItem } from "./RequestListItem";
+import { groupKey, RequestGroupItem } from "./RequestGroupItem";
 
 const LIST_WIDTH = { xs: "100%", md: 380 };
 
 interface RequestListProps {
   selectedId: string | null;
   onOpen: (requestId: string) => void;
+  onOpenBulk: (bulkId: string) => void;
 }
 
 /** The requests, filtered by what waits for the current actor or by state. */
-export const RequestList = ({ selectedId, onOpen }: RequestListProps) => {
+export const RequestList = ({
+  selectedId,
+  onOpen,
+  onOpenBulk,
+}: RequestListProps) => {
   const { formatMessage } = useIntl();
   const [filter, setFilter] = useState<RequestFilter>("forMe");
-  const requests = useVisibleRequests(filter);
+  const groups = useVisibleGroups(filter);
 
   return (
     <Box
@@ -65,18 +71,19 @@ export const RequestList = ({ selectedId, onOpen }: RequestListProps) => {
           />
         ))}
       </Tabs>
-      {requests.length === 0 ? (
+      {groups.length === 0 ? (
         <Typography variant="body2" sx={{ p: 2, color: "text.secondary" }}>
           {formatMessage({ id: `rinf_lc_empty_${filter}` })}
         </Typography>
       ) : (
         <List disablePadding sx={{ overflow: "auto", flex: 1 }}>
-          {requests.map((request) => (
-            <RequestListItem
-              key={request.id}
-              request={request}
-              selected={request.id === selectedId}
+          {groups.map((group) => (
+            <RequestGroupItem
+              key={groupKey(group)}
+              group={group}
+              selectedId={selectedId}
               onOpen={onOpen}
+              onOpenBulk={onOpenBulk}
             />
           ))}
         </List>

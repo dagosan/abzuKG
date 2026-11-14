@@ -22,6 +22,8 @@ export const LOCATION_CODES_PATH = `/${LOCATION_CODES_ROUTE}`;
 /** Sub-routes: the new request form and one request file. */
 export const NEW_REQUEST_SEGMENT = "new";
 export const REGISTER_SEGMENT = "register";
+/** Bulk requests: a CSV file checked line by line (LCMS specification FR-08). */
+export const BULK_SEGMENT = "bulk";
 /** A requester's own requests. */
 export const MY_REQUESTS_SEGMENT = "mine";
 export const REQUEST_ID_PARAM = "requestId";
@@ -34,6 +36,12 @@ export const RESUME_PARAM = "resume";
 export const resumeRequestPath = `${LOCATION_CODES_PATH}/${NEW_REQUEST_SEGMENT}?${RESUME_PARAM}=1`;
 
 export const registerPath = `${LOCATION_CODES_PATH}/${REGISTER_SEGMENT}`;
+
+export const bulkPath = `${LOCATION_CODES_PATH}/${BULK_SEGMENT}`;
+/** One bulk request: its lines and the steps taken on all of them. */
+export const BULK_ID_PARAM = "bulkId";
+export const bulkFilePath = (bulkId: string): string =>
+  `${bulkPath}/${encodeURIComponent(bulkId)}`;
 
 export const myRequestsPath = `${LOCATION_CODES_PATH}/${MY_REQUESTS_SEGMENT}`;
 

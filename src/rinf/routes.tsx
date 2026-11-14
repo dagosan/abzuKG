@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: location code routes. */
+Added for the ERA RINF frontend, 2026-10-28. 2026-10-29: location code routes.
+Modified 2026-11-14: bulk request routes. */
 
 import { Route } from "react-router-dom";
 import {
@@ -28,6 +29,8 @@ import {
 } from "./reports/rinfReportsPath";
 import { RinfReportsPage } from "./reports/RinfReportsPage";
 import {
+  BULK_ID_PARAM,
+  BULK_SEGMENT,
   LOCATION_CODES_ROUTE,
   MY_REQUESTS_SEGMENT,
   NEW_REQUEST_SEGMENT,
@@ -43,6 +46,8 @@ import {
 const LOCATION_CODES_SUBROUTES: [string, LocationCodesPageMode][] = [
   ["", "home"],
   [`/${NEW_REQUEST_SEGMENT}`, "new"],
+  [`/${BULK_SEGMENT}`, "bulk"],
+  [`/${BULK_SEGMENT}/:${BULK_ID_PARAM}`, "bulkFile"],
   [`/${REGISTER_SEGMENT}`, "register"],
   [`/${MY_REQUESTS_SEGMENT}`, "mine"],
   [`/:${REQUEST_ID_PARAM}`, "request"],

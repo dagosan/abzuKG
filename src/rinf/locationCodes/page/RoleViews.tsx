@@ -12,34 +12,48 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA RINF frontend, 2026-10-29. */
+Added for the ERA RINF frontend, 2026-10-29.
+Modified 2026-11-10: Bulk request view. */
 
 import { Box, Typography } from "@mui/material";
 import { useIntl } from "react-intl";
 import { Navigate, useNavigate } from "react-router-dom";
+import { BulkRequestPage } from "../bulk/BulkRequestPage";
+import { BulkFilePage } from "../bulk/file/BulkFilePage";
 import { NewRequestForm } from "../form/NewRequestForm";
 import { RequestFile } from "../requestFile/RequestFile";
-import { LOCATION_CODES_PATH, requestPath } from "./locationCodesPath";
+import {
+  bulkFilePath,
+  LOCATION_CODES_PATH,
+  requestPath,
+} from "./locationCodesPath";
 import { MyRequests } from "./MyRequests";
 import { RequestList } from "./RequestList";
 
 const HINT_MAX_WIDTH = 640;
 
 /** Page modes besides the code register, which every role shares. */
-export type WorkMode = "home" | "new" | "mine" | "request";
+export type WorkMode =
+  "home" | "new" | "bulk" | "bulkFile" | "mine" | "request";
 
 interface RoleViewProps {
   mode: WorkMode;
   requestId: string | null;
+  /** The bulk request open, in mode "bulkFile". */
+  bulkId: string | null;
 }
 
 /**
  * A requester asks for codes and follows their own requests: the form,
  * their list, or one request, each full width. No queue of other cases.
  */
-export const RequesterView = ({ mode, requestId }: RoleViewProps) => (
+export const RequesterView = ({ mode, requestId, bulkId }: RoleViewProps) => (
   <Box sx={{ flex: 1, overflow: "auto", minWidth: 0 }}>
     {(mode === "home" || mode === "new") && <NewRequestForm />}
+    {mode === "bulk" && <BulkRequestPage />}
+    {mode === "bulkFile" && bulkId && (
+      <BulkFilePage key={bulkId} bulkId={bulkId} />
+    )}
     {mode === "mine" && <MyRequests />}
     {mode === "request" && requestId && (
       <RequestFile key={requestId} requestId={requestId} />
@@ -51,10 +65,10 @@ export const RequesterView = ({ mode, requestId }: RoleViewProps) => (
  * Agency roles handle cases: the queue on the left, the open case on the
  * right. They never request codes, so the form is not offered.
  */
-export const AgencyView = ({ mode, requestId }: RoleViewProps) => {
+export const AgencyView = ({ mode, requestId, bulkId }: RoleViewProps) => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  if (mode === "new" || mode === "mine")
+  if (mode === "new" || mode === "bulk" || mode === "mine")
     return <Navigate to={LOCATION_CODES_PATH} replace />;
   const isHome = mode === "home";
 
@@ -75,8 +89,9 @@ export const AgencyView = ({ mode, requestId }: RoleViewProps) => {
         }}
       >
         <RequestList
-          selectedId={requestId}
+          selectedId={requestId ?? bulkId}
           onOpen={(id) => navigate(requestPath(id))}
+          onOpenBulk={(id) => navigate(bulkFilePath(id))}
         />
       </Box>
       <Box
@@ -88,6 +103,7 @@ export const AgencyView = ({ mode, requestId }: RoleViewProps) => {
         }}
       >
         {requestId && <RequestFile key={requestId} requestId={requestId} />}
+        {bulkId && <BulkFilePage key={bulkId} bulkId={bulkId} />}
         {isHome && (
           <Typography
             variant="body2"

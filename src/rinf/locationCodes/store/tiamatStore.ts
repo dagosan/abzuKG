@@ -79,6 +79,8 @@ const refusal = async (response: Response): Promise<Error> => {
   return new Error(reasons || `Tiamat answered ${response.status}`);
 };
 
+const BULK_NOT_IN_TIAMAT = "rinf_lc_bulk_error_not_in_tiamat";
+
 /** The register kept in Tiamat, at e.g. https://…/era/v1/location-codes. */
 export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
   const root = baseUrl.replace(/\/+$/, "");
@@ -119,6 +121,10 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
     loadCodes: () => read<CodeVersion[]>("/codes"),
     submitRequest: (data, actor) =>
       read<LocationCodeRequest>("/requests", "POST", { actor, data }),
+    // The register in Tiamat takes one request per code; bulk requests are
+    // so far tried out with the browser store only.
+    submitBulk: () => Promise.reject(new Error(BULK_NOT_IN_TIAMAT)),
+    registerBulk: () => Promise.reject(new Error(BULK_NOT_IN_TIAMAT)),
     takeStep: ({ requestId, action, actor, payload, expectedEventCount }) =>
       read<StepResult>(
         `/requests/${encodeURIComponent(requestId)}/actions`,

@@ -44,6 +44,10 @@ export const locationCodeStore: LocationCodeStore = {
   loadCodes: () => currentLocationCodeStore().loadCodes(),
   submitRequest: (data, actor) =>
     currentLocationCodeStore().submitRequest(data, actor),
+  submitBulk: (lines, actor, fileName) =>
+    currentLocationCodeStore().submitBulk(lines, actor, fileName),
+  registerBulk: (bulkId, actor) =>
+    currentLocationCodeStore().registerBulk(bulkId, actor),
   takeStep: (step) => currentLocationCodeStore().takeStep(step),
   exportSnapshot: () => currentLocationCodeStore().exportSnapshot(),
   importSnapshot: (snapshot) =>

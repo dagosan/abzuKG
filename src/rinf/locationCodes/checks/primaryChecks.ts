@@ -13,7 +13,8 @@ See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-10: the detail naming other codes on the element is exported (bulk requests hold such lines back). */
 
 import type { CheckResult } from "../model/checklist";
 import { isCreation } from "../model/codeTypes";
@@ -30,6 +31,9 @@ import {
   registeredPrimaryCodes,
   sameLink,
 } from "./checkContext";
+
+/** Detail of item 6 when the element already carries other codes: listed for the code administrator to read. */
+export const OTHER_CODES_ON_ELEMENT = "rinf_lc_detail_other_locations";
 
 /**
  * Item 6: no PLC already covers the same location. An OP or section of line
@@ -79,7 +83,7 @@ export const primaryDuplicateCheck = (
         code: sameName.code,
         codes: listed,
       })
-    : result("noDuplicate", "pass", "rinf_lc_detail_other_locations", {
+    : result("noDuplicate", "pass", OTHER_CODES_ON_ELEMENT, {
         codes: listed,
       });
 };
