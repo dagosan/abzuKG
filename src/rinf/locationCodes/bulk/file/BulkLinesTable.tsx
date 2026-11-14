@@ -12,11 +12,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA Location Code Manager, 2026-11-10. */
+Added for the ERA Location Code Manager, 2026-11-10.
+Modified 2026-11-14: a box to tick per line, and one for all lines. */
 
 import {
   Box,
   Button,
+  Checkbox,
   Table,
   TableBody,
   TableCell,
@@ -30,6 +32,7 @@ import type { LocationCodeRequest } from "../../model/LocationCodeRequest";
 import { requestPath } from "../../page/locationCodesPath";
 import { StatusChip } from "../../page/StatusChip";
 import { checksToRead } from "../bulkBatch";
+import type { LineSelection } from "./hooks/useLineSelection";
 
 const COLUMN_IDS = [
   "line",
@@ -48,10 +51,11 @@ const codeOf = (line: LocationCodeRequest): string =>
 
 interface BulkLinesTableProps {
   lines: LocationCodeRequest[];
+  selection: LineSelection;
 }
 
-/** The lines of a bulk request: where each stands, and the way into its own file. */
-export const BulkLinesTable = ({ lines }: BulkLinesTableProps) => {
+/** The lines of a bulk request: where each stands, the box to tick it for a step, and the way into its own file. */
+export const BulkLinesTable = ({ lines, selection }: BulkLinesTableProps) => {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
   return (
@@ -65,6 +69,22 @@ export const BulkLinesTable = ({ lines }: BulkLinesTableProps) => {
       >
         <TableHead>
           <TableRow>
+            <TableCell padding="checkbox">
+              <Checkbox
+                checked={selection.allSelected}
+                indeterminate={
+                  selection.selected.length > 0 && !selection.allSelected
+                }
+                onChange={selection.toggleAll}
+                slotProps={{
+                  input: {
+                    "aria-label": formatMessage({
+                      id: "rinf_lc_bulk_lines_select_all",
+                    }),
+                  },
+                }}
+              />
+            </TableCell>
             {COLUMN_IDS.map((columnId) => (
               <TableCell key={columnId}>
                 {formatMessage({ id: columnId })}
@@ -75,7 +95,25 @@ export const BulkLinesTable = ({ lines }: BulkLinesTableProps) => {
         </TableHead>
         <TableBody>
           {lines.map((line) => (
-            <TableRow key={line.id} hover>
+            <TableRow
+              key={line.id}
+              hover
+              selected={selection.isSelected(line.id)}
+            >
+              <TableCell padding="checkbox">
+                <Checkbox
+                  checked={selection.isSelected(line.id)}
+                  onChange={() => selection.toggle(line.id)}
+                  slotProps={{
+                    input: {
+                      "aria-label": formatMessage(
+                        { id: "rinf_lc_bulk_lines_select" },
+                        { line: line.bulk?.line },
+                      ),
+                    },
+                  }}
+                />
+              </TableCell>
               <TableCell>{line.bulk?.line}</TableCell>
               <TableCell>{line.reference ?? NONE}</TableCell>
               <TableCell>

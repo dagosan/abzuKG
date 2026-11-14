@@ -414,16 +414,18 @@ applies the same ones (tiamatLCs `workflow/BulkRequests.java`, `POST
   what their checks leave to read, and the steps the current role can take
   on all lines. In the lists a bulk request is one item
   (`page/RequestGroupItem.tsx`); a line's own file links back to it.
-- Steps on all lines (`bulk/bulkRequests.ts`, `bulk/file/hooks/useBulkBatch.ts`):
-  register; run checks; confirm manual checks; complete validation;
-  confirm RINF position; assign; record and publish; notify and close. Each
-  is the ordinary step taken line by line by the current actor. Left to the
+- Steps on several lines (`bulk/bulkBatch.ts`, `bulk/file/hooks/useBulkBatch.ts`,
+  `useLineSelection.ts`; since 2026-11-14 on the lines ticked in the table,
+  with a box in the header that ticks them all): run checks; confirm manual
+  checks; complete validation; confirm RINF position; assign; record and
+  publish; notify and close. Registration is of the whole request. Each is
+  the ordinary step taken line by line by the current actor. Left to the
   line's own file: anything that needs a reason or a choice (information
   request, rejection, external coordination, a line without a RINF element),
-  and completing validation where the checks leave something to read (a
-  failed check, a warning, or other codes already on the element). The
-  warning that an existing code is in the Knowledge Graph for its own
-  element does not hold a line back: that is first population.
+  and completing validation where a check failed. A warning, or other codes
+  already on the element, no longer hold a ticked line back (they did while
+  a step was taken on all lines unseen): the "Checks" column shows them
+  next to the box.
 - Measured with 50 lines and the live Knowledge Graph: checks about 36 s,
   assignment about 36 s, the other steps 3 to 12 s each.
 

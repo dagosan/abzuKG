@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA Location Code Manager, 2026-11-10. */
+Added for the ERA Location Code Manager, 2026-11-10.
+Modified 2026-11-14: steps are taken on the lines ticked in the table. */
 
 import { Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
@@ -22,6 +23,7 @@ import { bulkLinesOf } from "../bulkRequests";
 import { BulkBatchActions } from "./BulkBatchActions";
 import { BulkFileHeader } from "./BulkFileHeader";
 import { BulkLinesTable } from "./BulkLinesTable";
+import { useLineSelection } from "./hooks/useLineSelection";
 
 interface BulkFilePageProps {
   bulkId: string;
@@ -30,7 +32,7 @@ interface BulkFilePageProps {
 /**
  * One bulk request (LCMS specification FR-08): a file's accepted lines
  * under one reference and one T0. Each line is handled through the steps
- * of the workflow, here for all lines at once or in the line's own file.
+ * of the workflow, here for the lines ticked or in the line's own file.
  */
 export const BulkFilePage = ({ bulkId }: BulkFilePageProps) => {
   const { formatMessage } = useIntl();
@@ -39,6 +41,7 @@ export const BulkFilePage = ({ bulkId }: BulkFilePageProps) => {
     () => bulkLinesOf(requests, bulkId),
     [requests, bulkId],
   );
+  const selection = useLineSelection(lines);
 
   if (lines.length === 0)
     return (
@@ -49,8 +52,12 @@ export const BulkFilePage = ({ bulkId }: BulkFilePageProps) => {
   return (
     <Stack spacing={2} sx={{ p: { xs: 2, md: 3 } }}>
       <BulkFileHeader lines={lines} />
-      <BulkBatchActions bulkId={bulkId} lines={lines} />
-      <BulkLinesTable lines={lines} />
+      <BulkBatchActions
+        bulkId={bulkId}
+        lines={lines}
+        selected={selection.selected}
+      />
+      <BulkLinesTable lines={lines} selection={selection} />
     </Stack>
   );
 };

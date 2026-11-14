@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA Location Code Manager, 2026-11-10. */
+Added for the ERA Location Code Manager, 2026-11-10.
+Modified 2026-11-14: validation is completed in batch on the ticked lines unless a check failed. */
 
 import { OTHER_CODES_ON_ELEMENT } from "../checks/primaryChecks";
 import { EXISTING_CODE_ON_ITS_ELEMENT } from "../checks/primaryValueChecks";
@@ -24,7 +25,7 @@ import type { ActionPayload } from "../workflow/applyAction";
 import { availableActions } from "../workflow/availableActions";
 
 /**
- * Steps that can be taken on every line at once, because they need no
+ * Steps that can be taken on several lines at once, because they need no
  * input of their own: the checks, the confirmations and the plain moves.
  * A step that needs a reason or a choice is taken in the line's own file.
  */
@@ -91,9 +92,12 @@ export const batchPayloadsOf = (
         confirmedItem,
       }));
     case "completeValidation":
-      return checksToRead(request) === "none"
-        ? [{ recommendation: { outcome: "assign", ground: null } }]
-        : [];
+      // The administrator ticked the line with its "Checks" column in view:
+      // a warning or other codes on the element no longer hold it back. A
+      // failed check does: its recommendation needs a ground.
+      return checksToRead(request) === "failed"
+        ? []
+        : [{ recommendation: { outcome: "assign", ground: null } }];
     case "confirmPosition":
       return request.data.rinfLink ? [{}] : [];
     case "notifyAndClose":

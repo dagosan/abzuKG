@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA Location Code Manager, 2026-11-10. */
+Added for the ERA Location Code Manager, 2026-11-10.
+Modified 2026-11-14: steps are taken on the lines ticked in the table. */
 
 import {
   Alert,
@@ -70,26 +71,36 @@ const BatchResult = ({ progress }: BatchResultProps) => {
 interface BulkBatchActionsProps {
   bulkId: string;
   lines: LocationCodeRequest[];
+  /** The lines ticked in the table. */
+  selected: LocationCodeRequest[];
 }
 
 /**
- * What the current actor can do on the whole bulk request: register it,
- * and take a step on every line it is open to. Steps that need a reason or
- * a choice are taken in the line's own file.
+ * What the current actor can do on the bulk request: register it whole,
+ * and take a step on the ticked lines it is open to. Steps that need a
+ * reason or a choice are taken in the line's own file.
  */
-export const BulkBatchActions = ({ bulkId, lines }: BulkBatchActionsProps) => {
+export const BulkBatchActions = ({
+  bulkId,
+  lines,
+  selected,
+}: BulkBatchActionsProps) => {
   const { formatMessage } = useIntl();
   const actor = useAppSelector((state) => state.rinf.locationCodes.actor);
-  const { progress, register, run } = useBulkBatch(bulkId, lines);
+  const { progress, register, run } = useBulkBatch(bulkId, lines, selected);
   const today = todayIsoDate();
   const isRunning = progress?.running ?? false;
   const canRegister = bulkRegistrationRefusal(lines, actor) === null;
-  const steps = BATCH_ACTIONS.map((action) => ({
-    action,
-    count: linesReadyFor(lines, action, actor, today).length,
-  })).filter(({ count }) => count > 0);
+  const stepsOn = (chosen: LocationCodeRequest[]) =>
+    BATCH_ACTIONS.map((action) => ({
+      action,
+      count: linesReadyFor(chosen, action, actor, today).length,
+    })).filter(({ count }) => count > 0);
+  const steps = stepsOn(selected);
+  /** Something this actor could do, if lines were ticked. */
+  const hasWork = stepsOn(lines).length > 0;
 
-  if (!canRegister && steps.length === 0 && !progress) return null;
+  if (!canRegister && !hasWork && !progress) return null;
   return (
     <Stack spacing={1}>
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
@@ -118,6 +129,21 @@ export const BulkBatchActions = ({ bulkId, lines }: BulkBatchActionsProps) => {
           </Button>
         ))}
       </Stack>
+      {hasWork && (
+        <Typography variant="body2">
+          {formatMessage(
+            {
+              id:
+                selected.length === 0
+                  ? "rinf_lc_bulk_batch_select_hint"
+                  : steps.length === 0
+                    ? "rinf_lc_bulk_batch_selected_none_ready"
+                    : "rinf_lc_bulk_batch_selected",
+            },
+            { count: selected.length, total: lines.length },
+          )}
+        </Typography>
+      )}
       <Typography variant="caption" sx={{ color: "text.secondary" }}>
         {formatMessage({ id: "rinf_lc_bulk_batch_note" })}
       </Typography>

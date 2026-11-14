@@ -12,7 +12,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
 limitations under the Licence.
 
-Added for the ERA Location Code Manager, 2026-11-10. */
+Added for the ERA Location Code Manager, 2026-11-10.
+Modified 2026-11-14: a step is taken on the lines ticked, not on all. */
 
 import { useCallback, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../../store/hooks";
@@ -41,18 +42,20 @@ export interface BulkBatch {
   progress: BatchProgress | null;
   /** Registers every line under one reference and one T0. */
   register: () => void;
-  /** Takes `action` on every line it is open to, one after the other. */
+  /** Takes `action` on every ticked line it is open to, one after the other. */
   run: (action: WorkflowAction) => void;
 }
 
 /**
- * Steps on all lines of a bulk request. A batch step is the ordinary step,
- * taken line by line by the current actor, so every rule of the workflow
- * applies to each line and each line's file records it.
+ * Steps on several lines of a bulk request. A batch step is the ordinary
+ * step, taken line by line by the current actor, so every rule of the
+ * workflow applies to each line and each line's file records it.
+ * Registration is always of all `lines`; the other steps of `selected`.
  */
 export const useBulkBatch = (
   bulkId: string,
   lines: LocationCodeRequest[],
+  selected: LocationCodeRequest[],
 ): BulkBatch => {
   const dispatch = useAppDispatch();
   const endpoint = useRinfSparqlEndpoint();
@@ -86,7 +89,7 @@ export const useBulkBatch = (
 
   const run = useCallback(
     (action: WorkflowAction) => {
-      const ready = linesReadyFor(lines, action, actor, todayIsoDate());
+      const ready = linesReadyFor(selected, action, actor, todayIsoDate());
       let state: BatchProgress = {
         action,
         done: 0,
@@ -134,7 +137,7 @@ export const useBulkBatch = (
       };
       void runAll();
     },
-    [dispatch, endpoint, actor, lines],
+    [dispatch, endpoint, actor, selected],
   );
 
   return { progress, register, run };

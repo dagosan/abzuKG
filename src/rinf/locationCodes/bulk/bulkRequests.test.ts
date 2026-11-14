@@ -236,7 +236,7 @@ describe("the lines of a bulk request together", () => {
     expect(batchPayloadsOf(failing, "completeValidation")).toEqual([]);
     expect(
       batchPayloadsOf(checked(first, "warning"), "completeValidation"),
-    ).toEqual([]);
+    ).toEqual([{ recommendation: { outcome: "assign", ground: null } }]);
     expect(checksToRead(passing)).toBe("none");
     expect(checksToRead(failing)).toBe("failed");
     const otherCodes = {
@@ -263,7 +263,7 @@ describe("the lines of a bulk request together", () => {
     ).toBe("none");
     expect(
       batchPayloadsOf({ ...passing, ...otherCodes }, "completeValidation"),
-    ).toEqual([]);
+    ).toEqual([{ recommendation: { outcome: "assign", ground: null } }]);
     // Validation waits for the manual check, so no line is ready yet.
     expect(
       linesReadyFor([passing, failing], "completeValidation", carl, TODAY),
