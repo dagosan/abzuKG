@@ -14,7 +14,8 @@ limitations under the Licence.
 
 Added for the ERA RINF frontend, 2026-10-29.
 Modified 2026-10-30: Tiamat takes the workflow steps; this store only asks for them.
-Modified 2026-11-02: register as code versions with CRD's columns. */
+Modified 2026-11-02: register as code versions with CRD's columns.
+Modified 2026-11-14: bulk requests are sent to Tiamat. */
 
 import type { LocationCodeRequest } from "../model/LocationCodeRequest";
 import type { CodeVersion } from "../model/CodeVersion";
@@ -79,8 +80,6 @@ const refusal = async (response: Response): Promise<Error> => {
   return new Error(reasons || `Tiamat answered ${response.status}`);
 };
 
-const BULK_NOT_IN_TIAMAT = "rinf_lc_bulk_error_not_in_tiamat";
-
 /** The register kept in Tiamat, at e.g. https://…/era/v1/location-codes. */
 export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
   const root = baseUrl.replace(/\/+$/, "");
@@ -121,10 +120,18 @@ export const createTiamatStore = (baseUrl: string): LocationCodeStore => {
     loadCodes: () => read<CodeVersion[]>("/codes"),
     submitRequest: (data, actor) =>
       read<LocationCodeRequest>("/requests", "POST", { actor, data }),
-    // The register in Tiamat takes one request per code; bulk requests are
-    // so far tried out with the browser store only.
-    submitBulk: () => Promise.reject(new Error(BULK_NOT_IN_TIAMAT)),
-    registerBulk: () => Promise.reject(new Error(BULK_NOT_IN_TIAMAT)),
+    submitBulk: (lines, actor, fileName) =>
+      read<LocationCodeRequest[]>("/requests/bulk", "POST", {
+        actor,
+        fileName,
+        lines,
+      }),
+    registerBulk: (bulkId, actor) =>
+      read<LocationCodeRequest[]>(
+        `/requests/bulk/${encodeURIComponent(bulkId)}/register`,
+        "POST",
+        { actor },
+      ),
     takeStep: ({ requestId, action, actor, payload, expectedEventCount }) =>
       read<StepResult>(
         `/requests/${encodeURIComponent(requestId)}/actions`,

@@ -203,7 +203,6 @@
   "rinf_lc_bulk_download_report": "Download report",
   "rinf_lc_bulk_download_template": "Download template",
   "rinf_lc_bulk_error_no_lines": "There is no accepted line to submit.",
-  "rinf_lc_bulk_error_not_in_tiamat": "Bulk requests are not yet in the register kept in Tiamat: they can be tried with the browser store only.",
   "rinf_lc_bulk_error_not_submitted": "The request could not be submitted.",
   "rinf_lc_bulk_file_duplicate_columns": "The header has the same column more than once: {columns}.",
   "rinf_lc_bulk_file_empty": "It is empty: the first line must be the header with the column names.",

@@ -82,6 +82,28 @@ describe("tiamatStore", () => {
     });
   });
 
+  it("sends the lines of a bulk request together, and registers them together", async () => {
+    const lines = [{ line: 2, data }];
+    const submitMock = mockFetch(answer(201, [request]));
+    await expect(
+      createTiamatStore(BASE).submitBulk(lines, anna, "stations.csv"),
+    ).resolves.toEqual([request]);
+    expect(sent(submitMock)).toEqual({
+      url: `${BASE}requests/bulk`,
+      method: "POST",
+      body: JSON.stringify({ actor: anna, fileName: "stations.csv", lines }),
+    });
+    const registerMock = mockFetch(answer(200, [request]));
+    await expect(
+      createTiamatStore(BASE).registerBulk("b 1", carl),
+    ).resolves.toEqual([request]);
+    expect(sent(registerMock)).toEqual({
+      url: `${BASE}requests/bulk/b%201/register`,
+      method: "POST",
+      body: JSON.stringify({ actor: carl }),
+    });
+  });
+
   it("asks Tiamat to take a step, without the KG endpoint", async () => {
     const fetchMock = mockFetch(answer(200, { request, codes: [code] }));
     await expect(createTiamatStore(BASE).takeStep(publish)).resolves.toEqual({

@@ -387,9 +387,10 @@ nothing; sending the accepted lines is the second part, below.
 
 ### Bulk requests, second part: one request with a line per code (2026-11-10; on master 2026-11-14)
 
-FR-08: the accepted lines of a file become one request. **Browser store only
-so far**: with Tiamat the submission is refused with a message
-(`rinf_lc_bulk_error_not_in_tiamat`); the server side is not written.
+FR-08: the accepted lines of a file become one request. With the browser
+store the rules run here (`store/browserBulk.ts`); with Tiamat the register
+applies the same ones (tiamatLCs `workflow/BulkRequests.java`, `POST
+/requests/bulk` and `POST /requests/bulk/<id>/register`, since 2026-11-14).
 
 - Model: each accepted line is a request of its own with `bulk: {id, line,
   fileName}` (`model/LocationCodeRequest.ts`). The lines of a file share the
