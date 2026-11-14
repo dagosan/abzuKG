@@ -26,6 +26,7 @@ Five containers, all started by one `docker compose`:
 | `deploy/bootstrap.json` | Default config: modern UI, ERA theme, ERA endpoint, map centred on Belgium at zoom 8 (where RINF data shows), register at `/era/v1/location-codes`, login at `/auth/realms/era` |
 | `deploy/keycloak/era-realm.json` | The realm Keycloak imports the first time it starts: the five workflow roles (new accounts get *requester*), the app as a client, and the `lcm_roles` claim that carries an account's roles |
 | `deploy/update.sh` | Installs or updates both repositories from GitHub and rebuilds the containers |
+| `deploy/auto-update.sh` | For the NAS's scheduler: runs `update.sh` when GitHub has a new commit (see Update automatically) |
 | `/share/Container/abzukg.env` | Made by `update.sh` on first run: the passwords of both databases and of Keycloak's `admin`, the app's https address `LCM_PUBLIC_URL` (you add it, see Login), and optionally `ABZUKG_PORT`. Keep it; each database only accepts the password it was created with |
 
 ## Install on a QNAP NAS (Container Station)
@@ -152,6 +153,28 @@ old containers keep serving until the new ones are ready. The register's
 database (a Docker volume), the password file and your own config (below)
 live outside those folders, so they survive. Tiamat's later builds are as
 slow as the first (no cache between downloads).
+
+### Update automatically
+
+The NAS can look at GitHub itself and update when `master` of either
+repository has a new commit. As `admin` on the NAS, once:
+
+```sh
+echo '*/15 * * * * wget -qO- https://raw.githubusercontent.com/dagosan/abzuKG/master/deploy/auto-update.sh | sh' >> /etc/config/crontab
+crontab /etc/config/crontab && /etc/init.d/crond.sh restart
+```
+
+Every 15 minutes `auto-update.sh` asks GitHub for the latest commits (two
+small requests) and does nothing if they are the ones it last installed.
+Otherwise it runs `update.sh` as above, so a push to `master` is live after
+at most 15 minutes plus the build. What it did is in
+`/share/Container/abzukg-auto-update.log`. A build that fails is not tried
+again until a new commit arrives; the previous version keeps running.
+
+Mind what this means: whatever is on `master` of the two repositories is
+installed on the NAS without anyone looking. Keep work in progress on
+branches. To stop it, remove the line from `/etc/config/crontab` and run the
+second command again.
 
 To check which version is running, open `http://<nas-address>:8090/version.txt`:
 it shows the branches and commits of the app and of Tiamat, to compare with

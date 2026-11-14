@@ -4,6 +4,7 @@
 # both repositories from master; the app's port from ABZUKG_PORT in abzukg.env.
 # Modified 2026-11-01: the login service (Keycloak): its passwords, the app's
 # https address (LCM_PUBLIC_URL) and the realm's addresses.
+# Modified 2026-11-14: Docker's settings folder when the user has no home folder.
 #
 # Installs or updates the Location Code Manager (abzuKG) and its location code
 # register (Tiamat, dagosan/tiamatLCs) on the NAS from GitHub, and rebuilds
@@ -42,6 +43,15 @@ download() {
 }
 
 cd "$PARENT"
+
+# Docker keeps its settings in the user's home folder. A NAS user may have
+# none (QNAP: "mkdir …/homes/<user>: permission denied"), and the scheduler
+# may give none: then keep them next to the app folders.
+if [ -z "${DOCKER_CONFIG:-}" ] && ! mkdir -p "${HOME:-/nonexistent}/.docker" 2>/dev/null; then
+  DOCKER_CONFIG="$PARENT/.docker"
+  mkdir -p "$DOCKER_CONFIG"
+  export DOCKER_CONFIG
+fi
 
 # Passwords, made once and kept outside the app folders (abzukg.env). The
 # databases only accept the password they were created with, so never change
