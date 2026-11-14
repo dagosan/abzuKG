@@ -4,7 +4,8 @@
 # both repositories from master; the app's port from ABZUKG_PORT in abzukg.env.
 # Modified 2026-11-01: the login service (Keycloak): its passwords, the app's
 # https address (LCM_PUBLIC_URL) and the realm's addresses.
-# Modified 2026-11-14: Docker's settings folder when the user has no home folder.
+# Modified 2026-11-14: Docker's settings folder when the user has no home folder;
+# the Location Code Manager's version in /version.txt.
 #
 # Installs or updates the Location Code Manager (abzuKG) and its location code
 # register (Tiamat, dagosan/tiamatLCs) on the NAS from GitHub, and rebuilds
@@ -91,8 +92,11 @@ SHA=$(download dagosan/abzuKG "$BRANCH" "$APP")
 TIAMAT_SHA=$(download dagosan/tiamatLCs "$TIAMAT_BRANCH" "$TIAMAT_DIR")
 
 # Served at /version.txt (Vite copies public/ into the build).
-printf '%s %s\ntiamat %s %s\n' "$BRANCH" "$SHA" "$TIAMAT_BRANCH" "$TIAMAT_SHA" \
-  > "$APP.new/public/version.txt"
+# The version is the one the app shows (src/rinf/version.ts, see CHANGELOG.md).
+VERSION=$(sed -n 's/^export const LOCATION_CODE_MANAGER_VERSION = "\(.*\)";$/\1/p' \
+  "$APP.new/src/rinf/version.ts" 2>/dev/null)
+printf 'Location Code Manager %s\n%s %s\ntiamat %s %s\n' "${VERSION:-unknown}" \
+  "$BRANCH" "$SHA" "$TIAMAT_BRANCH" "$TIAMAT_SHA" > "$APP.new/public/version.txt"
 
 # Swap folders; the running containers keep serving until the rebuild below
 # replaces them.

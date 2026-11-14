@@ -1,4 +1,5 @@
-<!-- Modified for the ERA Location Code Manager, 2026-10-30: added this first section. -->
+<!-- Modified for the ERA Location Code Manager, 2026-10-30: added this first section;
+     2026-11-14: version and change log. -->
 
 # Location Code Manager
 
@@ -6,6 +7,10 @@ ERA's Location Code Manager, built on this fork of Entur's Abzu (dagosan/abzuKG)
 own features — RINF data on the map, RINF reports and the location code
 workflow — live in `src/rinf/` (see `src/rinf/README.md`). To run it on a
 server or NAS, see `deploy/README.md`.
+
+Its version is in `src/rinf/version.ts` (shown in the header's help menu) and
+its changes are listed in `CHANGELOG.md`. The `version` in `package.json` is
+Abzu's own.
 
 The rest of this file is Abzu's own README.
 

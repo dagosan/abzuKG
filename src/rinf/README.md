@@ -427,7 +427,7 @@ nothing; sending the accepted lines is the second part, below.
   Knowledge Graph (one query per country). If the Knowledge Graph cannot be
   reached those lines are refused and the page says so.
 - The report (`bulk/bulkReportCsv.ts`) is the annex's: `line, result,
-  item_ref, column, rule, message`, one row per accepted line and one per
+item_ref, column, rule, message`, one row per accepted line and one per
   failure. `item_ref` is empty: a line gets its reference at registration.
 - Where the check differs from the annex's wording: a proposed PLC that the
   Knowledge Graph already holds is accepted when the register does not hold
@@ -444,7 +444,7 @@ applies the same ones (tiamatLCs `workflow/BulkRequests.java`, `POST
 /requests/bulk` and `POST /requests/bulk/<id>/register`, since 2026-11-14).
 
 - Model: each accepted line is a request of its own with `bulk: {id, line,
-  fileName}` (`model/LocationCodeRequest.ts`). The lines of a file share the
+fileName}` (`model/LocationCodeRequest.ts`). The lines of a file share the
   bulk id, are submitted at the same moment, and are registered together:
   one number from the year's sequence, one T0, and each line's reference is
   that reference plus its line number in the file, `LC-2026-0001/3`
@@ -533,6 +533,9 @@ showed through the hidden map over the Reports footer:
   `locationCodesLoginRequired` config fields
 - `src/auth/auth.tsx` — a login address starting with `/` is resolved against
   the app's own address, so one `bootstrap.json` works on any host name
+- `src/components/modern/Header/components/HelpControl.tsx` — `<VersionMenuItem />`
+  in the help menu: the Location Code Manager's version (`version.ts`), with a
+  link to `CHANGELOG.md`
 - `src/static/lang/en.json`, `nb.json` — `rinf_*` text keys (`nb.json` holds
   English placeholders, to keep upstream's rule that both files carry every key)
 

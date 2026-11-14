@@ -763,6 +763,8 @@
   "rinf_show_location_codes": "Show location codes",
   "rinf_show_operational_points": "Show RINF operational points",
   "rinf_show_sections_of_line": "Show RINF sections of line",
+  "rinf_version": "Location Code Manager {version}",
+  "rinf_version_change_log": "Change log",
   "save_group_failed": "Saving the group failed. Please try again.",
   "save_stop_place": "Save stop place",
   "shelterEquipment": "Shelter",

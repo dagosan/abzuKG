@@ -10,7 +10,9 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the Licence is distributed on an "AS IS" basis,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the Licence for the specific language governing permissions and
-limitations under the Licence. */
+limitations under the Licence.
+
+Modified for the ERA Location Code Manager, 2026-11-14: the version in the menu. */
 
 import { ComponentToggle } from "@entur/react-component-toggle";
 import { Article, MenuBook, OpenInNew } from "@mui/icons-material";
@@ -27,6 +29,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useIntl } from "react-intl";
+import { VersionMenuItem } from "../../../../rinf/VersionMenuItem";
 import { menuItemPrimary } from "../../styles";
 
 const USER_GUIDE_URL =
@@ -126,6 +129,7 @@ export const HelpControl: React.FC<HelpControlProps> = ({ extPath }) => {
             sx={{ ml: 1, fontSize: EXTERNAL_LINK_ICON_SIZE, opacity: 0.6 }}
           />
         </MenuItem>
+        <VersionMenuItem onClick={handleClose} />
 
         {extPath && (
           <Box>

@@ -1,7 +1,8 @@
 <!-- Added for the ERA RINF frontend, 2026-10-29. Licensed under the EUPL 1.2.
      Modified 2026-10-30: the location code register (Tiamat + PostGIS) runs alongside;
      the app's port is a setting (ABZUKG_PORT).
-     Modified 2026-11-01: a login (Keycloak) for location code requests and steps. -->
+     Modified 2026-11-01: a login (Keycloak) for location code requests and steps.
+     Modified 2026-11-14: the version in /version.txt. -->
 
 # Running the Location Code Manager in Docker (e.g. on a NAS)
 
@@ -177,8 +178,9 @@ branches. To stop it, remove the line from `/etc/config/crontab` and run the
 second command again.
 
 To check which version is running, open `http://<nas-address>:8090/version.txt`:
-it shows the branches and commits of the app and of Tiamat, to compare with
-the latest commits on GitHub.
+it shows the Location Code Manager's version (see `CHANGELOG.md`), then the
+branches and commits of the app and of Tiamat, to compare with the latest
+commits on GitHub. The version is also in the app, in the header's help menu.
 
 To try other branches, add their names: `… | sh -s <abzuKG branch> <tiamatLCs
 branch>`. For a parent folder other than `/share/Container`, set `ABZUKG_DIR`
